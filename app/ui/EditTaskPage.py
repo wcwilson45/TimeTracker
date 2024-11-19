@@ -6,7 +6,7 @@ class EditTaskWindow(tk.Tk):  # Inherit from tk.Tk to make it a standalone app
     def __init__(self):
         super().__init__()
 
-        self.geometry("820x400")
+        self.geometry("620x400")
         self.title("Edit Task")
         self.configure(bg='#444444')
 
@@ -29,7 +29,7 @@ class EditTaskWindow(tk.Tk):  # Inherit from tk.Tk to make it a standalone app
         tk.Entry(self, width=40, bg='light blue').grid(row=2, column=1, pady=10, sticky="W")
 
         # Time of Completion
-        ttk.Label(self, text="Edit Time of Completion (0:00am/pm month-day-year):", style="Custom.TLabel").grid(row=3, column=0, sticky="w", padx=20, pady=10)
+        ttk.Label(self, text="Edit Time of Completion:", style="Custom.TLabel").grid(row=3, column=0, sticky="w", padx=20, pady=10)
         tk.Entry(self, width=40, bg='light blue').grid(row=3, column=1, pady=10, sticky="W")
 
         # Time Complexity
