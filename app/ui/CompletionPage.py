@@ -3,6 +3,7 @@ from tkinter.ttk import *
 from tkinter import filedialog
 from tkinter import ttk
 import tkinter as tk
+from datetime import datetime
 
 
 class CompletedTasksWindow(tk.Tk):
@@ -10,44 +11,145 @@ class CompletedTasksWindow(tk.Tk):
         super().__init__()
 
         self.geometry("540x320")
-        self.title("Completed Tasks")
+        self.title("Task Details")
+        self.configure(bg='white')
 
+        # Configure styles
+        self.style = ttk.Style()
+        self.style.theme_use('default')
+        self.style.configure("Info.TLabel", font=("Arial", 10), background='white')
+        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#e8f0fe', padding=2)
+
+        # Main container - using tk.Frame instead of ttk.Frame
+        self.main_container = tk.Frame(self, bg='white', bd=0)
+        self.main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Top section with header and buttons - using tk.Frame
+        self.top_frame = tk.Frame(self.main_container, bg='white', bd=0)
+        self.top_frame.pack(fill=tk.X, pady=(0, 10))
+
+        # Header
         self.header_label = tk.Label(
-            self,
-            text="Make Daniel Happy",  # Your text here
-            font=("Arial", 20, "bold"),  # Font family, size, and weight
-            anchor="w",  # 'w' means west (left) alignment
+            self.top_frame,
+            text="Task Name",
+            font=("Arial", 16, "bold"),
+            bg='white',
+            bd=0
         )
-        self.header_label.pack(side="top", fill="x", padx=2, pady=2)  # Add padding around text
+        self.header_label.pack(side=tk.LEFT)
 
-        # Description Box
-        self.description_frame = ttk.Frame(self)
-        self.description_frame.pack(anchor="w", padx=2)
+        # Buttons frame
+        self.button_frame = tk.Frame(self.top_frame, bg='white', bd=0)
+        self.button_frame.pack(side=tk.RIGHT)
 
-        # Description Label
-        self.description_label = ttk.Label(
-            self.description_frame,
-            text="Description:",
-            font=("Arial", 10)
+        # Cancel and Complete buttons
+        self.cancel_btn = ttk.Button(
+            self.button_frame,
+            text="Cancel",
+            command=self.destroy,
+            style="Secondary.TButton"
         )
-        self.description_label.pack(anchor="w")
+        self.cancel_btn.pack(side=tk.LEFT, padx=5)
 
-        # Text Area for Description
-        self.description_text = tk.Text(
-            self.description_frame,
-            height=4,  # Number of lines visible
-            width=30,  # Width in characters
-            wrap="word"  # Wrap by word instead of character
+        self.complete_btn = ttk.Button(
+            self.button_frame,
+            text="Complete",
+            style="Primary.TButton"
         )
-        self.description_text.pack(pady=5)
-        self.description_text.insert("1.0", "make good app and people happy")
+        self.complete_btn.pack(side=tk.LEFT)
 
-        ttk.Button(self, text='Close', command=self.destroy).pack(expand=True)
+        # Content area
+        self.content_frame = tk.Frame(self.main_container, bg='white', bd=0)
+        self.content_frame.pack(fill=tk.BOTH, expand=True)
 
+        # Left panel (70% width)
+        self.left_panel = tk.Frame(self.content_frame, bg='white', bd=0)
+        self.left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
 
-#def open_completedtaskswindow(parent):
- # window = CompletedTasksWindow(parent)
-  #  window.grab.set()
+        # Description section
+        self.create_collapsible_section(self.left_panel, "Description:", "Enter description here...", width=40)
+
+        # Commit History section
+        self.create_collapsible_section(self.left_panel, "Commit History:", "Enter commit history...", width=40)
+
+        # Right panel (30% width)
+        self.right_panel = tk.Frame(self.content_frame, bg='white', bd=0)
+        self.right_panel.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Tags
+        self.tags_frame = tk.Frame(self.right_panel, bg='white', bd=0)
+        self.tags_frame.pack(fill=tk.X, pady=(0, 10))
+        tk.Label(self.tags_frame, text="Tags:", font=("Arial", 10), bg='white').pack(anchor=tk.W)
+
+        # Create tag labels
+        self.create_tag("Blue")
+        self.create_tag("Small")
+        self.create_tag("Tech")
+
+        # Time information
+        self.create_info_field("Time of Completion:", "15:32:49")
+        self.create_info_field("Time Complexity:", "5")
+        self.create_info_field("Date Completed:", datetime.now().strftime("%m/%d/%y"))
+
+    def create_collapsible_section(self, parent, title, placeholder, width=None):
+        frame = tk.Frame(parent, bg='white', bd=0)
+        frame.pack(fill=tk.X, pady=(0, 10))
+
+        # Create a frame for the header area (title + button)
+        header_frame = tk.Frame(frame, bg='#f0f0f0')
+        header_frame.pack(fill=tk.X, anchor=tk.W)
+
+        # Label for section title inside header frame
+        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#f0f0f0').pack(side=tk.LEFT, padx=5, pady=5)
+
+        # Create outer frame to hold the text
+        outer_frame = tk.Frame(frame, bg='#f0f0f0')
+        outer_frame.pack(fill=tk.X, anchor=tk.W)
+
+        # Create text widget
+        text = tk.Text(outer_frame, height=4, wrap=tk.WORD, width=width, bg='#f0f0f0', borderwidth=0)
+        text.pack(padx=5, pady=(0, 5))
+        text.insert("1.0", placeholder)
+
+        # Function to toggle visibility
+        def toggle_collapse():
+            if outer_frame.winfo_viewable():
+                outer_frame.pack_forget()
+                toggle_btn.configure(text="⊕")  # Change to plus sign when collapsed
+            else:
+                outer_frame.pack(fill=tk.X, anchor=tk.W)
+                toggle_btn.configure(text="⊖")  # Change to minus sign when expanded
+
+        # Create toggle button with larger font
+        toggle_btn = tk.Button(
+            header_frame,
+            text="⊖",
+            command=toggle_collapse,
+            font=("Arial", 12),
+            width=2,
+            relief='flat',
+            bg='#f0f0f0',
+            bd=0,
+            cursor="hand2"
+        )
+
+        # Place button in top-right corner of header_frame
+        toggle_btn.pack(side=tk.RIGHT, padx=5)
+
+    def create_tag(self, text):
+        tag_label = ttk.Label(
+            self.tags_frame,
+            text=text,
+            style="Tag.TLabel"
+        )
+        tag_label.pack(side=tk.LEFT, padx=(0, 5))
+
+    def create_info_field(self, label_text, value_text):
+        frame = tk.Frame(self.right_panel, bg='white', bd=0)
+        frame.pack(fill=tk.X, pady=(0, 5))
+
+        tk.Label(frame, text=label_text, font=("Arial", 10), bg='white').pack(anchor=tk.W)
+        tk.Label(frame, text=value_text, font=("Arial", 10), bg='white').pack(anchor=tk.W)
 
 
 if __name__ == "__main__":
