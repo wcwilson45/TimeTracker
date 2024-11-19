@@ -10,6 +10,7 @@ class EditTaskWindow(tk.Tk):  # Inherit from tk.Tk to make it a standalone app
         self.title("Edit Task")
         self.configure(bg='#444444')
 
+
         self.style = ttk.Style()
         self.style.theme_use('alt')
         self.style.configure("Custom.TCombobox", fieldbackground="light blue", background="light blue", arrowcolor='black'
