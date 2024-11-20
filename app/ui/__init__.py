@@ -9,5 +9,3 @@ from .AddTaskPage import AddTaskWindow
 #from app.ui import EditTaskPage
 #from app.ui import CommitHistoryPage
 #from app.ui import AddTaskPage
-
-
