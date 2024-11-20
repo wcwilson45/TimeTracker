@@ -168,8 +168,8 @@ class App:
         self.reset_timer_values()
 
     def open_AddTaskWindow(self):
-        window = AddTaskWindow(self.root)
-        window.grab_set()
+        self.task_window = AddTaskWindow()
+        self.task_window.grab_set()
 
     def reset_timer_values(self):
         """Reset the timer values."""
