@@ -38,26 +38,6 @@ class CompletedTasksWindow(tk.Tk):
         )
         self.header_label.pack(side=tk.LEFT)
 
-        # Buttons frame
-        self.button_frame = tk.Frame(self.top_frame, bg='white', bd=0)
-        self.button_frame.pack(side=tk.RIGHT)
-
-        # Cancel and Complete buttons
-        self.cancel_btn = ttk.Button(
-            self.button_frame,
-            text="Cancel",
-            command=self.destroy,
-            style="Secondary.TButton"
-        )
-        self.cancel_btn.pack(side=tk.LEFT, padx=5)
-
-        self.complete_btn = ttk.Button(
-            self.button_frame,
-            text="Complete",
-            style="Primary.TButton"
-        )
-        self.complete_btn.pack(side=tk.LEFT)
-
         # Content area
         self.content_frame = tk.Frame(self.main_container, bg='white', bd=0)
         self.content_frame.pack(fill=tk.BOTH, expand=True)
@@ -90,6 +70,35 @@ class CompletedTasksWindow(tk.Tk):
         self.create_info_field("Time of Completion:", "15:32:49")
         self.create_info_field("Time Complexity:", "5")
         self.create_info_field("Date Completed:", datetime.now().strftime("%m/%d/%y"))
+
+        # Buttons frame
+        self.button_frame = tk.Frame(self.main_container, bg='white', bd=0)
+        self.button_frame.pack(side=tk.BOTTOM, pady=1, anchor='e')
+
+        # Cancel and Complete buttons
+        self.cancel_btn = tk.Button(
+            self.button_frame,
+            text="Cancel",
+            command=self.destroy,
+            bg='#808080',  # Background color
+            fg='white',  # Text color
+            relief='flat',  # Makes it look more modern
+            padx=10,  # Horizontal padding
+            pady=5  # Vertical padding
+        )
+        self.cancel_btn.pack(side=tk.LEFT, padx=1)
+
+        self.complete_btn = tk.Button(
+            self.button_frame,
+            text="Complete",
+            bg='#007bff',  # Background color
+            fg='white',  # Text color
+            relief='flat',  # Makes it look more modern
+            padx=10,  # Horizontal padding
+            pady=5  # Vertical padding
+        )
+
+        self.complete_btn.pack(side=tk.LEFT)
 
     def create_collapsible_section(self, parent, title, placeholder, width=None):
         frame = tk.Frame(parent, bg='white', bd=0)
