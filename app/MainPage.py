@@ -4,7 +4,13 @@ from tkinter import filedialog
 from tkinter import ttk, messagebox
 import tkinter as tk
 from datetime import datetime
-from ui import *
+from ui import (
+    SmallOverlayWindow,
+    CompletedTasksWindow,
+    EditTaskWindow,
+    create_commit_history_page,
+    AddTaskWindow
+)
 
 
 class App:
