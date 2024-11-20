@@ -115,20 +115,7 @@ class App:
         print(f"Item Clicked")
 
     def setup_completedtasks_page(self):
-        self.completedtasks_page.configure(bg='#add8e6')
-        self.completed_tree = ttk.Treeview(
-            self.completedtasks_page,
-            columns=("Task", "Completed Date", "Time Taken"),
-            show="headings"
-        )
-        self.completed_tree.bind("<<TreeviewSelect>>", self.on_item_click)
-
-        self.completed_tree.insert("", "end", values=("1", "1", "1"))
-        self.completed_tree.heading("Task", text="Task")
-        self.completed_tree.heading("Completed Date", text="Completed Date")
-        self.completed_tree.heading("Time Taken", text="Time Taken")
-
-        self.completed_tree.pack(padx=10, pady=5, fill="both", expand=True)
+        return 0
 
     def setup_smalloverlay_page(self):
         self.smalloverlay_page.configure(bg='#add8e6')
