@@ -15,6 +15,4 @@ class SmallOverlayWindow(tk.Toplevel):
         ttk.Button(self, text='Close', command=self.destroy).pack(expand=True)
 
 
-def open_smalloverlaywindow(parent):
-    window = SmallOverlayWindow(parent)
-    window.grab_set()
+

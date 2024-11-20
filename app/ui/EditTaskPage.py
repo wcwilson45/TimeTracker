@@ -48,6 +48,3 @@ class EditTaskWindow(tk.Tk):  # Inherit from tk.Tk to make it a standalone app
         exit_button = tk.Button(self, text="Exit", width=15, bg='#F08080', fg='black', command=self.destroy)
         exit_button.grid(row=6, column=1, pady=20, sticky="e")
 
-if __name__ == "__main__":
-    app = EditTaskWindow()
-    app.mainloop()

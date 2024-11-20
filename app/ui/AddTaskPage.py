@@ -184,7 +184,3 @@ class AddTaskWindow(tk.Tk):
             if len(date_str) in [2, 5] and not date_str.endswith('-'):
                 self.date_var.set(date_str + '-')
 
-if __name__ == "__main__":
-    app = TaskWindow()
-    app.eval('tk::PlaceWindow . center')
-    app.mainloop()

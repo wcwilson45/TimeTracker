@@ -161,6 +161,3 @@ class CompletedTasksWindow(tk.Tk):
         tk.Label(frame, text=value_text, font=("Arial", 10), bg='white').pack(anchor=tk.W)
 
 
-if __name__ == "__main__":
-    app = CompletedTasksWindow()
-    app.mainloop()

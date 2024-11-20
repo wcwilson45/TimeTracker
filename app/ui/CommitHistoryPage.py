@@ -32,6 +32,5 @@ def create_commit_history_page():
         ttk.Label(root, text="→", font=("Arial", 10)).grid(row=2 + i * 2, column=1)
         ttk.Entry(root).grid(row=2 + i * 2, column=2, padx=10, pady=5)
 
-    root.mainloop()
 
-create_commit_history_page()
+

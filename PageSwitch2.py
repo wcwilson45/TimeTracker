@@ -237,7 +237,4 @@ class App:
         self.timer_running = False
 
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = App(root)
-    root.mainloop()
+
