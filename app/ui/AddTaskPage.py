@@ -5,7 +5,7 @@ import tkinter.font as tkfont
 import re
 from datetime import datetime
 
-class TaskWindow(tk.Tk):
+class AddTaskWindow(tk.Tk):
     def __init__(self):
         super().__init__()
 

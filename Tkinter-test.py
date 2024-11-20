@@ -2,7 +2,10 @@
 # which are needed 
 from tkinter import *
 from tkinter.ttk import *
-from time import strftime 
+from time import strftime
+from tkinter import *
+from tkinter.ttk import *
+from time import strftime
 
 # creating tkinter window 
 root = Tk() 
