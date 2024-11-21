@@ -8,7 +8,7 @@ from ui import (
     SmallOverlayWindow,
     CompletedTasksWindow,
     EditTaskWindow,
-    create_commit_history_page,
+    CommitHistoryWindow,
     AddTaskWindow
 )
 
@@ -17,7 +17,8 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Task Manager")
-        self.root.geometry("540x1080")
+        self.root.geometry("650x550")
+        root.resizable(width = 0, height = 0)
 
         # Background color hex code
         self.root.configure(bg="#add8e6")
@@ -77,12 +78,16 @@ class App:
         if page_name == "Full":
             self.current_page = self.full_page
             self.page_title.config(text="Full", background="#add8e6")
+            self.root.geometry("650x550")
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background="#add8e6")
+            self.root.geometry("700x300")
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background="#add8e6")
+            self.root.geometry("300x175")
+
 
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
 
@@ -107,6 +112,7 @@ class App:
                                     command=self.open_AddTaskWindow)
         add_task_button.grid(row=11, column=0, sticky=W, pady=10)
 
+
         self.task_list = ttk.Treeview(self.full_page, columns=("Task", "Time", "Complexity"), show="headings")
         self.task_list.heading("Task", text="Task")
         self.task_list.heading("Time", text="Time")
@@ -116,9 +122,7 @@ class App:
     def on_item_click(self, event):
         selected_item = self.completed_tree.selection()[0]
 
-        item_values = self.completed_tree.item(selected_item, "values")
-
-        print(f"Item Clicked")
+        self.open_AddCompleteTaskWindow()
 
     def setup_completedtasks_page(self):
         self.completedtasks_page.configure(bg = '#add8e6')
@@ -143,14 +147,8 @@ class App:
                                                                                                            column=0,
                                                                                                            sticky=W,
                                                                                                            pady=2)
-        Label(self.smalloverlay_page, text="Description:", font=self.Body_tuple, background="#add8e6").grid(row=3,
-                                                                                                            column=0,
-                                                                                                            sticky=W,
-                                                                                                            pady=2)
-        Label(self.smalloverlay_page, text="Time:", font=self.Title_tuple, background="#add8e6").grid(row=1, column=0,
+        Label(self.smalloverlay_page, text="Time:", font=self.Body_tuple, background="#add8e6").grid(row=1, column=0,
                                                                                                       sticky=W, pady=2)
-        Label(self.smalloverlay_page, text="Tags", font=self.Body_tuple, background="#add8e6").grid(row=3, column=8,
-                                                                                                    sticky=W, pady=2)
 
         # Timer section
         self.time_box = Text(self.smalloverlay_page, height=1, width=10, font=self.Body_tuple)
@@ -163,26 +161,16 @@ class App:
 
         stop_button = tk.Button(self.smalloverlay_page, text="Stop", background="#FF7276", command=self.stop_timer)
         stop_button.grid(row=2, column=1, sticky=W, pady=5)
-        # Text box to show the description
-        self.description_box = Text(self.smalloverlay_page, height=5, width=35, font=self.Description_tuple,
-                                    background="#d3d3d3")
-        self.description_box.grid(row=4, column=0, columnspan=2, pady=5, padx=5, sticky=W)
 
-        # Example pre-filled description (can be replaced dynamically)
-        self.description_box.insert("1.0", "This is where the task description will appear.")
-        self.description_box.config(state=DISABLED)  # Make it read-only
-
-        self.tag_box = Text(self.smalloverlay_page, height=5, width=15, font=self.Description_tuple,
-                            background="#d3d3d3")
-        self.tag_box.grid(row=4, column=8, columnspan=1, pady=5, padx=5, sticky=W)
-
-        self.tag_box.insert("1.0", "This is where the task tags will appear.")
-        self.tag_box.config(state=DISABLED)  # Make it read-only
 
         self.reset_timer_values()
 
     def open_AddTaskWindow(self):
         self.task_window = AddTaskWindow()
+        self.task_window.grab_set()
+
+    def open_AddCompleteTaskWindow(self):
+        self.task_window = CompletedTasksWindow()
         self.task_window.grab_set()
 
     def reset_timer_values(self):
