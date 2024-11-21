@@ -91,6 +91,7 @@ class CompletedTasksWindow(tk.Tk):
         self.complete_btn = tk.Button(
             self.button_frame,
             text="Complete",
+            command=self.destroy,
             bg='#007bff',  # Background color
             fg='white',  # Text color
             relief='flat',  # Makes it look more modern
@@ -161,3 +162,7 @@ class CompletedTasksWindow(tk.Tk):
         tk.Label(frame, text=value_text, font=("Arial", 10), bg='white').pack(anchor=tk.W)
 
 
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = CompletedTasksWindow()
+    root.mainloop()
