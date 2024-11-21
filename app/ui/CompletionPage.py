@@ -4,6 +4,7 @@ from tkinter import filedialog
 from tkinter import ttk
 import tkinter as tk
 from datetime import datetime
+from .CommitHistoryPage import CommitHistoryWindow
 
 
 class CompletedTasksWindow(tk.Tk):
@@ -74,12 +75,11 @@ class CompletedTasksWindow(tk.Tk):
         # Buttons frame
         self.button_frame = tk.Frame(self.main_container, bg='white', bd=0)
         self.button_frame.pack(side=tk.BOTTOM, pady=1, anchor='e')
-
         # Cancel and Complete buttons
         self.cancel_btn = tk.Button(
             self.button_frame,
             text="Cancel",
-            command=self.destroy,
+            command=self.open_commit_history_page,
             bg='#808080',  # Background color
             fg='white',  # Text color
             relief='flat',  # Makes it look more modern
@@ -100,6 +100,7 @@ class CompletedTasksWindow(tk.Tk):
         )
 
         self.complete_btn.pack(side=tk.LEFT)
+
 
     def create_collapsible_section(self, parent, title, placeholder, width=None):
         frame = tk.Frame(parent, bg='white', bd=0)
@@ -160,6 +161,10 @@ class CompletedTasksWindow(tk.Tk):
 
         tk.Label(frame, text=label_text, font=("Arial", 10), bg='white').pack(anchor=tk.W)
         tk.Label(frame, text=value_text, font=("Arial", 10), bg='white').pack(anchor=tk.W)
+    
+    def open_commit_history_page(self):
+        self.task_window = CommitHistoryWindow()
+        self.task_window.grab_set()
 
 
 if __name__ == "__main__":
