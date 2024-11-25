@@ -19,7 +19,7 @@ class CompletedTasksWindow(tk.Tk):
         self.style = ttk.Style()
         self.style.theme_use('default')
         self.style.configure("Info.TLabel", font=("Arial", 10), background='#5DADE2')
-        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#5DADE2', padding=2)
+        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#D3D3D3', padding=2, foreground='white')
 
         # Main container - using tk.Frame instead of ttk.Frame
         self.main_container = tk.Frame(self, bg='#5DADE2', bd=0)
@@ -148,10 +148,14 @@ class CompletedTasksWindow(tk.Tk):
         toggle_btn.pack(side=tk.RIGHT, padx=5)
 
     def create_tag(self, text):
-        tag_label = ttk.Label(
+        tag_label = tk.Label(
             self.tags_frame,
             text=text,
-            style="Tag.TLabel"
+            font=("Arial", 8),
+            bg='#5DADE2',
+            fg='black',
+            padx=5,
+            pady=2
         )
         tag_label.pack(side=tk.LEFT, padx=(0, 5))
 
@@ -169,5 +173,5 @@ class CompletedTasksWindow(tk.Tk):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = CompletedTasksWindow()
+    app = CompletedTasksWindow("bullshit", "never", "a lot")
     root.mainloop()
