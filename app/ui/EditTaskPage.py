@@ -14,7 +14,7 @@ class EditTaskWindow(tk.Tk):
         self.style.theme_use('alt')
         self.style.configure("Custom.TCombobox", fieldbackground="light grey", background='#5DADE2', arrowcolor='black'
                              , foreground='black',  font=("SF Pro Display", 12))
-        self.style.configure("Custom.TLabel", background='#5DADE2', foreground='black', font=("SF Pro Display", 12, 'bold'))
+        self.style.configure("Custom.TLabel",fieldbackground='#d3d3d3', background="#5DADE2", foreground='black', font=("SF Pro Display", 12, 'bold'))
 
         # Task Name
         ttk.Label(self, text="Task Name:", style="Custom.TLabel", background='#5DADE2').grid(row=0, column=0, sticky="w", padx=20, pady=10)
