@@ -73,15 +73,15 @@ class CompletedTasksWindow(tk.Tk):
         self.create_info_field("Date Completed:", completed_date)
 
         # Buttons frame
-        self.button_frame = tk.Frame(self.main_container, bg='white', bd=0)
+        self.button_frame = tk.Frame(self.main_container, bg='#5DADE2', bd=0)
         self.button_frame.pack(side=tk.BOTTOM, pady=1, anchor='e')
         # Cancel and Complete buttons
         self.cancel_btn = tk.Button(
             self.button_frame,
             text="Cancel",
             command=self.open_commit_history_page,
-            bg='#808080',  # Background color
-            fg='white',  # Text color
+            bg='#F08080',  # Background color
+            fg='black',  # Text color
             relief='flat',  # Makes it look more modern
             padx=10,  # Horizontal padding
             pady=5  # Vertical padding
@@ -92,8 +92,8 @@ class CompletedTasksWindow(tk.Tk):
             self.button_frame,
             text="Complete",
             command=self.destroy,
-            bg='#007bff',  # Background color
-            fg='white',  # Text color
+            bg='#90EE90',  # Background color
+            fg='black',  # Text color
             relief='flat',  # Makes it look more modern
             padx=10,  # Horizontal padding
             pady=5  # Vertical padding
