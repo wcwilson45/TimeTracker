@@ -4,7 +4,7 @@ from tkinter import filedialog
 from tkinter import ttk
 import tkinter as tk
 from datetime import datetime
-from .CommitHistoryPage import CommitHistoryWindow
+#from .CommitHistoryPage import CommitHistoryWindow
 
 
 class CompletedTasksWindow(tk.Tk):
@@ -13,20 +13,20 @@ class CompletedTasksWindow(tk.Tk):
 
         self.geometry("540x320")
         self.title("Task Details")
-        self.configure(bg='white')
+        self.configure(bg="#5DADE2")
 
         # Configure styles
         self.style = ttk.Style()
         self.style.theme_use('default')
-        self.style.configure("Info.TLabel", font=("Arial", 10), background='white')
-        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#e8f0fe', padding=2)
+        self.style.configure("Info.TLabel", font=("Arial", 10), background='#5DADE2')
+        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#5DADE2', padding=2)
 
         # Main container - using tk.Frame instead of ttk.Frame
-        self.main_container = tk.Frame(self, bg='white', bd=0)
+        self.main_container = tk.Frame(self, bg='#5DADE2', bd=0)
         self.main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         # Top section with header and buttons - using tk.Frame
-        self.top_frame = tk.Frame(self.main_container, bg='white', bd=0)
+        self.top_frame = tk.Frame(self.main_container, bg='#5DADE2', bd=0)
         self.top_frame.pack(fill=tk.X, pady=(0, 10))
 
         # Header
@@ -34,17 +34,17 @@ class CompletedTasksWindow(tk.Tk):
             self.top_frame,
             text="Task Name",
             font=("Arial", 16, "bold"),
-            bg='white',
+            bg='#5DADE2',
             bd=0
         )
         self.header_label.pack(side=tk.LEFT)
 
         # Content area
-        self.content_frame = tk.Frame(self.main_container, bg='white', bd=0)
+        self.content_frame = tk.Frame(self.main_container, bg='#5DADE2', bd=0)
         self.content_frame.pack(fill=tk.BOTH, expand=True)
 
         # Left panel (70% width)
-        self.left_panel = tk.Frame(self.content_frame, bg='white', bd=0)
+        self.left_panel = tk.Frame(self.content_frame, bg='#5DADE2', bd=0)
         self.left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
 
         # Description section
@@ -54,13 +54,13 @@ class CompletedTasksWindow(tk.Tk):
         self.create_collapsible_section(self.left_panel, "Commit History:", "Enter commit history...", width=40)
 
         # Right panel (30% width)
-        self.right_panel = tk.Frame(self.content_frame, bg='white', bd=0)
+        self.right_panel = tk.Frame(self.content_frame, bg='#5DADE2', bd=0)
         self.right_panel.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Tags
-        self.tags_frame = tk.Frame(self.right_panel, bg='white', bd=0)
+        self.tags_frame = tk.Frame(self.right_panel, bg='#5DADE2', bd=0)
         self.tags_frame.pack(fill=tk.X, pady=(0, 10))
-        tk.Label(self.tags_frame, text="Tags:", font=("Arial", 10), bg='white').pack(anchor=tk.W)
+        tk.Label(self.tags_frame, text="Tags:", font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
 
         # Create tag labels
         self.create_tag("Blue")
@@ -107,18 +107,18 @@ class CompletedTasksWindow(tk.Tk):
         frame.pack(fill=tk.X, pady=(0, 10))
 
         # Create a frame for the header area (title + button)
-        header_frame = tk.Frame(frame, bg='#f0f0f0')
+        header_frame = tk.Frame(frame, bg='#D3D3D3')
         header_frame.pack(fill=tk.X, anchor=tk.W)
 
         # Label for section title inside header frame
-        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#f0f0f0').pack(side=tk.LEFT, padx=5, pady=5)
+        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#D3D3D3').pack(side=tk.LEFT, padx=5, pady=5)
 
         # Create outer frame to hold the text
-        outer_frame = tk.Frame(frame, bg='#f0f0f0')
+        outer_frame = tk.Frame(frame, bg='#D3D3D3')
         outer_frame.pack(fill=tk.X, anchor=tk.W)
 
         # Create text widget
-        text = tk.Text(outer_frame, height=4, wrap=tk.WORD, width=width, bg='#f0f0f0', borderwidth=0)
+        text = tk.Text(outer_frame, height=4, wrap=tk.WORD, width=width, bg='#D3D3D3', borderwidth=0)
         text.pack(padx=5, pady=(0, 5))
         text.insert("1.0", placeholder)
 
@@ -139,7 +139,7 @@ class CompletedTasksWindow(tk.Tk):
             font=("Arial", 12),
             width=2,
             relief='flat',
-            bg='#f0f0f0',
+            bg='#D3D3D3',
             bd=0,
             cursor="hand2"
         )
@@ -156,11 +156,11 @@ class CompletedTasksWindow(tk.Tk):
         tag_label.pack(side=tk.LEFT, padx=(0, 5))
 
     def create_info_field(self, label_text, value_text):
-        frame = tk.Frame(self.right_panel, bg='white', bd=0)
+        frame = tk.Frame(self.right_panel, bg='#5DADE2', bd=0)
         frame.pack(fill=tk.X, pady=(0, 5))
 
-        tk.Label(frame, text=label_text, font=("Arial", 10), bg='white').pack(anchor=tk.W)
-        tk.Label(frame, text=value_text, font=("Arial", 10), bg='white').pack(anchor=tk.W)
+        tk.Label(frame, text=label_text, font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
+        tk.Label(frame, text=value_text, font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
     
     def open_commit_history_page(self):
         self.task_window = CommitHistoryWindow()
