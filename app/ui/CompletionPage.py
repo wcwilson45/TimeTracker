@@ -8,7 +8,7 @@ from datetime import datetime
 
 
 class CompletedTasksWindow(tk.Tk):
-    def __init__(self):
+    def __init__(self,task_name, completed_date, time_taken):
         super().__init__()
 
         self.geometry("540x320")
@@ -32,7 +32,7 @@ class CompletedTasksWindow(tk.Tk):
         # Header
         self.header_label = tk.Label(
             self.top_frame,
-            text="Task Name",
+            text=task_name,
             font=("Arial", 16, "bold"),
             bg='#5DADE2',
             bd=0
@@ -68,9 +68,9 @@ class CompletedTasksWindow(tk.Tk):
         self.create_tag("Tech")
 
         # Time information
-        self.create_info_field("Time of Completion:", "15:32:49")
+        self.create_info_field("Time of Completion:", time_taken)
         self.create_info_field("Time Complexity:", "5")
-        self.create_info_field("Date Completed:", datetime.now().strftime("%m/%d/%y"))
+        self.create_info_field("Date Completed:", completed_date)
 
         # Buttons frame
         self.button_frame = tk.Frame(self.main_container, bg='white', bd=0)
