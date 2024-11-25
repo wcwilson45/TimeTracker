@@ -96,13 +96,13 @@ class App:
         Label(self.full_page, text="Task Name:", font=self.Title_tuple, background="#add8e6").grid(row=0, column=0,
                                                                                                    sticky=W, pady=2)
         Label(self.full_page, text="Time: ", font=self.Body_tuple, background="#add8e6").grid(row=1, column=0, sticky=W,
-                                                                                              pady=2)
-        Label(self.full_page, text="Description:", font=self.Body_tuple, background="#add8e6").grid(row=2, column=0,
+                                                                                              pady=2)                                                                                     
+        Label(self.full_page, text="Description:", font=self.Body_tuple, background="#add8e6").grid(row=4, column=0,
                                                                                                     sticky=W, pady=2)
 
         self.description_box = Text(self.full_page, height=5, width=50, font=self.Description_tuple,
                                     background="#d3d3d3")
-        self.description_box.grid(row=3, column=0, rowspan=2, columnspan=2, pady=5, padx=5, sticky=W)
+        self.description_box.grid(row=5, column=0, rowspan=2, columnspan=2, pady=5, padx=5, sticky=W)
 
         # Example pre-filled description (can be replaced dynamically)
         self.description_box.insert("1.0", "This is where the task description will appear.")
@@ -117,7 +117,23 @@ class App:
         self.task_list.heading("Task", text="Task")
         self.task_list.heading("Time", text="Time")
         self.task_list.heading("Complexity", text="Complexity")
-        self.task_list.grid(row=6, column=0)
+        self.task_list.grid(row=8, column=0)
+        self.task_list.insert("","end", values =("Debug Code", "01:48:36", "7"))
+        self.task_list.insert("","end", values =("Create Report", "00:32:27", "2"))
+
+        self.time_box = Text(self.full_page, height=1, width=10, font=self.Body_tuple)
+        self.time_box.grid(row=1, column=0, padx=5, pady=5, sticky=E)
+        self.time_box.insert("1.0", "00:00:00")  # Initial timer text
+        self.time_box.config(state=DISABLED)  # Make it read-only
+
+        start_button = tk.Button(self.full_page, text="Start", background="#77DD77", command=self.start_timer)
+        start_button.grid(row=3, column=0, sticky=W, pady=5)
+
+        stop_button = tk.Button(self.full_page, text="Stop", background="#FF7276", command=self.stop_timer)
+        stop_button.grid(row=3, column=0, sticky=E, pady=5)
+
+
+        self.reset_timer_values()
 
     def on_item_click(self, event):
         selected_item = self.completed_tree.selection()[0]
@@ -133,8 +149,8 @@ class App:
         )
         self.completed_tree.bind("<<TreeviewSelect>>", self.on_item_click)
 
-        self.completed_tree.insert("", "end", values =("1", "1", "1"))
-        self.completed_tree.insert("","end", values =("2", "2", "2"))
+        self.completed_tree.insert("", "end", values =("Create Table", "12/4/24", "03:23:56"))
+        self.completed_tree.insert("","end", values =("Finalize Document", "12/6/24", "02:48:12"))
         self.completed_tree.heading("Task", text="Task")
         self.completed_tree.heading("Completed Date", text="Completed Date")
         self.completed_tree.heading("Time Taken", text="Time Taken")
