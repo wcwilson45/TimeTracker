@@ -3,8 +3,6 @@ from tkinter.ttk import *
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkfont
-import re
-from datetime import datetime
 
 class AddTaskWindow(tk.Tk):
     def __init__(self):
@@ -17,7 +15,7 @@ class AddTaskWindow(tk.Tk):
 
         # Create fonts
         self.fonts = {
-            'header': tkfont.Font(family="SF Pro Display", size=28, weight="bold"),
+            'header': tkfont.Font(family="SF Pro Display", size=24, weight="bold"),
             'subheader': tkfont.Font(family="SF Pro Display", size=8, weight="bold"),
             'body': tkfont.Font(family="SF Pro Text", size=10)
         }
@@ -117,25 +115,18 @@ class AddTaskWindow(tk.Tk):
         # Bind the type selection to update value options
         self.type_combo.bind('<<ComboboxSelected>>', self.update_values)
 
-        # Date Completed with format validation
+        # Date Completed without validation
         label = ttk.Label(right_frame, text="Start Date (MM-DD-YYYY):", font=self.fonts['subheader'], style='TLabel')
         label.pack(anchor='w')
 
-        # Date frame to hold entry and validation message
+        # Date frame to hold entry and potential validation message
         date_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
         date_frame.pack(fill='x', pady=(3, 6))
 
-        # Create StringVar for the date entry
+        # Date entry (text box)
         self.date_var = tk.StringVar()
-        self.date_var.trace('w', self.validate_date_format)
-
-        # Date entry
         self.date_entry = ttk.Entry(date_frame, style='Input.TEntry', textvariable=self.date_var)
         self.date_entry.pack(fill='x')
-
-        # Validation message label
-        self.validation_label = ttk.Label(date_frame, text="", font=self.fonts['body'], foreground='red', style='TLabel')
-        self.validation_label.pack(anchor='w')
 
     def update_values(self, event=None):
         selected_type = self.type_combo.get()
@@ -146,24 +137,6 @@ class AddTaskWindow(tk.Tk):
         else:
             self.value_combo['values'] = []
         self.value_combo.set("Select Value")
-
-    def validate_date_format(self, *args):
-        date_str = self.date_var.get()
-        if not date_str:
-            self.validation_label.config(text="")
-            return
-        if not re.match(r'^\d{0,2}-?\d{0,2}-?\d{0,4}$', date_str):
-            self.validation_label.config(text="Use format: MM-DD-YYYY")
-            return
-        if re.match(r'^\d{2}-\d{2}-\d{4}$', date_str):
-            try:
-                datetime.strptime(date_str, '%m-%d-%Y')
-                self.validation_label.config(text="")
-            except ValueError:
-                self.validation_label.config(text="Invalid date")
-        else:
-            if len(date_str) in [2, 5] and not date_str.endswith('-'):
-                self.date_var.set(date_str + '-')
 
     def cancel_action(self):
         # Implement the cancel action (e.g., close the window)
