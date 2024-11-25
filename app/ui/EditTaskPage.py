@@ -2,19 +2,19 @@ from tkinter import ttk
 import tkinter as tk
 
 
-class EditTaskWindow(tk.Tk):  # Inherit from tk.Tk to make it a standalone app
+class EditTaskWindow(tk.Tk):
     def __init__(self):
         super().__init__()
 
         self.geometry("620x400")
         self.title("Edit Task")
-        self.configure(bg='#f0f0f0')
+        self.configure(bg='#5DADE2')
 
         self.style = ttk.Style()
         self.style.theme_use('alt')
-        self.style.configure("Custom.TCombobox", fieldbackground="white", background="#f0f0f0", arrowcolor='black'
+        self.style.configure("Custom.TCombobox", fieldbackground="light grey", background="#5DADE2", arrowcolor='black'
                              , foreground='black',  font=("SF Pro Display", 12))
-        self.style.configure("Custom.TLabel", background='#f0f0f0', foreground='black', font=("SF Pro Display", 12, 'bold'))
+        self.style.configure("Custom.TLabel", background='#5DADE2', foreground='black', font=("SF Pro Display", 12, 'bold'))
 
         # Task Name
         ttk.Label(self, text="Task Name:", style="Custom.TLabel").grid(row=0, column=0, sticky="w", padx=20, pady=10)
@@ -41,9 +41,9 @@ class EditTaskWindow(tk.Tk):  # Inherit from tk.Tk to make it a standalone app
         tk.Entry(self, width=20, bg='white', font=("SF Pro Display", 12)).grid(row=5, column=1, pady=10, sticky="w")
 
         # Buttons at Bottom-Right
-        confirm_button = tk.Button(self, text="Confirm", width=15, bg='#90EE90', fg='black')
+        confirm_button = tk.Button(self, text="Confirm", width=15, bg='#90EE90', fg='black', relief='flat')
         confirm_button.grid(row=6, column=1, pady=20, sticky="w")
 
-        exit_button = tk.Button(self, text="Exit", width=15, bg='#F08080', fg='black', command=self.destroy)
+        exit_button = tk.Button(self, text="Exit", width=15, bg='#F08080', fg='black', relief='flat', command=self.destroy)
         exit_button.grid(row=6, column=1, pady=20, sticky="e")
 
