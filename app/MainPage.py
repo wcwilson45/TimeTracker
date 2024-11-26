@@ -3,6 +3,7 @@ from tkinter.ttk import *
 from tkinter import filedialog
 from tkinter import ttk, messagebox
 import tkinter as tk
+import tkinter.font as tkfont
 from datetime import datetime
 from ui import (
     SmallOverlayWindow,
@@ -16,17 +17,19 @@ from ui import (
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Task Tracker")
-        self.root.geometry("650x550")
+        self.root.title("Task Manager")
+        self.root.geometry("600x600")
         root.resizable(width = 0, height = 0)
 
         # Background color hex code
         self.root.configure(bg="#5DADE2")
 
         # Font Tuples for Use on pages
-        self.Title_tuple = ("SF Pro Display", 24, "bold")
-        self.Body_tuple = ("SF Pro Text", 12, "bold")
-        self.Description_tuple = ("SF Pro Text", 12)
+        self.fonts = {
+            "Title_Tuple": tkfont.Font(family ="SF Pro Display", size =24, weight ="bold"),
+            "Body_Tuple": tkfont.Font(family = "SF Pro Text", size = 12, weight = "bold"),
+            "Description_Tuple": tkfont.Font(family = "Sf Pro Text", size = 12)
+        }
 
         # Main Container
         self.main_container = tk.Frame(root, background="#5DADE2")
@@ -41,7 +44,7 @@ class App:
         self.menu_button.pack(side="left", padx=5)
 
         # Page Title Label
-        self.page_title = ttk.Label(self.menu_frame, text="Full", font=self.Body_tuple, background="#5DADE2")
+        self.page_title = ttk.Label(self.menu_frame, text="Full", font=self.fonts['Body_Tuple'], background="#5DADE2")
         self.page_title.pack(side="left", padx=10)
 
         self.time_box_full = None
@@ -81,7 +84,7 @@ class App:
         if page_name == "Full":
             self.current_page = self.full_page
             self.page_title.config(text="Full", background="#5DADE2")
-            self.root.geometry("650x550")
+            self.root.geometry("600x600")
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background="#5DADE2")
@@ -96,16 +99,16 @@ class App:
 
     def setup_smalloverlay_page(self):
         self.smalloverlay_page.configure(bg='#5DADE2')
-        Label(self.smalloverlay_page, text="Task Name:", font=self.Title_tuple, background="#5DADE2").grid(row=0,
+        Label(self.smalloverlay_page, text="Task Name:", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=0,
                                                                                                            column=0,
                                                                                                            sticky=W,
                                                                                                            pady=2)
-        Label(self.smalloverlay_page, text="Time:", font=self.Body_tuple, background="#5DADE2").grid(row=1, column=0,
+        Label(self.smalloverlay_page, text="Time:", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=1, column=0,
                                                                                                       sticky=W, pady=2)
 
         # Timer section
-        self.time_box_overlay = Text(self.smalloverlay_page, height=1, width=10, font=self.Body_tuple, background = "#d3d3d3")
-        self.time_box_overlay.grid(row=1, column=0, padx=5, pady=5, sticky=E)
+        self.time_box_overlay = Text(self.smalloverlay_page, height=1, width=10, font=self.fonts['Body_Tuple'], background = "#d3d3d3")
+        self.time_box_overlay.grid(row=1, column=0, padx=50, pady=5, sticky=E)
         self.time_box_overlay.insert("1.0", "00:00:00")  # Initial timer text
         self.time_box_overlay.config(state=DISABLED)  # Make it read-only
         
@@ -138,19 +141,16 @@ class App:
 
     def setup_full_page(self):
         self.full_page.configure(bg='#5DADE2')
-        style = ttk.Style(root)
-        style.theme_use("clam")
-        style.configure("Treewview", background = "#d3d3d3", fieldbackground = "#d3d3d3")
-        Label(self.full_page, text="Task Name:", font=self.Body_tuple, background="#5DADE2").grid(row=0, column=0,
+        Label(self.full_page, text="Task Name:", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=0, column=0,
                                                                                                    sticky=W, pady=2)
-        Label(self.full_page, text="Time: ", font=self.Body_tuple, background="#5DADE2").grid(row=1, column=0, sticky=W,
+        Label(self.full_page, text="Time: ", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=1, column=0, sticky=W,
                                                                                               pady=2)                                                                                     
-        Label(self.full_page, text="Description:", font=self.Body_tuple, background="#5DADE2").grid(row=4, column=0,
+        Label(self.full_page, text="Description:", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=4, column=0,
                                                                                                     sticky=W, pady=2)
 
-        self.description_box = Text(self.full_page, height=5, width=60, font=self.Description_tuple,
+        self.description_box = Text(self.full_page, height=5, width=44, font=self.fonts['Description_Tuple'],
                                     background="#d3d3d3")
-        self.description_box.grid(row=6, column=0, rowspan=2, columnspan=2, pady=5, padx=0, sticky=W)
+        self.description_box.grid(row=6, column=0, pady = 5,sticky=W)
 
         # Example pre-filled description (can be replaced dynamically)
         self.description_box.insert("1.0", "This is where the task description will appear.")
@@ -170,20 +170,60 @@ class App:
         self.full_page_stop_button = tk.Button(self.full_page, text="Stop",relief = "flat", background="#FF7276", command=self.stop_timer)
         self.full_page_stop_button.grid(row=3, column=0, sticky=tk.W, padx=45, pady=5)
 
-
-
-        self.task_list = ttk.Treeview(self.full_page, columns=("Task", "Time", "Complexity"), show="headings")
+        # Create Treeview with headings
+        self.task_list = ttk.Treeview(
+            self.full_page, columns=("Task", "Time", "Complexity"), show="headings", style="Treeview"
+        )
+        self.task_list.bind("<<TreeviewSelect>>", self.on_item_click)
         self.task_list.heading("Task", text="Task")
         self.task_list.heading("Time", text="Time")
         self.task_list.heading("Complexity", text="Complexity")
-        self.task_list.grid(row=8, column=0)
-        self.task_list.insert("","end", values =("Debug Code", "01:48:36", "7"))
-        self.task_list.insert("","end", values =("Create Report", "00:32:27", "2"))
+        self.task_list.grid(row=8, column=0, sticky=W+E)
+        self.task_list.column('Task', width=200, anchor='w')  # Left-aligned
+        self.task_list.column('Time', width=100, anchor='center')  # Centered
+        self.task_list.column('Complexity', width=100, anchor='center')  # Right-aligned
 
-        self.time_box_full = Text(self.full_page, height=1, width=10, font=self.Body_tuple,background= "#d3d3d3")
-        self.time_box_full.grid(row=1, column=0, padx=50, pady=5, sticky=W)
-        self.time_box_full.insert("1.0", "00:00:00")  # Initial timer text
-        self.time_box_full.config(state=DISABLED)  # Make it read-only
+        # Configure Treeview style to show lines between columns
+        style = ttk.Style()
+        style.theme_use("clam")  # Use a theme that supports detailed styling (e.g., "clam")
+        style.configure(
+            "self.Treeview",
+            rowheight=25,  # Adjust row height for better visibility (optional)
+            bordercolor="black",
+            borderwidth=1,
+            relief = "flat"
+        )
+        style.configure(
+            "self.Treeview.Heading",
+            background="#d3d3d3",  # Header background color
+            bordercolor="black",  # Header border color
+            borderwidth = 1, #Border size
+            relief="flat",  # Header border style
+        )
+        style.map(
+            "Treeview.Heading",
+            background=[("active", "#c0c0c0")],  # Change background on hover
+        )
+
+        style.layout(
+            "Treeview",
+            [
+                (
+                    "Treeview.field",
+                    {"sticky": "nswe", "children": [("Treeview.padding", {"children": [("Treeview.treearea", {"sticky": "nswe"})]})]},
+                )
+            ],
+        )
+
+        # Example Tasks
+        self.task_list.insert("", "end", values=("Debug Code", "01:48:36", "7"))
+        self.task_list.insert("", "end", values=("Create Report", "00:32:27", "2"))
+
+        # Add a vertical scrollbar
+        scrollbar = ttk.Scrollbar(self.full_page, orient="vertical", command=self.task_list.yview)
+        self.task_list.configure(yscrollcommand=scrollbar.set)
+        scrollbar.grid(row=8, column=1, sticky="ns")
+
 
         self.reset_timer_values()
 
@@ -191,7 +231,7 @@ class App:
         self.completedtasks_page.configure(bg = '#5DADE2')
         style = ttk.Style(root)
         style.theme_use("clam")
-        style.configure("Treeview", background = "#d3d3d3", fieldbackground = "d3d3d3")
+        style.configure("Treeview", background = "#d3d3d3", fieldbackground = "d3d3d3", activebackground = "#d3d3d3")
 
         self.completed_tree = ttk.Treeview(
             self.completedtasks_page,
