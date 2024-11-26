@@ -6,14 +6,14 @@ import tkinter as tk
 from datetime import datetime
 
 
-# from .CommitHistoryPage import CommitHistoryWindow
+from .CommitHistoryPage import CommitHistoryWindow
 
 
 class CompletedTasksWindow(tk.Tk):
     def __init__(self, task_name, completed_date, time_taken):
         super().__init__()
 
-        self.geometry("600x350")
+        self.geometry("540x320")
         self.title("Task Details")
         self.configure(bg="#5DADE2")
 
@@ -158,7 +158,7 @@ class CompletedTasksWindow(tk.Tk):
             def on_commit_click(event):
                 selected_item = tree.selection()[0]
                 date = tree.item(selected_item)['values'][0]
-                print(f"Clicked on commit from {date}")
+                self.open_commit_history_page()
 
             tree.bind("<Double-1>", on_commit_click)
         else:
