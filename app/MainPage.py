@@ -141,91 +141,79 @@ class App:
 
     def setup_full_page(self):
         self.full_page.configure(bg='#5DADE2')
-        Label(self.full_page, text="Task Name:", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=0, column=0,
-                                                                                                   sticky=W, pady=2)
-        Label(self.full_page, text="Time: ", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=1, column=0, sticky=W,
-                                                                                              pady=2)                                                                                     
-        Label(self.full_page, text="Description:", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=4, column=0,
-                                                                                                    sticky=W, pady=2)
+        Label(self.full_page, text="Task Name:", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=0, column=0, sticky=W, pady=2)
+        Label(self.full_page, text="Time: ", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=1, column=0, sticky=W, pady=2)
+        Label(self.full_page, text="Description:", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=4, column=0, sticky=W, pady=2)
 
-        self.description_box = Text(self.full_page, height=5, width=44, font=self.fonts['Description_Tuple'],
-                                    background="#d3d3d3")
-        self.description_box.grid(row=6, column=0, pady = 5,sticky=W)
-
-        # Example pre-filled description (can be replaced dynamically)
+        self.description_box = Text(self.full_page, height=5, width=44, font=self.fonts['Description_Tuple'], background="#d3d3d3")
+        self.description_box.grid(row=6, column=0, pady=5, sticky=W)
         self.description_box.insert("1.0", "This is where the task description will appear.")
-        self.description_box.config(state=DISABLED)  # Make it read-only
+        self.description_box.config(state=DISABLED)
 
-        add_task_button = tk.Button(self.full_page, text="Add Task",relief = "flat", background="#d3d3d3",
-                                    command=self.open_AddTaskWindow)
-        add_task_button.grid(row=3, column=0, sticky=W,padx = 90, pady=5)
+        add_task_button = tk.Button(self.full_page, text="Add Task", relief="flat", background="#d3d3d3", command=self.open_AddTaskWindow)
+        add_task_button.grid(row=3, column=0, sticky=W, padx=90, pady=5)
 
-        edit_task_button = tk.Button(self.full_page, text = "Edit Task",relief = "flat", background = "#d3d3d3",
-                                      command = self.open_EditTaskWindow)
-        edit_task_button.grid(row = 3, column = 0, sticky = W, padx = 160, pady = 5)
+        edit_task_button = tk.Button(self.full_page, text="Edit Task", relief="flat", background="#d3d3d3", command=self.open_EditTaskWindow)
+        edit_task_button.grid(row=3, column=0, sticky=W, padx=160, pady=5)
 
-        self.full_page_start_button = tk.Button(self.full_page, text="Start",relief = "flat", background="#77DD77", command=self.start_timer)
+        self.full_page_start_button = tk.Button(self.full_page, text="Start", relief="flat", background="#77DD77", command=self.start_timer)
         self.full_page_start_button.grid(row=3, column=0, sticky=tk.W, pady=5)
 
-        self.full_page_stop_button = tk.Button(self.full_page, text="Stop",relief = "flat", background="#FF7276", command=self.stop_timer)
+        self.full_page_stop_button = tk.Button(self.full_page, text="Stop", relief="flat", background="#FF7276", command=self.stop_timer)
         self.full_page_stop_button.grid(row=3, column=0, sticky=tk.W, padx=45, pady=5)
 
         # Create Treeview with headings
-        self.task_list = ttk.Treeview(
-            self.full_page, columns=("Task", "Time", "Complexity"), show="headings", style="Treeview"
-        )
+        self.task_list = ttk.Treeview(self.full_page, columns=("Task", "Time", "Complexity"), show="headings", style="Treeview")
         self.task_list.bind("<<TreeviewSelect>>", self.on_item_click)
         self.task_list.heading("Task", text="Task")
         self.task_list.heading("Time", text="Time")
         self.task_list.heading("Complexity", text="Complexity")
         self.task_list.grid(row=8, column=0, sticky=W+E)
-        self.task_list.column('Task', width=200, anchor='w')  # Left-aligned
-        self.task_list.column('Time', width=100, anchor='center')  # Centered
-        self.task_list.column('Complexity', width=100, anchor='center')  # Right-aligned
+        self.task_list.column('Task', width=200, anchor='w')
+        self.task_list.column('Time', width=100, anchor='center')
+        self.task_list.column('Complexity', width=100, anchor='center')
 
         # Configure Treeview style to show lines between columns
         style = ttk.Style()
-        style.theme_use("clam")  # Use a theme that supports detailed styling (e.g., "clam")
-        style.configure(
-            "self.Treeview",
-            rowheight=25,  # Adjust row height for better visibility (optional)
-            bordercolor="black",
-            borderwidth=1,
-            relief = "flat"
-        )
-        style.configure(
-            "self.Treeview.Heading",
-            background="#d3d3d3",  # Header background color
-            bordercolor="black",  # Header border color
-            borderwidth = 1, #Border size
-            relief="flat",  # Header border style
-        )
-        style.map(
-            "Treeview.Heading",
-            background=[("active", "#c0c0c0")],  # Change background on hover
-        )
+        style.theme_use("clam")
+        style.configure("Treeview", rowheight=25, bordercolor="black", borderwidth=1, relief="flat")
+        style.configure("Treeview.Heading", background="#d3d3d3", bordercolor="black", borderwidth=1, relief="flat")
+        style.map("Treeview.Heading", background=[("active", "#c0c0c0")])
 
-        style.layout(
-            "Treeview",
-            [
-                (
-                    "Treeview.field",
-                    {"sticky": "nswe", "children": [("Treeview.padding", {"children": [("Treeview.treearea", {"sticky": "nswe"})]})]},
-                )
-            ],
-        )
+        # Configure alternating row colors
+        style.configure("Treeview.oddrow", background="#d3d3d3")  # Light gray for odd rows
+        style.configure("Treeview.evenrow", background="#A9A9A9")  # Slightly lighter grey for even rows
 
-        # Example Tasks
-        self.task_list.insert("", "end", values=("Debug Code", "01:48:36", "7"))
-        self.task_list.insert("", "end", values=("Create Report", "00:32:27", "2"))
+        self.task_list.tag_configure("oddrow", background="#d3d3d3")  # Apply light gray background
+        self.task_list.tag_configure("evenrow", background="#A9A9A9")  # Apply slightly lighter grey background
+
+        # Insert tasks with tags for alternating colors
+        self.insert_task("Debug Code", "01:48:36", "7")
+        self.insert_task("Create Report", "00:32:27", "2")
+        self.insert_task("Design Database Schema", "02:15:40", "8")
+        self.insert_task("Write Unit Tests", "01:00:00", "5")
+        self.insert_task("Optimize Query Performance", "00:45:12", "6")
+        self.insert_task("Refactor Code", "03:23:55", "9")
+        self.insert_task("Update Documentation", "00:50:45", "4")
+        self.insert_task("Review Pull Request", "00:20:30", "3")
+        self.insert_task("Research New Feature", "01:30:10", "6")
+        self.insert_task("Fix Bugs", "01:10:05", "7")
+        self.insert_task("Fix Bugs", "01:10:05", "7")
+        self.insert_task("Fix Bugs", "01:10:05", "7")
+        self.insert_task("Fix Bugs", "01:10:05", "7")
+        self.insert_task("Fix Bugs", "01:10:05", "7")
 
         # Add a vertical scrollbar
         scrollbar = ttk.Scrollbar(self.full_page, orient="vertical", command=self.task_list.yview)
         self.task_list.configure(yscrollcommand=scrollbar.set)
         scrollbar.grid(row=8, column=1, sticky="ns")
 
-
         self.reset_timer_values()
+
+    def insert_task(self, task_name, time, complexity):
+        # Determine whether to use odd or even row color
+        row_tag = "oddrow" if len(self.task_list.get_children()) % 2 == 0 else "evenrow"
+        self.task_list.insert("", "end", values=(task_name, time, complexity), tags=(row_tag,))
 
     def setup_completedtasks_page(self):
         self.completedtasks_page.configure(bg = '#5DADE2')
