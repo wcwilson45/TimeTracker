@@ -13,7 +13,7 @@ class CompletedTasksWindow(tk.Tk):
     def __init__(self, task_name, completed_date, time_taken):
         super().__init__()
 
-        self.geometry("540x320")
+        self.geometry("600x400")
         self.title("Task Details")
         self.configure(bg="#5DADE2")
 
@@ -140,27 +140,49 @@ class CompletedTasksWindow(tk.Tk):
         toggle_btn.configure(command=toggle_collapse)
 
         if title == "Commit History:":
-            style = ttk.Style(self)
+            style = ttk.Style()
             style.theme_use("clam")
-            style.configure("Treeview", background="#D3D3D3", fieldbackground="#D3D3D3")
+            style.configure("Treeview",
+                            background="#D3D3D3",
+                            fieldbackground="#D3D3D3",
+                            borderwidth=0,
+                            relief='flat',
+                            rowheight=25)
 
-            tree = ttk.Treeview(
-                outer_frame,
-                columns=("Date",),
-                show="tree",
-                height=4
-            )
-            tree.heading("Date", text="Date")
-            tree.insert("", "end", values=("12/4/24",))
-            tree.insert("", "end", values=("12/6/24",))
-            tree.pack(padx=5, pady=(0, 5), fill=tk.X)
+            # Configure alternating row colors
+            style.configure("Treeview.oddrow", background="#D3D3D3")
+            style.configure("Treeview.evenrow", background="#A9A9A9")
+
+            tree = ttk.Treeview(outer_frame, columns=("Date",), show="tree", height=4)
+            tree.pack(side='left', fill='both', expand=True)
+
+            # Add scrollbar
+            scrollbar = ttk.Scrollbar(outer_frame, orient="vertical", command=tree.yview)
+            scrollbar.pack(side='right', fill='y')
+            tree.configure(yscrollcommand=scrollbar.set)
+
+            # Insert sample data with alternating colors
+            dates = ["12/4/24", "12/6/24", "12/8/24", "12/10/24"]
+            for i, date in enumerate(dates):
+                tag = "oddrow" if i % 2 == 0 else "evenrow"
+                tree.insert("", "end", values=(date,), tags=(tag,))
+
+            # Configure row tags
+            tree.tag_configure("oddrow", background="#D3D3D3")
+            tree.tag_configure("evenrow", background="#A9A9A9")
+            tree.tag_configure('selected', background='#b3b3b3')
 
             def on_commit_click(event):
                 selected_item = tree.selection()[0]
+                for item in tree.get_children():
+                    tree.item(item, tags=(tree.item(item)['tags'][0],))
+                tree.item(selected_item, tags=('selected',))
                 date = tree.item(selected_item)['values'][0]
                 self.open_commit_history_page()
 
-            tree.bind("<Double-1>", on_commit_click)
+            tree.bind("<Button-1>", on_commit_click)
+
+
         else:
             # Original text widget for Description
             text = tk.Text(outer_frame, height=4, wrap=tk.WORD, width=width, bg='#D3D3D3', borderwidth=0)
