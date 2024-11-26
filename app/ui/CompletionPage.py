@@ -4,11 +4,13 @@ from tkinter import filedialog
 from tkinter import ttk
 import tkinter as tk
 from datetime import datetime
-#from .CommitHistoryPage import CommitHistoryWindow
+
+
+# from .CommitHistoryPage import CommitHistoryWindow
 
 
 class CompletedTasksWindow(tk.Tk):
-    def __init__(self,task_name, completed_date, time_taken):
+    def __init__(self, task_name, completed_date, time_taken):
         super().__init__()
 
         self.geometry("540x320")
@@ -101,41 +103,22 @@ class CompletedTasksWindow(tk.Tk):
 
         self.complete_btn.pack(side=tk.LEFT)
 
-
     def create_collapsible_section(self, parent, title, placeholder, width=None):
-        frame = tk.Frame(parent, bg='white', bd=0)
+        frame = tk.Frame(parent, bg='#D3D3D3', bd=0)
         frame.pack(fill=tk.X, pady=(0, 10))
 
-        # Create a frame for the header area (title + button)
         header_frame = tk.Frame(frame, bg='#D3D3D3')
         header_frame.pack(fill=tk.X, anchor=tk.W)
 
-        # Label for section title inside header frame
         tk.Label(header_frame, text=title, font=("Arial", 10), bg='#D3D3D3').pack(side=tk.LEFT, padx=5, pady=5)
 
-        # Create outer frame to hold the text
         outer_frame = tk.Frame(frame, bg='#D3D3D3')
         outer_frame.pack(fill=tk.X, anchor=tk.W)
-
-        # Create text widget
-        text = tk.Text(outer_frame, height=4, wrap=tk.WORD, width=width, bg='#D3D3D3', borderwidth=0)
-        text.pack(padx=5, pady=(0, 5))
-        text.insert("1.0", placeholder)
-
-        # Function to toggle visibility
-        def toggle_collapse():
-            if outer_frame.winfo_viewable():
-                outer_frame.pack_forget()
-                toggle_btn.configure(text="⊕")  # Change to plus sign when collapsed
-            else:
-                outer_frame.pack(fill=tk.X, anchor=tk.W)
-                toggle_btn.configure(text="⊖")  # Change to minus sign when expanded
 
         # Create toggle button with larger font
         toggle_btn = tk.Button(
             header_frame,
             text="⊖",
-            command=toggle_collapse,
             font=("Arial", 12),
             width=2,
             relief='flat',
@@ -143,9 +126,46 @@ class CompletedTasksWindow(tk.Tk):
             bd=0,
             cursor="hand2"
         )
-
-        # Place button in top-right corner of header_frame
         toggle_btn.pack(side=tk.RIGHT, padx=5)
+
+        # Function to toggle visibility
+        def toggle_collapse():
+            if outer_frame.winfo_viewable():
+                outer_frame.pack_forget()
+                toggle_btn.configure(text="⊕")
+            else:
+                outer_frame.pack(fill=tk.X, anchor=tk.W)
+                toggle_btn.configure(text="⊖")
+
+        toggle_btn.configure(command=toggle_collapse)
+
+        if title == "Commit History:":
+            style = ttk.Style(self)
+            style.theme_use("clam")
+            style.configure("Treeview", background="#D3D3D3", fieldbackground="#D3D3D3")
+
+            tree = ttk.Treeview(
+                outer_frame,
+                columns=("Date",),
+                show="tree",
+                height=4
+            )
+            tree.heading("Date", text="Date")
+            tree.insert("", "end", values=("12/4/24",))
+            tree.insert("", "end", values=("12/6/24",))
+            tree.pack(padx=5, pady=(0, 5), fill=tk.X)
+
+            def on_commit_click(event):
+                selected_item = tree.selection()[0]
+                date = tree.item(selected_item)['values'][0]
+                print(f"Clicked on commit from {date}")
+
+            tree.bind("<Double-1>", on_commit_click)
+        else:
+            # Original text widget for Description
+            text = tk.Text(outer_frame, height=4, wrap=tk.WORD, width=width, bg='#D3D3D3', borderwidth=0)
+            text.pack(padx=5, pady=(0, 5))
+            text.insert("1.0", placeholder)
 
     def create_tag(self, text):
         tag_label = tk.Label(
@@ -165,7 +185,7 @@ class CompletedTasksWindow(tk.Tk):
 
         tk.Label(frame, text=label_text, font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
         tk.Label(frame, text=value_text, font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
-    
+
     def open_commit_history_page(self):
         self.task_window = CommitHistoryWindow()
         self.task_window.grab_set()
