@@ -13,7 +13,7 @@ class CompletedTasksWindow(tk.Tk):
     def __init__(self, task_name, completed_date, time_taken):
         super().__init__()
 
-        self.geometry("540x320")
+        self.geometry("600x350")
         self.title("Task Details")
         self.configure(bg="#5DADE2")
 
