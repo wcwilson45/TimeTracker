@@ -13,18 +13,18 @@ class CommitHistoryWindow(tk.Tk):
 
         # Create a style for labels with light gray background
         style = ttk.Style(self)
-        style.configure("Custom.TLabel", background="#D3D3D3", font=("SF Pro", 10))  # Light gray color
+        style.configure("Custom.TLabel",background="#5DADE2", font=("SF Pro", 10))  # Light gray color
 
         # Title Label
-        self.title_label = ttk.Label(self, text="Commit History Page",background="#D3D3D3", font=("SF Pro", 14, "bold"))
+        self.title_label = ttk.Label(self, text="Commit History Page", background="#5DADE2", font=("SF Pro", 14, ))
         self.title_label.grid(row=0, column=0, columnspan=3, pady=10, sticky="n")
 
         # Header Section
-        self.changelog_label = ttk.Label(self, text="Changelog",background="#D3D3D3", font=("SF Pro", 12))
+        self.changelog_label = ttk.Label(self, text="Changelog",background="#5DADE2", font=("SF Pro", 12))
         self.changelog_label.grid(row=1, column=0, padx=10, sticky="w")
 
         # Date and Time Label
-        self.date_time_label = ttk.Label(self, text="December 1, 2024    3:48:52",background="#D3D3D3", font=("SF Pro", 12))
+        self.date_time_label = ttk.Label(self, text="December 1, 2024    3:48:52", background="#5DADE2", font=("SF Pro", 12))
         self.date_time_label.grid(row=1, column=1, columnspan=2, sticky="e", padx=10)
 
         # Back Button
@@ -49,4 +49,3 @@ class CommitHistoryWindow(tk.Tk):
 if __name__ == "__main__":
     app = CommitHistoryWindow()
     app.mainloop()
-
