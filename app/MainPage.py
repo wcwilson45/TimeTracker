@@ -16,7 +16,7 @@ from ui import (
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Task Manager")
+        self.root.title("Task Tracker")
         self.root.geometry("650x550")
         root.resizable(width = 0, height = 0)
 
