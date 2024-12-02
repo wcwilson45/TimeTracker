@@ -11,7 +11,7 @@ from ui import (
     EditTaskWindow,
     CommitHistoryWindow,
     AddTaskWindow,
-    CurrentTaskWindow
+    #CurrentTaskWindow
 )
 
 
