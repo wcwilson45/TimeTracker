@@ -5,7 +5,6 @@ from tkinter import ttk
 import tkinter as tk
 from datetime import datetime
 
-
 from .CommitHistoryPage import CommitHistoryWindow
 
 
@@ -77,16 +76,17 @@ class CompletedTasksWindow(tk.Tk):
         # Buttons frame
         self.button_frame = tk.Frame(self.main_container, bg='#5DADE2', bd=0)
         self.button_frame.pack(side=tk.BOTTOM, pady=1, anchor='e')
+
         # Cancel and Complete buttons
         self.cancel_btn = tk.Button(
             self.button_frame,
             text="Cancel",
             command=self.open_commit_history_page,
-            bg='#F08080',  # Background color
-            fg='black',  # Text color
-            relief='flat',  # Makes it look more modern
-            padx=10,  # Horizontal padding
-            pady=5  # Vertical padding
+            bg='#F08080',
+            fg='black',
+            relief='flat',
+            padx=10,
+            pady=5
         )
         self.cancel_btn.pack(side=tk.LEFT, padx=1)
 
@@ -94,13 +94,12 @@ class CompletedTasksWindow(tk.Tk):
             self.button_frame,
             text="Complete",
             command=self.destroy,
-            bg='#90EE90',  # Background color
-            fg='black',  # Text color
-            relief='flat',  # Makes it look more modern
-            padx=10,  # Horizontal padding
-            pady=5  # Vertical padding
+            bg='#90EE90',
+            fg='black',
+            relief='flat',
+            padx=10,
+            pady=5
         )
-
         self.complete_btn.pack(side=tk.LEFT)
 
     def create_collapsible_section(self, parent, title, placeholder, width=None):
@@ -112,32 +111,9 @@ class CompletedTasksWindow(tk.Tk):
 
         tk.Label(header_frame, text=title, font=("Arial", 10), bg='#D3D3D3').pack(side=tk.LEFT, padx=5, pady=5)
 
-        outer_frame = tk.Frame(frame, bg='#D3D3D3')
-        outer_frame.pack(fill=tk.X, anchor=tk.W)
-
-        # Create toggle button with larger font
-        toggle_btn = tk.Button(
-            header_frame,
-            text="⊖",
-            font=("Arial", 12),
-            width=2,
-            relief='flat',
-            bg='#D3D3D3',
-            bd=0,
-            cursor="hand2"
-        )
-        toggle_btn.pack(side=tk.RIGHT, padx=5)
-
-        # Function to toggle visibility
-        def toggle_collapse():
-            if outer_frame.winfo_viewable():
-                outer_frame.pack_forget()
-                toggle_btn.configure(text="⊕")
-            else:
-                outer_frame.pack(fill=tk.X, anchor=tk.W)
-                toggle_btn.configure(text="⊖")
-
-        toggle_btn.configure(command=toggle_collapse)
+        # Create container frame for content and scrollbar
+        container_frame = tk.Frame(frame, bg='#D3D3D3')
+        container_frame.pack(fill=tk.X, anchor=tk.W, padx=5, pady=(0, 5))
 
         if title == "Commit History:":
             style = ttk.Style()
@@ -153,11 +129,16 @@ class CompletedTasksWindow(tk.Tk):
             style.configure("Treeview.oddrow", background="#D3D3D3")
             style.configure("Treeview.evenrow", background="#A9A9A9")
 
-            tree = ttk.Treeview(outer_frame, columns=("Date",), show="tree", height=4)
+            # Create frame for treeview and scrollbar
+            tree_frame = tk.Frame(container_frame, bg='#D3D3D3')
+            tree_frame.pack(fill=tk.BOTH, expand=True)
+
+            # Create treeview
+            tree = ttk.Treeview(tree_frame, columns=("Date",), show="tree", height=4)
             tree.pack(side='left', fill='both', expand=True)
 
             # Add scrollbar
-            scrollbar = ttk.Scrollbar(outer_frame, orient="vertical", command=tree.yview)
+            scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
             scrollbar.pack(side='right', fill='y')
             tree.configure(yscrollcommand=scrollbar.set)
 
@@ -182,12 +163,20 @@ class CompletedTasksWindow(tk.Tk):
 
             tree.bind("<Button-1>", on_commit_click)
 
-
         else:
-            # Original text widget for Description
-            text = tk.Text(outer_frame, height=4, wrap=tk.WORD, width=width, bg='#D3D3D3', borderwidth=0)
-            text.pack(padx=5, pady=(0, 5))
+            # Create frame for text widget and scrollbar
+            text_frame = tk.Frame(container_frame, bg='#D3D3D3')
+            text_frame.pack(fill=tk.BOTH, expand=True)
+
+            # Create text widget
+            text = tk.Text(text_frame, height=4, wrap=tk.WORD, width=width, bg='#D3D3D3', borderwidth=0)
+            text.pack(side='left', fill='both', expand=True)
             text.insert("1.0", placeholder)
+
+            # Add scrollbar
+            scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=text.yview)
+            scrollbar.pack(side='right', fill='y')
+            text.configure(yscrollcommand=scrollbar.set)
 
     def create_tag(self, text):
         tag_label = tk.Label(
@@ -215,5 +204,5 @@ class CompletedTasksWindow(tk.Tk):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = CompletedTasksWindow("bullshit", "never", "a lot")
+    app = CompletedTasksWindow("Sample Task", "12/4/24", "03:23:56")
     root.mainloop()
