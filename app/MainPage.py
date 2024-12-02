@@ -156,7 +156,7 @@ class App:
 
         description_scrollbar = tk.Scrollbar(self.full_page, orient="vertical",command=self.description_box.yview)
         self.description_box.configure(yscrollcommand= description_scrollbar.set)
-        description_scrollbar.grid(row=6, column=1, sticky="ns")
+        description_scrollbar.grid(row=6, column=1,pady = 5, sticky=N + S)
 
         # Example pre-filled description (can be replaced dynamically)
         self.description_box.insert("1.0", "This is where the task description will appear.")
