@@ -49,10 +49,10 @@ class CompletedTasksWindow(tk.Tk):
         self.left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
 
         # Description section
-        self.create_collapsible_section(self.left_panel, "Description:", "Enter description here...", width=40)
+        self.create_collapsible_section(self.left_panel, "Description:", "Enter description here...", width=150)
 
         # Commit History section
-        self.create_collapsible_section(self.left_panel, "Commit History:", "Enter commit history...", width=40)
+        self.create_collapsible_section(self.left_panel, "Commit History:", "Enter commit history...", width=150)
 
         # Right panel (30% width)
         self.right_panel = tk.Frame(self.content_frame, bg='#5DADE2', bd=0)
@@ -102,14 +102,14 @@ class CompletedTasksWindow(tk.Tk):
         )
         self.complete_btn.pack(side=tk.LEFT)
 
-    def create_collapsible_section(self, parent, title, placeholder, width=None):
-        frame = tk.Frame(parent, bg='#D3D3D3', bd=0)
+    def create_collapsible_section(self, parent, title, placeholder, width=1):
+        frame = tk.Frame(parent, bg='#5DADE2', bd=0)
         frame.pack(fill=tk.X, pady=(0, 10))
 
-        header_frame = tk.Frame(frame, bg='#D3D3D3')
+        header_frame = tk.Frame(frame, bg='#5DADE2')
         header_frame.pack(fill=tk.X, anchor=tk.W)
 
-        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#D3D3D3').pack(side=tk.LEFT, padx=5, pady=5)
+        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#5DADE2').pack(side=tk.LEFT, padx=5, pady=5)
 
         # Create container frame for content and scrollbar
         container_frame = tk.Frame(frame, bg='#D3D3D3')
@@ -169,7 +169,7 @@ class CompletedTasksWindow(tk.Tk):
             text_frame.pack(fill=tk.BOTH, expand=True)
 
             # Create text widget
-            text = tk.Text(text_frame, height=4, wrap=tk.WORD, width=width, bg='#D3D3D3', borderwidth=0)
+            text = tk.Text(text_frame, height=10, wrap=tk.WORD, width=1, bg='#D3D3D3', borderwidth=0)
             text.pack(side='left', fill='both', expand=True)
             text.insert("1.0", placeholder)
 
