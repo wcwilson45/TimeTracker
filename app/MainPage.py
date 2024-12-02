@@ -177,7 +177,7 @@ class App:
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("Treeview", rowheight=25, bordercolor="black", borderwidth=1, relief="flat")
-        style.configure("Treeview.Heading", background="#d3d3d3", bordercolor="black", borderwidth=1, relief="flat")
+        style.configure("Treeview.Heading", background="#A9A9A9", bordercolor="black", borderwidth=1, relief="flat")
         style.map("Treeview.Heading", background=[("active", "#c0c0c0")])
 
         # Configure alternating row colors

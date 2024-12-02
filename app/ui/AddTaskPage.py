@@ -65,8 +65,30 @@ class AddTaskWindow(tk.Tk):
         # Description
         label = ttk.Label(left_frame, text="Description:", font=self.fonts['subheader'], style='TLabel')
         label.pack(anchor='w')
-        desc_text = tk.Text(left_frame, height=7, width=30, bg='#d3d3d3', relief="solid", bd=1, font=("SF Pro Text", 10))
-        desc_text.pack(fill='x', pady=(3, 6))
+
+        # Frame to hold the description text and scrollbar
+        desc_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
+        desc_frame.pack(fill='x', pady=(3, 6))
+
+        # Scrollbar for the description
+        desc_scrollbar = ttk.Scrollbar(desc_frame, orient='vertical')
+        desc_scrollbar.pack(side='right', fill='y')
+
+        # Text widget for description
+        desc_text = tk.Text(
+            desc_frame, 
+            height=7, 
+            width=30, 
+            bg='#d3d3d3', 
+            relief="solid", 
+            bd=1, 
+            font=("SF Pro Text", 10),
+            yscrollcommand=desc_scrollbar.set
+        )
+        desc_text.pack(side='left', fill='both', expand=True)
+
+        # Link scrollbar to text widget
+        desc_scrollbar.config(command=desc_text.yview)
 
         # Button frame below the description
         button_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
