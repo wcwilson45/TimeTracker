@@ -64,8 +64,22 @@ class EditTaskWindow(tk.Tk):
         # Description
         label = ttk.Label(left_frame, text="Edit Description:", font=self.fonts['subheader'], style='TLabel')
         label.pack(anchor='w')
-        desc_text = tk.Text(left_frame, height=7, width=30, bg='#d3d3d3', relief="solid", bd=1, font=("SF Pro Text", 10))
-        desc_text.pack(fill='x', pady=(3, 6))
+
+        # Create a frame for the text and scrollbar
+        desc_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
+        desc_frame.pack(fill='x', pady=(3, 6))
+
+        # Text widget with scrollbar
+        desc_text = tk.Text(desc_frame, height=7, width=30, bg='#d3d3d3', relief="solid", bd=1,
+                            font=("SF Pro Text", 10))
+        desc_text.pack(side='left', fill='both', expand=True)
+
+        # Add a vertical scrollbar
+        scrollbar = ttk.Scrollbar(desc_frame, orient="vertical", command=desc_text.yview)
+        scrollbar.pack(side='right', fill='y')
+
+        # Link the scrollbar with the text widget
+        desc_text.configure(yscrollcommand=scrollbar.set)
 
         # Time Complexity with nested dropdowns (Moved below Description)
         label = ttk.Label(left_frame, text="Edit Time Complexity:", font=self.fonts['subheader'], style='TLabel')
