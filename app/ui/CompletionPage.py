@@ -3,6 +3,7 @@ from tkinter.ttk import *
 from tkinter import filedialog
 from tkinter import ttk
 import tkinter as tk
+import tkinter.font as tkfont
 from datetime import datetime
 
 from .CommitHistoryPage import CommitHistoryWindow
@@ -12,23 +13,30 @@ class CompletedTasksWindow(tk.Tk):
     def __init__(self, task_name, completed_date, time_taken):
         super().__init__()
 
-        self.geometry("600x400")
+        # Font Tuples for Use on pages
+        self.fonts = {
+            "Title_Tuple": tkfont.Font(family="SF Pro Display", size=24, weight="bold"),
+            "Body_Tuple": tkfont.Font(family="SF Pro Display", size=12, weight="bold"),
+            "Description_Tuple": tkfont.Font(family="Sf Pro Text", size=12)
+        }
+
+        self.geometry("600x600")  # Reduced height
         self.title("Task Details")
         self.configure(bg="#5DADE2")
 
         # Configure styles
         self.style = ttk.Style()
-        self.style.theme_use('alt')
+        self.style.theme_use('default')
         self.style.configure("Info.TLabel", font=("Arial", 10), background='#5DADE2')
         self.style.configure("Tag.TLabel", font=("Arial", 8), background='#D3D3D3', padding=2, foreground='white')
 
-        # Main container - using tk.Frame instead of ttk.Frame
+        # Main container with reduced padding
         self.main_container = tk.Frame(self, bg='#5DADE2', bd=0)
-        self.main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)  # Reduced pady
 
-        # Top section with header and buttons - using tk.Frame
+        # Top section with header and buttons with reduced padding
         self.top_frame = tk.Frame(self.main_container, bg='#5DADE2', bd=0)
-        self.top_frame.pack(fill=tk.X, pady=(0, 10))
+        self.top_frame.pack(fill=tk.X, pady=(0, 5))  # Reduced pady
 
         # Header
         self.header_label = tk.Label(
@@ -44,23 +52,23 @@ class CompletedTasksWindow(tk.Tk):
         self.content_frame = tk.Frame(self.main_container, bg='#5DADE2', bd=0)
         self.content_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Left panel (70% width)
-        self.left_panel = tk.Frame(self.content_frame, bg='#5DADE2', bd=0)
-        self.left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+        # Left panel wrapper
+        self.left_panel_wrapper = tk.Frame(self.content_frame, bg='#5DADE2', bd=0)
+        self.left_panel_wrapper.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
 
-        # Description section
-        self.create_collapsible_section(self.left_panel, "Description:", "Enter description here...", width=150)
+        # Left panel (centered, fixed width)
+        self.left_panel = tk.Frame(self.left_panel_wrapper, bg='#5DADE2', bd=0, width=300)
+        self.left_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=(10, 0))
+        self.left_panel.pack_propagate(False)
 
-        # Commit History section
-        self.create_collapsible_section(self.left_panel, "Commit History:", "Enter commit history...", width=150)
-
-        # Right panel (30% width)
-        self.right_panel = tk.Frame(self.content_frame, bg='#5DADE2', bd=0)
+        # Right panel
+        self.right_panel = tk.Frame(self.content_frame, bg='#5DADE2', bd=0, width=160)
         self.right_panel.pack(side=tk.RIGHT, fill=tk.Y)
+        self.right_panel.pack_propagate(False)
 
         # Tags
         self.tags_frame = tk.Frame(self.right_panel, bg='#5DADE2', bd=0)
-        self.tags_frame.pack(fill=tk.X, pady=(0, 10))
+        self.tags_frame.pack(fill=tk.X, pady=(0, 5))  # Reduced pady
         tk.Label(self.tags_frame, text="Tags:", font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
 
         # Create tag labels
@@ -73,9 +81,19 @@ class CompletedTasksWindow(tk.Tk):
         self.create_info_field("Time Complexity:", "5")
         self.create_info_field("Date Completed:", completed_date)
 
-        # Buttons frame
+        # Create sections with buttons aligned to bottom
+        self.sections_frame = tk.Frame(self.left_panel, bg='#5DADE2', bd=0)
+        self.sections_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Description section
+        self.create_collapsible_section(self.sections_frame, "Description:", "Enter description here...", height=15)
+
+        # Commit History section
+        self.create_collapsible_section(self.sections_frame, "Commit History:", "Enter commit history...", height=15)
+
+        # Buttons frame - now packed after commit history
         self.button_frame = tk.Frame(self.main_container, bg='#5DADE2', bd=0)
-        self.button_frame.pack(side=tk.BOTTOM, pady=1, anchor='e')
+        self.button_frame.pack(side=tk.RIGHT, pady=(5, 10))
 
         # Cancel and Complete buttons
         self.cancel_btn = tk.Button(
@@ -102,81 +120,78 @@ class CompletedTasksWindow(tk.Tk):
         )
         self.complete_btn.pack(side=tk.LEFT)
 
-    def create_collapsible_section(self, parent, title, placeholder, width=1):
+    def create_collapsible_section(self, parent, title, placeholder, height=10):
         frame = tk.Frame(parent, bg='#5DADE2', bd=0)
-        frame.pack(fill=tk.X, pady=(0, 10))
+        frame.pack(fill=tk.X, pady=(0, 5))  # Reduced pady
 
         header_frame = tk.Frame(frame, bg='#5DADE2')
         header_frame.pack(fill=tk.X, anchor=tk.W)
 
-        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#5DADE2').pack(side=tk.LEFT, padx=5, pady=5)
-
-        # Create container frame for content and scrollbar
-        container_frame = tk.Frame(frame, bg='#D3D3D3')
-        container_frame.pack(fill=tk.X, anchor=tk.W, padx=5, pady=(0, 5))
+        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#5DADE2').pack(side=tk.LEFT, padx=5, pady=2)  # Reduced pady
 
         if title == "Commit History:":
-            style = ttk.Style()
-            style.theme_use("clam")
-            style.configure("Treeview",
-                            background="#D3D3D3",
-                            fieldbackground="#D3D3D3",
-                            borderwidth=0,
-                            relief='flat',
-                            rowheight=25)
-
-            # Configure alternating row colors
-            style.configure("Treeview.oddrow", background="#D3D3D3")
-            style.configure("Treeview.evenrow", background="#A9A9A9")
+            # Container frame
+            container_frame = tk.Frame(frame, bg='#D3D3D3', bd=1, relief='solid')
+            container_frame.pack(fill=tk.X, anchor=tk.W, padx=5, pady=(0, 2))  # Reduced pady
 
             # Create frame for treeview and scrollbar
             tree_frame = tk.Frame(container_frame, bg='#D3D3D3')
             tree_frame.pack(fill=tk.BOTH, expand=True)
 
-            # Create treeview
-            tree = ttk.Treeview(tree_frame, columns=("Date",), show="tree", height=4)
-            tree.pack(side='left', fill='both', expand=True)
+            # Create the treeview
+            tree = ttk.Treeview(tree_frame, columns=("Date",), show="headings", height=15)
+            tree.heading("Date", text="Date", anchor="center")  # Center the header
+            tree.column("Date", anchor="center", width=150)  # Center the content
 
-            # Add scrollbar
+            # Scrollbar
             scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
-            scrollbar.pack(side='right', fill='y')
             tree.configure(yscrollcommand=scrollbar.set)
 
-            # Insert sample data with alternating colors
-            dates = ["12/4/24", "12/6/24", "12/8/24", "12/10/24"]
+            # Pack the tree and scrollbar
+            tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+            # Add the dates
+            dates = ["12/4/24", "12/6/24", "12/8/24", "12/10/24", "10/8/24", "11,2,24", "10/8/24", "11,2,24", "10/8/24", "11,2,24", "10/8/24"]
             for i, date in enumerate(dates):
                 tag = "oddrow" if i % 2 == 0 else "evenrow"
                 tree.insert("", "end", values=(date,), tags=(tag,))
 
-            # Configure row tags
             tree.tag_configure("oddrow", background="#D3D3D3")
             tree.tag_configure("evenrow", background="#A9A9A9")
             tree.tag_configure('selected', background='#b3b3b3')
 
             def on_commit_click(event):
-                selected_item = tree.selection()[0]
-                for item in tree.get_children():
-                    tree.item(item, tags=(tree.item(item)['tags'][0],))
-                tree.item(selected_item, tags=('selected',))
-                date = tree.item(selected_item)['values'][0]
-                self.open_commit_history_page()
+                try:
+                    selected_item = tree.selection()[0]
+                    for item in tree.get_children():
+                        tree.item(item, tags=(tree.item(item)['tags'][0],))
+                    tree.item(selected_item, tags=('selected',))
+                    self.open_commit_history_page()
+                except IndexError:
+                    pass
 
             tree.bind("<Button-1>", on_commit_click)
 
         else:
-            # Create frame for text widget and scrollbar
-            text_frame = tk.Frame(container_frame, bg='#D3D3D3')
-            text_frame.pack(fill=tk.BOTH, expand=True)
+            # Container frame for description
+            container_frame = tk.Frame(frame, bg='#D3D3D3', bd=1, relief='solid')
+            container_frame.pack(fill=tk.X, anchor=tk.W, padx=5, pady=(0, 2))  # Reduced pady
+
+            # Create a scrollbar first
+            scrollbar = tk.Scrollbar(container_frame, orient="vertical")
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
             # Create text widget
-            text = tk.Text(text_frame, height=10, wrap=tk.WORD, width=1, bg='#D3D3D3', borderwidth=0)
-            text.pack(side='left', fill='both', expand=True)
-            text.insert("1.0", placeholder)
+            text = tk.Text(container_frame, height=height, wrap=tk.WORD, bg='#D3D3D3', bd=0,
+                           yscrollcommand=scrollbar.set)  # Connect text widget to scrollbar
+            text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-            # Add scrollbar
-            scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=text.yview)
-            scrollbar.pack(side='right', fill='y')
-            text.configure(yscrollcommand=scrollbar.set)
+            # Configure scrollbar to work with text widget
+            scrollbar.config(command=text.yview)
+
+            # Insert placeholder text
+            text.insert("1.0", placeholder)
 
     def create_tag(self, text):
         tag_label = tk.Label(
