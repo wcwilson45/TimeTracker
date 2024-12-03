@@ -37,6 +37,9 @@ class EditTaskWindow(tk.Tk):
         self.style.configure('ConfirmButton.TButton', background='#90EE90', font=("SF Pro Text", 10))
         self.style.configure('CancelButton.TButton', background='#F08080', font=("SF Pro Text", 10))
 
+        # Scrollbar style
+        self.style.configure('Vertical.TScrollbar', troughcolor="#E0E0E0", background="#AED6F1", bordercolor="#5DADE2", arrowcolor="#5DADE2")
+
         # Main container
         main_frame = ttk.Frame(self, style='MainFrame.TFrame')
         main_frame.pack(fill='both', expand=True, padx=10, pady=5)
@@ -74,8 +77,8 @@ class EditTaskWindow(tk.Tk):
                             font=("SF Pro Text", 10))
         desc_text.pack(side='left', fill='both', expand=True)
 
-        # Add a vertical scrollbar
-        scrollbar = ttk.Scrollbar(desc_frame, orient="vertical", command=desc_text.yview)
+        # Add a vertical scrollbar and apply the custom style
+        scrollbar = ttk.Scrollbar(desc_frame, orient="vertical", command=desc_text.yview, style='Vertical.TScrollbar')
         scrollbar.pack(side='right', fill='y')
 
         # Link the scrollbar with the text widget

@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 import tkinter.font as tkfont
 
 class CommitHistoryWindow(tk.Tk):
@@ -6,7 +7,7 @@ class CommitHistoryWindow(tk.Tk):
         super().__init__()
 
         # Set the main window geometry and title
-        self.geometry("500x600")  # Set the window size to 800x500 pixels
+        self.geometry("630x600")  # Set the window size
         self.title("Commit History")  # Set the title of the window
         self.configure(bg="#5DADE2")  # Set background color for the window
 
@@ -31,6 +32,11 @@ class CommitHistoryWindow(tk.Tk):
         self.option_add("*TButton*font", "SF Pro Text 10")
         self.option_add("*TLabel*font", "SF Pro Text 12")
         self.option_add("*TEntry*font", "SF Pro Text 10")
+
+        # Apply a modern theme
+        style = ttk.Style(self)
+        style.theme_use("alt")
+        style.configure("Vertical.TScrollbar", troughcolor="#E0E0E0", background="#AED6F1", bordercolor="#5DADE2", arrowcolor="#5DADE2")
 
     def create_header(self):
         """Create the header section with date and time, and an exit button."""        
@@ -125,9 +131,9 @@ class CommitHistoryWindow(tk.Tk):
 
             # Create entry boxes for all fields except "Description:"
             if label_text != "Description:":
-                entry_box = tk.Entry(frame, font=("SF Pro Text", 10), width=20, bg="#d3d3d3")  # Reduced entry width
+                entry_box = tk.Entry(frame, font=("SF Pro Text", 10), width=30, bg="#d3d3d3")  # Set consistent width
                 entry_box.insert(0, data)  # Insert the data into the entry box
-                entry_box.pack(anchor="w", padx=10, pady=5)  # Pack the entry box
+                entry_box.pack(anchor="w", padx=10, pady=5, fill="x")  # Pack the entry box and align with the text box width
 
             else:
                 # Special case for "Description:" field to use a text box with a scrollbar
@@ -135,14 +141,14 @@ class CommitHistoryWindow(tk.Tk):
                 desc_frame.pack(fill="x", padx=10, pady=5)  # Adjust padding to match other fields
 
                 # Scrollbar for the description text
-                desc_scrollbar = tk.Scrollbar(desc_frame, orient="vertical")
+                desc_scrollbar = ttk.Scrollbar(desc_frame, orient="vertical", style="Vertical.TScrollbar")
                 desc_scrollbar.pack(side="right", fill="y")  # Pack the scrollbar to the right
 
                 # Text box (Text widget) for multi-line description
                 desc_text = tk.Text(
                     desc_frame,
                     height=5,  # Height of the text box
-                    width=20,  # Reduced width for the description box
+                    width=30,  # Match width to entry boxes
                     bg='#d3d3d3',  # Background color of the text box
                     font=("SF Pro Text", 10),  # Font for the text box
                     yscrollcommand=desc_scrollbar.set,  # Link the scrollbar to the text box
@@ -154,8 +160,6 @@ class CommitHistoryWindow(tk.Tk):
                 # Link the scrollbar to the text box
                 desc_scrollbar.config(command=desc_text.yview)
 
-                # Force the layout to update immediately after data insertion
-                self.after(100, lambda: desc_scrollbar.config(command=desc_text.yview))
 
 # Run the application
 if __name__ == "__main__":

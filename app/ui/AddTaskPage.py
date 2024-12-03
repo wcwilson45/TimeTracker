@@ -33,10 +33,7 @@ class AddTaskWindow(tk.Tk):
         self.style.configure('Input.TCombobox', fieldbackground='#d3d3d3', background="#5DADE2", font=("SF Pro Text", 10))
         self.style.configure('TLabel', background='#5DADE2', font=("SF Pro Text", 8))  # Lighter Blue for labels
         self.style.configure('TButton', background='#5DADE2', font=("SF Pro Text", 10))  # Default Lighter Blue for buttons
-
-        # Custom button styles
-        self.style.configure('ConfirmButton.TButton', background='#90EE90', font=("SF Pro Text", 10))
-        self.style.configure('CancelButton.TButton', background='#F08080', font=("SF Pro Text", 10))
+        self.style.configure('Vertical.TScrollbar', troughcolor="#E0E0E0", background="#AED6F1", bordercolor="#5DADE2", arrowcolor="#5DADE2")
 
         # Main container
         main_frame = ttk.Frame(self, style='MainFrame.TFrame')
@@ -71,17 +68,17 @@ class AddTaskWindow(tk.Tk):
         desc_frame.pack(fill='x', pady=(3, 6))
 
         # Scrollbar for the description
-        desc_scrollbar = ttk.Scrollbar(desc_frame, orient='vertical')
+        desc_scrollbar = ttk.Scrollbar(desc_frame, orient='vertical', style="Vertical.TScrollbar")
         desc_scrollbar.pack(side='right', fill='y')
 
         # Text widget for description
         desc_text = tk.Text(
-            desc_frame, 
-            height=7, 
-            width=30, 
-            bg='#d3d3d3', 
-            relief="solid", 
-            bd=1, 
+            desc_frame,
+            height=7,
+            width=30,
+            bg='#d3d3d3',
+            relief="solid",
+            bd=1,
             font=("SF Pro Text", 10),
             yscrollcommand=desc_scrollbar.set
         )
@@ -167,3 +164,8 @@ class AddTaskWindow(tk.Tk):
     def confirm_action(self):
         # Implement the confirm action (e.g., save the task data)
         pass
+
+# Run the application
+if __name__ == "__main__":
+    app = AddTaskWindow()
+    app.mainloop()
