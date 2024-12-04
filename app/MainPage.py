@@ -11,7 +11,7 @@ from ui import (
     EditTaskWindow,
     CommitHistoryWindow,
     AddTaskWindow,
-    #CurrentTaskWindow
+    CurrentTaskWindow
 )
 
 
@@ -150,11 +150,11 @@ class App:
         Label(self.full_page, text="Description:", font=self.fonts['Body_Tuple'], background="#5DADE2").grid(row=4, column=0,
                                                                                                     sticky=W, pady=2)
 
-        self.description_box = Text(self.full_page, height=5, width=62, font=self.fonts['Description_Tuple'],
+        self.description_box = Text(self.full_page, height=5, width=62,border = 1, font=self.fonts['Description_Tuple'],
                                     background="#d3d3d3")
         self.description_box.grid(row=6, column=0, pady = 5,sticky=W)
 
-        description_scrollbar = tk.Scrollbar(self.full_page, orient="vertical",command=self.description_box.yview)
+        description_scrollbar = ttk.Scrollbar(self.full_page, orient="vertical",command=self.description_box.yview)
         self.description_box.configure(yscrollcommand= description_scrollbar.set)
         description_scrollbar.grid(row=6, column=1,pady = 5, sticky=N + S)
 
@@ -194,11 +194,12 @@ class App:
         self.task_list.column('Time', width=100, anchor='center')  # Centered
         self.task_list.column('Complexity', width=100, anchor='center')  # Right-aligned
 
-        style = ttk.Style()
-        style.theme_use("clam")
+        style = ttk.Style(root)
+        style.theme_use("alt")
         style.configure("Treeview", rowheight=25, bordercolor="black", borderwidth=1, relief="flat")
         style.configure("Treeview.Heading", background="#A9A9A9", bordercolor="black", borderwidth=1, relief="flat")
         style.map("Treeview.Heading", background=[("active", "#c0c0c0")])
+        style.configure('Vertical.TScrollbar', troughcolor="#E0E0E0", background="#AED6F1", bordercolor="#5DADE2", arrowcolor="#5DADE2")
 
         # Configure alternating row colors
         style.configure("Treeview.oddrow", background="#d3d3d3")  # Light gray for odd rows
@@ -223,7 +224,7 @@ class App:
         self.insert_task("Fix Bugs", "01:10:05", "7")
         self.insert_task("Fix Bugs", "01:10:05", "7")
         # Add a vertical scrollbar
-        scrollbar = tk.Scrollbar( self.full_page,orient = "vertical", command=self.task_list.yview)
+        scrollbar = ttk.Scrollbar(self.full_page,orient = "vertical",style = "Vertical.TScrollbar", command=self.task_list.yview)
         self.task_list.configure(yscrollcommand=scrollbar.set)
         scrollbar.grid(row=8, column=1, sticky="ns", pady = 25)
 
@@ -244,26 +245,33 @@ class App:
             show="headings", style = "Treeview"
         )
         self.completed_tree.bind("<<TreeviewSelect>>", self.on_item_click)
-        self.completed_tree.insert("", "end", values =("Create Table", "12/4/24", "03:23:56"))
-        self.completed_tree.insert("","end", values =("Finalize Document", "12/6/24", "02:48:12"))
         self.completed_tree.heading("Task", text="Task")
         self.completed_tree.heading("Completed Date", text="Completed Date")
         self.completed_tree.heading("Time Taken", text="Time Taken")
+        
 
         style = ttk.Style()
-        style.theme_use("clam")
+        style.theme_use("alt")
         style.configure("Treeview", rowheight=25, bordercolor="black", borderwidth=1, relief="flat")
         style.configure("Treeview.Heading", background="#A9A9A9", bordercolor="black", borderwidth=1, relief="flat")
         style.map("Treeview.Heading", background=[("active", "#c0c0c0")])
 
         # Configure alternating row colors
-        style.configure("Treeview.oddrow", background="#d3d3d3")  # Light gray for odd rows
-        style.configure("Treeview.evenrow", background="#A9A9A9")  # Slightly lighter grey for even rows
+        style.configure("Treeview.onerow", background="#d3d3d3")  # Light gray for odd rows
+        style.configure("Treeview.tworow", background="#A9A9A9")  # Slightly lighter grey for even rows
 
-        self.completed_tree.tag_configure("oddrow", background="#d3d3d3")  # Apply light gray background
-        self.completed_tree.tag_configure("evenrow", background="#A9A9A9")  # Apply slightly lighter grey background
+        self.completed_tree.tag_configure("onerow", background="#d3d3d3")  # Apply light gray background
+        self.completed_tree.tag_configure("tworow", background="#A9A9A9")  # Apply slightly lighter grey background
+
+        self.completed_tree.insert("", "end", values =("Create Table", "12/4/24", "03:23:56"))
+        self.completed_tree.insert("","end", values =("Finalize Document", "12/6/24", "02:48:12"))
 
         self.completed_tree.pack(padx=10, pady=5, fill="both", expand=True)
+
+    def insert_completed_task(self, completed_task_name, completed_time, completed_complexity):
+        # Determine whether to use odd or even row color
+        row_tag = "onerow" if len(self.completed_tree.get_children()) % 2 == 0 else "tworow"
+        self.completed_tree.insert("", "end", values=(completed_task_name, completed_time, completed_complexity), tags=(row_tag,))
 
 
     def on_item_click(self, event):
