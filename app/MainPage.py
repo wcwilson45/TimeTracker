@@ -1,3 +1,4 @@
+
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
@@ -242,6 +243,7 @@ class App:
         style.configure("Treeview", rowheight=25, fieldbackground="#d3d3d3", bordercolor="black", borderwidth=1, relief="flat")
         style.configure("Treeview.Heading", background="#A9A9A9", bordercolor="black", borderwidth=1, relief="flat")
         style.map("Treeview.Heading", background=[("active", "#c0c0c0")])
+        style.configure('Vertical.TScrollbar', troughcolor="#E0E0E0", background="#AED6F1", bordercolor="#5DADE2", arrowcolor="#5DADE2")
         self.completedtasks_page.configure(bg = '#5DADE2')
 
         self.completed_tree = ttk.Treeview(
@@ -266,10 +268,11 @@ class App:
         self.insert_completed_task("Create Table", "12/4/24", "03:23:56")
         self.insert_completed_task("Finalize Document", "12/6/24", "02:48:12")
         self.insert_completed_task("Debug Code", "12/5/24", "01:32:45")
-        self.insert_completed_task("Write Report", "12/7/24", "00:45:20")
-
         # Pack the completed treeview to display it
-        self.completed_tree.pack(padx=10, pady=5, fill="both", expand=True)
+        self.completed_tree.pack(padx=0, pady=5, fill="both", expand=True, side  = "left")
+        scrollbar = ttk.Scrollbar(self.completedtasks_page, orient = "vertical", style = "Vertical.TScrollbar", command = self.completed_tree.yview)
+        self.completed_tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side='right', fill='y', padx = (0,10), pady = 5)
 
 
     def insert_completed_task(self, task_name, completed_date, time_taken):
