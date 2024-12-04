@@ -11,7 +11,7 @@ from ui import (
     EditTaskWindow,
     CommitHistoryWindow,
     AddTaskWindow,
-    CurrentTaskWindow
+    #CurrentTaskWindow
 )
 
 
@@ -237,6 +237,11 @@ class App:
         self.task_list.insert("", "end", values=(task_name, time, complexity), tags=(row_tag,))
 
     def setup_completedtasks_page(self):
+        style = ttk.Style()
+        style.theme_use("alt")
+        style.configure("Treeview", rowheight=25, fieldbackground="#d3d3d3", bordercolor="black", borderwidth=1, relief="flat")
+        style.configure("Treeview.Heading", background="#A9A9A9", bordercolor="black", borderwidth=1, relief="flat")
+        style.map("Treeview.Heading", background=[("active", "#c0c0c0")])
         self.completedtasks_page.configure(bg = '#5DADE2')
 
         self.completed_tree = ttk.Treeview(
@@ -248,31 +253,29 @@ class App:
         self.completed_tree.heading("Task", text="Task")
         self.completed_tree.heading("Completed Date", text="Completed Date")
         self.completed_tree.heading("Time Taken", text="Time Taken")
-        
-
-        style = ttk.Style()
-        style.theme_use("alt")
-        style.configure("Treeview", rowheight=25, bordercolor="black", borderwidth=1, relief="flat")
-        style.configure("Treeview.Heading", background="#A9A9A9", bordercolor="black", borderwidth=1, relief="flat")
-        style.map("Treeview.Heading", background=[("active", "#c0c0c0")])
 
         # Configure alternating row colors
-        style.configure("Treeview.onerow", background="#d3d3d3")  # Light gray for odd rows
-        style.configure("Treeview.tworow", background="#A9A9A9")  # Slightly lighter grey for even rows
+        style.configure("Treeview.oddrow", background="#d3d3d3")  # Light gray for odd rows
+        style.configure("Treeview.evenrow", background="#A9A9A9")  # Slightly lighter grey for even rows
 
-        self.completed_tree.tag_configure("onerow", background="#d3d3d3")  # Apply light gray background
-        self.completed_tree.tag_configure("tworow", background="#A9A9A9")  # Apply slightly lighter grey background
+        # Apply alternating row colors to the treeview
+        self.completed_tree.tag_configure("oddrow", background="#d3d3d3")  # Apply light gray background
+        self.completed_tree.tag_configure("evenrow", background="#A9A9A9")  # Apply slightly lighter grey background
 
-        self.completed_tree.insert("", "end", values =("Create Table", "12/4/24", "03:23:56"))
-        self.completed_tree.insert("","end", values =("Finalize Document", "12/6/24", "02:48:12"))
+        # Insert tasks with tags for alternating colors
+        self.insert_completed_task("Create Table", "12/4/24", "03:23:56")
+        self.insert_completed_task("Finalize Document", "12/6/24", "02:48:12")
+        self.insert_completed_task("Debug Code", "12/5/24", "01:32:45")
+        self.insert_completed_task("Write Report", "12/7/24", "00:45:20")
 
+        # Pack the completed treeview to display it
         self.completed_tree.pack(padx=10, pady=5, fill="both", expand=True)
 
-    def insert_completed_task(self, completed_task_name, completed_time, completed_complexity):
-        # Determine whether to use odd or even row color
-        row_tag = "onerow" if len(self.completed_tree.get_children()) % 2 == 0 else "tworow"
-        self.completed_tree.insert("", "end", values=(completed_task_name, completed_time, completed_complexity), tags=(row_tag,))
 
+    def insert_completed_task(self, task_name, completed_date, time_taken):
+        # Determine whether to use odd or even row color
+        row_tag = "oddrow" if len(self.completed_tree.get_children()) % 2 == 0 else "evenrow"
+        self.completed_tree.insert("", "end", values=(task_name, completed_date, time_taken), tags=(row_tag,))
 
     def on_item_click(self, event):
         selected_item = self.completed_tree.selection()[0]
