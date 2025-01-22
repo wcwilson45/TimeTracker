@@ -121,6 +121,12 @@ class EditTaskWindow(tk.Tk):
                                 relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
         confirm_btn.pack(side='left')
 
+        # Delete button
+        delete_btn = tk.Button(button_frame, text="Delete", command=self.delete_action,
+                              bg="#FFA500", fg="#000000", font=("SF Pro Text", 10),
+                              relief="flat", activebackground="#FFB347", activeforeground="#000000")
+        delete_btn.pack(side='right')
+        
         # Right column
         right_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
         right_frame.pack(side='left', fill='both', expand=True)
@@ -183,4 +189,7 @@ class EditTaskWindow(tk.Tk):
 
     def confirm_action(self):
         # Implement the confirm action (e.g., save the task data)
+        pass
+
+    def delete_action(self):
         pass

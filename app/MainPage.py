@@ -23,6 +23,9 @@ class App:
         self.root.geometry("600x600")
         root.resizable(width = 0, height = 0)
 
+        # Confirmation window whne exiting program
+        self.root.protocol("WM_DELETE_WINDOW", self.on_exit)
+
         # Background color hex code
         self.root.configure(bg="#5DADE2")
 
@@ -70,6 +73,10 @@ class App:
         self.setup_full_page()
         self.setup_completedtasks_page()
         self.setup_smalloverlay_page()
+
+    def on_exit(self):
+        if messagebox.askyesno("Exit Confirmation", "Are you sure you want to exit?"):
+            self.root.destroy()
 
     def show_menu(self):
         try:
