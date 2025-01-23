@@ -23,7 +23,7 @@ class CurrentTaskWindow(tk.Tk):
 
         # Configure styles
         self.style = ttk.Style()
-        self.style.theme_use('default')
+        self.style.theme_use('alt')
         self.style.configure("Info.TLabel", font=("Arial", 10), background='#5DADE2')
         self.style.configure("Tag.TLabel", font=("Arial", 8), background='#D3D3D3', padding=2, foreground='white')
 
