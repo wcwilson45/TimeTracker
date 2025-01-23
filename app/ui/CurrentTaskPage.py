@@ -5,6 +5,7 @@ from tkinter import ttk
 import tkinter.font as tkfont
 from tkinter import messagebox
 
+
 class CurrentTaskWindow(tk.Tk):
     def __init__(self):
         super().__init__()
