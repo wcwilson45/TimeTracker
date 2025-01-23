@@ -4,8 +4,11 @@ import tkinter.font as tkfont
 
 
 class EditTaskWindow(tk.Tk):
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
+
+        self.parent = parent
+        self.protocol("WM_DELETE_WINDOW", self.on_close)  # Bind the "X" button to a custom method
 
         # Set the main window geometry and title
         self.geometry("620x350")  # Increased height to accommodate additional fields
@@ -173,6 +176,13 @@ class EditTaskWindow(tk.Tk):
         self.timer_entry = ttk.Entry(timer_frame, style='Input.TEntry', textvariable=self.timer_var)
         self.timer_entry.pack(fill='x')
 
+    def on_close(self):
+        # Reset the reference in the parent App class
+        if self.parent:
+            self.parent.edit_task_window = None
+        # Destroy the window
+        self.destroy()
+
     def update_values(self, event=None):
         selected_type = self.type_combo.get()
         if selected_type == "T-Shirt Size":
@@ -186,6 +196,10 @@ class EditTaskWindow(tk.Tk):
     def cancel_action(self):
         # Implement the cancel action (e.g., close the window)
         self.destroy()
+
+        #Reset the refernece in the parent app
+        if self.parent:
+            self.parent.edit_task_window = None
 
     def confirm_action(self):
         # Implement the confirm action (e.g., save the task data)

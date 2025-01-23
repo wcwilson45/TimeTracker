@@ -75,6 +75,9 @@ class App:
         self.setup_completedtasks_page()
         self.setup_smalloverlay_page()
 
+        #Track edit task page
+        self.edit_task_window = None
+
     def on_exit(self):
         if messagebox.askyesno("Exit Confirmation", "Are you sure you want to exit?"):
             self.root.destroy()
@@ -315,8 +318,13 @@ class App:
         self.task_window.grab_set()
     
     def open_EditTaskWindow(self):
-        self.task_window = EditTaskWindow()
-        self.task_window.grab_set()
+        # Close the existing EditTaskWindow if it is already open
+        if self.edit_task_window is not None and self.edit_task_window.winfo_exists():
+            self.edit_task_window.destroy()
+
+        # Create a new EditTaskWindow
+        self.edit_task_window = EditTaskWindow(self)
+        self.edit_task_window.grab_set()
 
     def open_CurrentTaskWindow(self):
         self.task_window = CurrentTaskWindow()
