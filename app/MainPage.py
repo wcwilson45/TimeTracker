@@ -295,12 +295,6 @@ class App:
 
         self.open_AddCompleteTaskWindow(task_name, completed_date, time_taken)
     
-    def current_item_click(self, event):
-        selected_item= self.task_list.selection()[0]
-        if selected_item:
-            item_values = self.task_list.item(selected_item, "values")
-            current_task_name, current_task_time, current_time_complexity = item_values
-
     def on_item_click_main(self, event):
         selected_item = self.task_list.selection()[0]
         if selected_item:
