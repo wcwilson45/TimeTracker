@@ -13,6 +13,7 @@ from ui import (
     CommitHistoryWindow,
     AddTaskWindow,
     CurrentTaskPage,
+    CurrentTaskWindow
 )
 
 
