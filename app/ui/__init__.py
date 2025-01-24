@@ -3,7 +3,7 @@ from .CompletionPage import CompletedTasksWindow
 from .EditTaskPage import EditTaskWindow
 from .CommitHistoryPage import CommitHistoryWindow
 from .AddTaskPage import AddTaskWindow
-from .CurrentTaskWindow import CurrentTaskWindow
+from .CurrentTaskWindow import CurrentTask
 from .CurrentTaskPage import CurrentTaskWindow
 
 #from app.ui import SmallOverlay
