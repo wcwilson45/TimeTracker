@@ -4,9 +4,9 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkfont
 
-class AddTaskWindow(tk.Tk):
-    def __init__(self):
-        super().__init__()
+class AddTaskWindow(tk.Toplevel):
+    def __init__(self,parent):
+        super().__init__(parent)
 
         # Set the main window geometry and title
         self.geometry("550x250")
@@ -98,7 +98,7 @@ class AddTaskWindow(tk.Tk):
         cancel_btn.pack(side='left', padx=(0, 8))
 
         # Confirm button
-        confirm_btn = tk.Button(button_frame, text="Confirm", command=self.confirm_action,
+        confirm_btn = tk.Button(button_frame, text="Confirm", command=self.confirm_press,
                         bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
                         relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
         confirm_btn.pack(side='left')
@@ -161,9 +161,16 @@ class AddTaskWindow(tk.Tk):
         # Implement the cancel action (e.g., close the window)
         self.destroy()
 
-    def confirm_action(self):
+    def confirm_save(self):
         # Implement the confirm action (e.g., save the task data)
-        pass
+        self.destroy()  # Corrected line to close the Toplevel window
+
+    def confirm_press(self):
+        result = tk.messagebox.askyesno("Confirmation", "Are you sure you want to continue?",icon="question")
+        if result:
+            self.confirm_save()
+        else:
+            pass
 
 # Run the application
 if __name__ == "__main__":
