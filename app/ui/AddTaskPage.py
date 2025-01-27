@@ -2,6 +2,7 @@ from tkinter import ttk as ttk
 import tkinter as tk
 import tkinter.font as tkfont
 from tkinter import messagebox
+from datetime import date
 
 class AddTaskWindow(tk.Tk):
     def __init__(self, parent):
@@ -105,6 +106,12 @@ class AddTaskWindow(tk.Tk):
                                 relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
         confirm_btn.pack(side='left')
 
+        #Autofill today's date button
+        autofill_date_btn = tk.Button(button_frame, text="Autofill date", command=self.autofill_date,
+                                bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
+                                relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
+        autofill_date_btn.pack(side='right')
+
         # Right column
         right_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
         right_frame.pack(side='left', fill='both', expand=True)
@@ -180,3 +187,7 @@ class AddTaskWindow(tk.Tk):
             pass
         else:
             return
+    def autofill_date(self):
+        CurrentDate = date.today()
+        self.start_date_entry.delete(0, "end")
+        self.start_date_entry.insert(0, CurrentDate.strftime("%m-%d-%Y"))
