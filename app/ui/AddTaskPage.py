@@ -108,8 +108,8 @@ class AddTaskWindow(tk.Tk):
 
         #Autofill today's date button
         autofill_date_btn = tk.Button(button_frame, text="Autofill date", command=self.autofill_date,
-                                bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
-                                relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
+                                bg="#A020F0", fg="#000000", font=("SF Pro Text", 10),
+                                relief="flat", activebackground="#800080", activeforeground="#000000")
         autofill_date_btn.pack(side='right')
 
         # Right column
