@@ -10,6 +10,8 @@ class EditTaskWindow(tk.Tk):
 
         self.parent = parent
         self.protocol("WM_DELETE_WINDOW", self.on_close)  # Bind the "X" button to a custom method
+        # Make window not maximizable
+        self.resizable(False, False)
 
         # Set the main window geometry and title
         self.geometry("620x350")  # Increased height to accommodate additional fields
@@ -207,10 +209,14 @@ class EditTaskWindow(tk.Tk):
         confirm = messagebox.askyesno("Confirm Edit", "Are you sure you want to edit this task?")
         if confirm:
             # If the user confirms, save the task data
-            pass
+            self.destroy()
         else:
             # Do nothing if the user cancels
             return
+        
+        #Reset the refernece in the parent app
+        if self.parent:
+            self.parent.edit_task_window = None
 
     def delete_action(self):
         confirm = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this task?")
@@ -220,3 +226,7 @@ class EditTaskWindow(tk.Tk):
             self.destroy()  # Close the window after deletion (optional)
         else:
             pass
+
+        #Reset the refernece in the parent app
+        if self.parent:
+            self.parent.edit_task_window = None

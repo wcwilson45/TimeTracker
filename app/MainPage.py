@@ -77,6 +77,7 @@ class App:
 
         #Track edit task page
         self.edit_task_window = None
+        self.add_task_window = None
 
     def on_exit(self):
         if messagebox.askyesno("Exit Confirmation", "Are you sure you want to exit?"):
@@ -313,8 +314,13 @@ class App:
 
 
     def open_AddTaskWindow(self):
-        self.task_window = AddTaskWindow(self.root)
-        self.task_window.grab_set()
+        # Close the existing EditTaskWindow if it is already open
+        if self.add_task_window is not None and self.add_task_window.winfo_exists():
+           self.add_task_window.destroy()
+
+        # Create a new EditTaskWindow
+        self.add_task_window = AddTaskWindow(self)
+        self.add_task_window.grab_set
 
     def open_AddCompleteTaskWindow(self, task_name, completed_date, time_taken):
         self.task_window = CompletedTasksWindow(
