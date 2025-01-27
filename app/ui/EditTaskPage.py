@@ -1,6 +1,7 @@
 from tkinter import ttk as ttk
 import tkinter as tk
 import tkinter.font as tkfont
+from tkinter import messagebox
 
 
 class EditTaskWindow(tk.Tk):
@@ -202,8 +203,20 @@ class EditTaskWindow(tk.Tk):
             self.parent.edit_task_window = None
 
     def confirm_action(self):
-        # Implement the confirm action (e.g., save the task data)
-        pass
+        #Show a confimration dialog
+        confirm = messagebox.askyesno("Confirm Edit", "Are you sure you want to edit this task?")
+        if confirm:
+            # If the user confirms, save the task data
+            pass
+        else:
+            # Do nothing if the user cancels
+            return
 
     def delete_action(self):
-        pass
+        confirm = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this task?")
+        if confirm:
+            # Logic to delete the task
+            print("Task deleted")  # Replace this with actual delete logic
+            self.destroy()  # Close the window after deletion (optional)
+        else:
+            pass
