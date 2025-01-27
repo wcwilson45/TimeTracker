@@ -4,16 +4,16 @@ from tkinter import filedialog
 from tkinter import ttk, messagebox
 import tkinter as tk
 import tkinter.font as tkfont
+import sqlite3
 from datetime import datetime
 from ui import (
-    SmallOverlayWindow,
     CompletedTasksWindow,
     EditTaskWindow,
     CommitHistoryWindow,
     AddTaskWindow,
     CurrentTaskWindow
 )
-import sqlite3
+
 
 #Global Variables
 blue_background_color = "#5DADE2"
@@ -23,125 +23,22 @@ red_button_color = "#FF7276"
 scroll_trough_color = "E0E0E0"
 
 
-# Database Functions
-def create_connection():
-    conn = sqlite3.connect('task_manager.db')
-    return conn
-
-def initialize_db():
-    conn = create_connection()
-    cursor = conn.cursor()
-
-#Create the tasklist table
-    cursor.execute("""CREATE TABLE TaskList
-          task_id INTEGER PRIMARY KEY AUTOINCREMENT, 
-          task_name TEXT NOT NULL,
-          task_description TEXT,
-          completion_date TEXT,
-          task_tags TEXT,
-          task_weight INTEGER NOT NULL DEFAULT 1,
-          current_time INTEGER NOT NULL DEFAULT 0,
-          task_status TEXT NOT NULL DEFAULT 'Incomplete'
-"""
-)
-
-    cursor.execute("""CREATE TABLE CompletedTasks
-          task_id INTEGER PRIMARY KEY, 
-          task_name TEXT NOT NULL,
-          task_description TEXT,
-          completion_date TEXT,
-          current_time INTEGER NOT NULL DEFAULT 0,
-          task_status TEXT NOT NULL DEFAULT 'Completed'
-"""
-)
-    
-    cursor.execute("""CREATE TABLE CurrentTask
-          task_id INTEGER PRIMARY KEY,
-          task_name TEXT NOT NULL,
-          task_description TEXT,
-          completion_date TEXT,
-          task_tags TEXT,
-          task_weight INTEGER NOT NULL DEFAULT 1,
-          current_time INTEGER NOT NULL DEFAULT 0,
-          task_status TEXT NOT NULL DEFAULT 'Incomplete'
-"""
-)
-    conn.commit()
-    conn.close()
 
 
-def add_task_to_db(title, description, tags):
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO TaskList (title, description, tags) VALUES (?, ?, ?)' (title, description, tags))
-    conn.commit()
-    conn.close()
-    messagebox.showinfo("Success", "Task added successfully.")
-
-def list_tasks_from_db():
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM TaskList')
-    TaskList = cursor.fetchall()
-    conn.close
-    return TaskList
-
-def complete_task_in_db(task_id):
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM TaskList WHERE task_id = ?', (task_id))
-    task = cursor.fetchone()
-    if task:
-      cursor.execute('INSERT INTO CompletedTasks (title, description, completion_date, time_spent, task_weight) VALUES (?, ?, datetime("now"),?)', (task[1], task[2], task[4]))
-      cursor.execute('DELETE FROM TaskList WHERE id = ?', (task_id))
-      conn.commit()
-      messagebox.showinfo("Success", "Task completed and moved to CompletedTasks.")
-    else:
-      messagebox.showerror("Error", "Task not found.")
-    conn.close()
-def get_current_time():
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT current_time FROM CurrentTask', (current_task_time))
-    current_task_time = cursor.fetchone()
-    return current_task_time
-
-
-#GUI Functions
-
-def add_task():
-    title = title_entry.get()
-    description = description_entry.get()
-    weight = weight_entry.get()
-    if title:
-      add_task_db(title, description)
-      title_entry.delete(0, tk.END)
-      description_entry.delete(0, tk.END)
-      update_task_list()
-    else:
-      messagebox.showwarning("Input Error", "Please enter a task title.")
-
-def update_task_list():
-    task_list.delete(0, tk.END)
-    TaskList = list_tasks_from_db
-    for task in TaskList:
-      task_list.insert(tk.END, f"ID: {task[0]}, Title: {task[1]}, Status: {task[3]}, Time Spent: {task[4]}")
-
-def complete_task():
-    selected_task = task_list.get(tk.ACTIVE)
-    if selected_task:
-      task_id = int(selected_task.split(',')[0].split(': ')[1])
-      complete_task_in_db(task_id)
-      update_task_list()
-    else:
-      messagebox.showwarning("Selection Error", "Please select a task to complete.")
 
 class App:
-    def __init__(self,root):
+    def __init__(self, root):
       self.root = root
       self.root.title("Task Manager")
-      self.root.geometry("600x600")
+      self.root.geometry("800x600")
       root.resizable(width = 0, height = 0)
+
+      # Font Tuples for Use on pages
+      self.fonts = {
+            "Title_Tuple": tkfont.Font(family ="SF Pro Display", size =24, weight ="bold"),
+            "Body_Tuple": tkfont.Font(family = "SF Pro Display", size = 12, weight = "bold"),
+            "Description_Tuple": tkfont.Font(family = "Sf Pro Text", size = 12)
+        }
 
       #Set Background color
       self.root.configure(bg = blue_background_color)
@@ -162,7 +59,8 @@ class App:
       self.page_title = ttk.Label(self.menu_frame, text="NAVSEA Time Tracker", font=self.fonts['Body_Tuple'], background="#5DADE2")
       self.page_title.pack(side="left", padx=10)
 
-      get_current_time()
+      #get_current_time()
+      current_task_time = 0
       self.time_box_full = current_task_time
       self.time_box_overlay = current_task_time
 
@@ -186,7 +84,7 @@ class App:
       self.setup_completedtasks_page()
       self.setup_smalloverlay_page()
 
-      def show_menu(self):
+    def show_menu(self):
         try:
             self.popup_menu.tk_popup(
                 self.menu_button.winfo_rootx(),
@@ -215,7 +113,7 @@ class App:
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
 
 
-    def setup_smalloverlay_page(self, current_task_time):
+    def setup_smalloverlay_page(self):
       self.smalloverlay_page.configure(bg = blue_background_color)
       Label(self.smalloverlay_page, text = "Task Name:", 
              font = self.fonts['Body_Tuple'],
@@ -226,14 +124,22 @@ class App:
              font=self.fonts['Body_Tuple'],
              background= blue_background_color
              ).grid(row = 1, column = 0, sticky = W, pady = 2)
+      
       self.time_box_overlay = Text(self.smalloverlay_page, height = 1, width = 10,
                     font = self.fonts['Body_Tuple'],
                     background = grey_button_color)
-      self.time_box.grid(row = 1, columd = 0, padx = 50, pady = 5, sticky = E)
+      self.time_box_overlay.grid(row = 1, column = 0, padx = 50, pady = 5, sticky = E)
       #Set the timer text to the current time
-      self.time_box_overlay.insert("1.0", current_task_time)
+      self.time_box_overlay.insert("1.0", "00:00:00")
       #Make the time box Read-Only
-      self.time_box.config(state = DISABLED)
+      self.time_box_overlay.config(state = DISABLED)
+      self.small_overlay_start_button = tk.Button(self.smalloverlay_page, text="Start",relief = "flat", background="#77DD77", command=self.start_timer)
+      self.small_overlay_start_button.grid(row=2, column=0, sticky=W,padx = 0, pady=5)
+
+      self.small_overlay_stop_button = tk.Button(self.smalloverlay_page, text="Stop",relief = "flat", background="#FF7276", command=self.stop_timer)
+      self.small_overlay_stop_button.grid(row=2, column=0, sticky=W,padx = 45, pady=5)
+
+
    
     def update_timer_boxes(self, timer_text):
       """Update the timer display in both timer boxes."""
@@ -250,11 +156,175 @@ class App:
         self.time_box_overlay.delete("1.0", tk.END)
         self.time_box_overlay.insert("1.0", timer_text)
         self.time_box_overlay.config(state=DISABLED)
-    #def setup_full_page(self):
+
+    def setup_full_page(self):
+        style = ttk.Style()
+        style.theme_use('default')
+        style.configure("Treeview",
+        background = blue_background_color,
+        foreground = blue_background_color,
+        rowheight = 25,
+        fieldbackground = grey_button_color)
+
+        #Current Task Frame
+        currenttask_frame = tk.Frame(self.full_page)
+        currenttask_frame.pack(pady=10, side = TOP)
+
+        label = ttk.Label(currenttask_frame, text = "Task Name", font = ['Title_tuple'])
+        label.pack(anchor = W)
+
+        #Change color when a item is selected
+        style.map("Treeview",
+        background = [('selected', "347083")])
+
+        #Put the task list inside a frame
+        tasklist_frame = ttk.Frame(self.full_page, style = "Treeview")
+        tasklist_frame.pack(pady=10, side = BOTTOM)
+
+        #Create scrollbar
+        tasklist_scroll = Scrollbar(tasklist_frame)
+        tasklist_scroll.pack(side = RIGHT, fill = Y)
+
+        #Set scrollbar
+        task_list = ttk.Treeview(tasklist_frame, yscrollcommand=tasklist_scroll.set, selectmode = "extended")
+        task_list.pack()
+
+        #Task List is vertical scroll
+        tasklist_scroll.config(command = task_list.yview)
+
+        #Format columns
+        task_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID")
+        task_list.column("#0", width = 0, stretch=NO)
+        task_list.column('Task Name', anchor = W, width = 250)
+        task_list.column('Task Time', anchor = CENTER, width = 100)
+        task_list.column('Task Weight', anchor = CENTER, width =100)
+        task_list.column('Task ID',anchor = CENTER, width = 100)
+
+
+        task_list.heading("#0", text = "", anchor = W)
+        task_list.heading("Task Name", text = "Task Name", anchor = W)
+        task_list.heading("Task Time", text = "Time", anchor = CENTER)
+        task_list.heading("Task Weight", text = "Weight", anchor = CENTER)
+        task_list.heading("Task ID", text = "ID", anchor = CENTER)
+
+        data = [
+            ["Collect money", "00:14:35", "5", "1"],
+            ["Print paper", "00:30:21", "3", "2"]
+        ]
+
+        task_list.tag_configure('oddrow', background=  "white")
+        task_list.tag_configure('evenrow', background=  grey_button_color)
+
+        #Add data to screen
+        global count
+        count = 0
+
+        for record in data:
+            if count % 2 == 0:
+                task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[0],record[1],record[2],record[3]), tags = ('evenrow', ""))
+            else:
+                task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[0],record[1],record[2],record[3]), tags = ('oddrow', ""))
+            #Increment count
+            count += 1
+
+        data_frame = LabelFrame(root, text = "Input")
+        data_frame.pack(fill = "x", expand = YES, padx = 20)
+
+        tn_label = Label(data_frame, text = "Task Name")
+        tn_label.grid(row = 0, column = 0, padx = 10, pady = 10)
+        tn_entry = Entry(data_frame)
+        tn_entry.grid(row = 1, column = 0)
+
+        tt_label = Label(data_frame, text = "Task Time")
+        tt_label.grid(row = 0, column = 1, padx = 10, pady = 10)
+        tt_entry = Entry(data_frame)
+        tt_entry.grid(row = 1, column = 1)
+
+        tw_label = Label(data_frame, text = "Task Weight")
+        tw_label.grid(row = 0, column = 2, padx = 10, pady = 10)
+        tw_entry = Entry(data_frame)
+        tw_entry.grid(row = 1, column = 2)
+
+        ti_label = Label(data_frame, text = "Task ID")
+        ti_label.grid(row = 0, column = 3, padx = 10, pady = 10)
+        ti_entry = Entry(data_frame)
+        ti_entry.grid(row = 1, column = 3)
+
+        button_frame = LabelFrame(root, text = "Commands")
+        button_frame.pack(fill = "x", expand = YES, padx = 20,side = BOTTOM)
+
+
+        update_button = Button(button_frame, text = "Update Record")
+        update_button.grid(row = 0, column = 0, padx = 6, pady = 10)
+
+        add_button = Button(button_frame, text = "Add Task")
+        add_button.grid(row = 0, column = 1, padx = 6, pady = 10)
+
+        remove_button = Button(button_frame, text = "Remove Task")
+        remove_button.grid(row = 0, column = 2, padx = 6, pady = 10)
+
+        remove_all_button = Button(button_frame, text = "Remove All")
+        remove_all_button.grid(row = 0, column = 3, padx = 6, pady = 10)
+
+        moveup_button = Button(button_frame, text = "Move Up")
+        moveup_button.grid(row = 0, column = 4, padx = 6, pady = 10)
+
+        movedown_button = Button(button_frame, text = "Move Down")
+        movedown_button.grid(row = 0, column = 5, padx = 6, pady = 10)
+
+        tags_button = Button(button_frame, text = "Tags")
+        tags_button.grid(row = 0, column = 6, padx = 6, pady = 10)
+
+        select_record_button = Button(button_frame, text = "Select Record")
+        select_record_button.grid(row = 0, column = 7, padx = 6, pady = 10)
+
+
+
        
     #def insert_task(self, task_id):
        
-    #def setup_completedtasks_page(self):
+    def setup_completedtasks_page(self):
+        style = ttk.Style()
+        style.theme_use('default')
+        style.configure("Treeview",
+        background = grey_button_color,
+        foreground = blue_background_color,
+        rowheight = 25,
+        fieldbackground = grey_button_color)
+
+        #Change color when a item is selected
+        style.map("Treeview",
+        background = [('selected', "347083")])
+
+        #Put the task list inside a frame
+        completedlist_frame = Frame(self.completedtasks_page)
+        completedlist_frame.pack(pady=10)
+
+        #Create scrollbar
+        completedlist_scroll = Scrollbar(completedlist_frame)
+        completedlist_scroll.pack(side = RIGHT, fill = Y)
+
+        #Set scrollbar
+        completed_list = ttk.Treeview(completedlist_frame, yscrollcommand=completedlist_scroll.set, selectmode = "extended")
+        completed_list.pack()
+
+        #Task List is vertical scroll
+        completedlist_scroll.config(command = completed_list.yview)
+
+        #Format columns
+        completed_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID")
+        completed_list.column("#0", width = 0, stretch=NO)
+        completed_list.column('Task Name', anchor = W, width = 150)
+        completed_list.column('Task Time', anchor = CENTER, width = 50)
+        completed_list.column('Task Weight', anchor = CENTER, width =25)
+        completed_list.column('Task ID',anchor = CENTER, width = 25)
+
+
+        completed_list.heading("#0", text = "", anchor = W)
+        completed_list.heading("Task Name", text = "Task Name", anchor = W)
+        completed_list.heading("Task Time", text = "Time", anchor = CENTER)
+        completed_list.heading("Task Weight", text = "Weight", anchor = CENTER)
+        completed_list.heading("Task ID", text = "ID", anchor = CENTER)
        
     #def insert_completed_task(self, task_id):
        
@@ -279,6 +349,22 @@ class App:
     def open_CurrentTaskWindow(self):
         self.task_window = CurrentTaskWindow()
         self.task_window.grab_set()
+
+    def select_record(tn_entry, tt_entry, ti_entry, tw_entry, task_list):
+        #Clear entry boxes
+        tn_entry.delete(0)
+        tt_entry.delete(0)
+        ti_entry.delete(0)
+        tw_entry.delete(0)
+
+        #Grab record number
+        selected = task_list.focus()
+
+        #Grab record values
+        values = task_list.item(selected, values)
+
+
+        return tn_entry, tt_entry, ti_entry, tw_entry
 
     
     def update_timer(self):
