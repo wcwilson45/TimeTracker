@@ -6,9 +6,10 @@ import tkinter.font as tkfont
 from datetime import datetime
 
 
-class CurrentTaskWindow(tk.Tk):
-    def __init__(self, current_task_name, current_task_time, current_time_comp):
-        super().__init__()
+class CurrentTask(tk.Toplevel):
+    def __init__(self,parent, current_task_name, current_task_time, current_time_comp):
+        super().__init__(parent)
+
 
         # Font Tuples for Use on pages
         self.fonts = {
@@ -171,5 +172,5 @@ class CurrentTaskWindow(tk.Tk):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = CurrentTaskWindow()
+    app = CurrentTask()
     root.mainloop()

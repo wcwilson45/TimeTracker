@@ -12,8 +12,8 @@ from ui import (
     EditTaskWindow,
     CommitHistoryWindow,
     AddTaskWindow,
-    CurrentTaskPage,
-    CurrentTaskWindow
+    CurrentTaskWindow,
+    CurrentTask
 )
 
 
@@ -197,7 +197,7 @@ class App:
         self.task_list = ttk.Treeview(
             self.full_page, columns=("Task", "Time", "Complexity"), show="headings", style="Treeview"
         )
-        self.task_list.bind("<<TreeviewSelect>>", self.on_item_click)
+        self.task_list.bind("<<TreeviewSelect>>", self.on_item_click_main)
         self.task_list.heading("Task", text="Task")
         self.task_list.heading("Time", text="Time")
         self.task_list.heading("Complexity", text="Complexity")
@@ -299,14 +299,21 @@ class App:
 
         self.open_AddCompleteTaskWindow(task_name, completed_date, time_taken)
     
-    def current_item_click(self, event):
-        selected_item= self.task_list.selection()[0]
+    def on_item_click_main(self, event):
+        selected_item = self.task_list.selection()[0]
         if selected_item:
             item_values = self.task_list.item(selected_item, "values")
-            current_task_name, current_task_time, current_time_complexity = item_values
+            current_task_name, current_task_time, current_time_comp= item_values
+
+        self.open_CurrentTask(current_task_name, current_task_time, current_time_comp)
+
+    def open_CurrentTask(self, current_task_name, current_task_time, current_time_comp):
+        self.task_window = CurrentTask(self.root,current_task_name,current_task_time,current_time_comp)
+        self.task_window.grab_set()
+
 
     def open_AddTaskWindow(self):
-        self.task_window = AddTaskWindow()
+        self.task_window = AddTaskWindow(self.root)
         self.task_window.grab_set()
 
     def open_AddCompleteTaskWindow(self, task_name, completed_date, time_taken):
