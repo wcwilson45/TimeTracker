@@ -15,6 +15,12 @@ from ui import (
 )
 
 
+#MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
+#DATABASE IS CALLED task_list.db
+#We need to create a table for each distinct treeview as well as the current task.
+#Switching current task will just involve moving the current task to the task_list,
+#  and the task_list item to the current task.
+
 #Global Variables
 blue_background_color = "#5DADE2"
 grey_button_color = "#d3d3d3"
@@ -84,6 +90,8 @@ class App:
       self.root.title("Task Manager")
       self.root.geometry("800x1000")
       root.resizable(width = 0, height = 0)
+
+      #Query the database for all information inside
       query_database()
 
       # Font Tuples for Use on pages
@@ -218,10 +226,11 @@ class App:
         style.theme_use('default')
         style.configure("Treeview",
         background = blue_background_color,
-        foreground = blue_background_color,
+        foreground = "black",
         rowheight = 25,
         fieldbackground = grey_button_color)
         
+        #Dummy info for name and description. Will become void
         currenttask_name = "John"
         currenttask_desc = "This is the description"
 
@@ -229,6 +238,7 @@ class App:
         currenttask_frame = tk.Frame(self.full_page, bg = blue_background_color)
         currenttask_frame.pack(pady=0, side = TOP, fill = 'x')
 
+        #Set Labels for Name, Time, and Description
         Label(currenttask_frame, text = f"Task Name: {currenttask_name}",
                font=self.fonts['Body_Tuple'],
                background="#5DADE2").grid(row=0, column=0, sticky=W,pady=2)
@@ -246,17 +256,15 @@ class App:
 
         #Description Scrollbar
         description_scroll = Scrollbar(description_frame)
-        description_scroll.pack(side = RIGHT, fill = Y)
+        description_scroll.grid(row = 0, column = 1, sticky = "ns")
         description_box = Text(description_frame, yscrollcommand= description_scroll.set,
                                 height=5,
                                     width=62,border = 1, font=self.fonts['Description_Tuple'],
                                     background="#d3d3d3")
-        description_box.pack(side = LEFT)
+        description_box.grid(row = 0, column = 0)
 
         #Insert Current Task Description
         description_box.insert("1.0", currenttask_desc)
-
-
         description_scroll.config(command = description_box.yview)
 
 
@@ -265,16 +273,16 @@ class App:
         background = [('selected', "347083")])
 
         #Put the task list inside a frame
-        tasklist_frame = tk.Frame(self.full_page)
-        tasklist_frame.pack(pady=10)
+        tasklist_frame = tk.Frame(self.full_page, bg = blue_background_color)
+        tasklist_frame.pack(pady=10, fill = "x")
 
         #Create scrollbar
         tasklist_scroll = Scrollbar(tasklist_frame)
-        tasklist_scroll.pack(side = RIGHT, fill = Y)
+        tasklist_scroll.grid(row = 0, column = 1, sticky = "ns")
 
         #Set scrollbar
-        self.task_list = ttk.Treeview(tasklist_frame, yscrollcommand=tasklist_scroll.set, selectmode = "extended")
-        self.task_list.pack(side = LEFT)
+        self.task_list = ttk.Treeview(tasklist_frame, yscrollcommand=tasklist_scroll.set, selectmode = "extended", style = "Treeview")
+        self.task_list.grid(row = 0, column = 0)
 
         #Task List is vertical scroll
         tasklist_scroll.config(command = self.task_list.yview)
@@ -287,13 +295,14 @@ class App:
         self.task_list.column('Task Weight', anchor = CENTER, width =100)
         self.task_list.column('Task ID',anchor = CENTER, width = 100)
 
-
+        #Format headings
         self.task_list.heading("#0", text = "", anchor = W)
         self.task_list.heading("Task Name", text = "Task Name", anchor = W)
         self.task_list.heading("Task Time", text = "Time", anchor = CENTER)
         self.task_list.heading("Task Weight", text = "Weight", anchor = CENTER)
         self.task_list.heading("Task ID", text = "ID", anchor = CENTER)
 
+        #Configure the different rows for color
         self.task_list.tag_configure('oddrow', background=  "white")
         self.task_list.tag_configure('evenrow', background=  grey_button_color)
 
@@ -301,6 +310,7 @@ class App:
         global count
         count = 0
 
+        #Adding the dummy data. Will become void?
         for record in data:
             if count % 2 == 0:
                 self.task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[0],record[1],record[2],record[3]), tags = ('evenrow', ""))
@@ -309,33 +319,36 @@ class App:
             #Increment count
             count += 1
 
-        data_frame = LabelFrame(root, text = "Input")
+        #This is the select thing. Will become void after current task table is implemented
+        #So Full page will become smaller and when using select button it should put task information at the top.
+        data_frame = LabelFrame(self.full_page, text = "Input")
         data_frame.pack(fill = "x", padx = 20)
 
         tn_label = Label(data_frame, text = "Task Name")
-        tn_label.grid(row = 0, column = 0, padx = 10, pady = 10)
+        tn_label.grid(row = 0, column = 0, padx = 10, pady = 0)
         self.tn_entry = Entry(data_frame)
         self.tn_entry.grid(row = 1, column = 0)
 
         tt_label = Label(data_frame, text = "Task Time")
-        tt_label.grid(row = 0, column = 1, padx = 10, pady = 10)
+        tt_label.grid(row = 0, column = 1, padx = 10, pady = 0)
         self.tt_entry = Entry(data_frame)
         self.tt_entry.grid(row = 1, column = 1)
 
         tw_label = Label(data_frame, text = "Task Weight")
-        tw_label.grid(row = 0, column = 2, padx = 10, pady = 10)
+        tw_label.grid(row = 0, column = 2, padx = 10, pady = 0)
         self.tw_entry = Entry(data_frame)
         self.tw_entry.grid(row = 1, column = 2)
 
         ti_label = Label(data_frame, text = "Task ID")
-        ti_label.grid(row = 0, column = 3, padx = 10, pady = 10)
+        ti_label.grid(row = 0, column = 3, padx = 10, pady = 0)
         self.ti_entry = Entry(data_frame)
         self.ti_entry.grid(row = 1, column = 3)
 
-        button_frame = LabelFrame(root, text = "Commands")
-        button_frame.pack(fill = "x", expand = YES, padx = 5,side = BOTTOM)
+        button_frame = LabelFrame(self.full_page, text = "Commands")
+        button_frame.pack(fill = "x",pady = 10,padx = 5,side = BOTTOM)
 
 
+        #Buttons
         update_button = Button(button_frame, text = "Edit Task", command = self.open_EditTaskWindow)
         update_button.grid(row = 0, column = 0, padx = 6, pady = 10)
 
@@ -354,6 +367,7 @@ class App:
         movedown_button = Button(button_frame, text = "Move Down", command = self.move_down)
         movedown_button.grid(row = 0, column = 5, padx = 6, pady = 10)
 
+        #Need to add command for opening the tags Page
         tags_button = Button(button_frame, text = "Tags")
         tags_button.grid(row = 0, column = 6, padx = 6, pady = 10)
 
