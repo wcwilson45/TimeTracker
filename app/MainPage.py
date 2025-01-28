@@ -1,21 +1,96 @@
-
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
 from tkinter import ttk, messagebox
 import tkinter as tk
 import tkinter.font as tkfont
+import sqlite3
 from datetime import datetime
 from ui import (
-    SmallOverlayWindow,
     CompletedTasksWindow,
     EditTaskWindow,
     CommitHistoryWindow,
     AddTaskWindow,
-    CurrentTaskWindow,
-    CurrentTask
+    CurrentTaskWindow
 )
 
+# MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
+# DATABASE IS CALLED task_list.db
+# We need to create a table for each distinct treeview as well as the current task.
+# Switching current task will just involve moving the current task to the task_list,
+#  and the task_list item to the current task.
+
+# Global Variables
+blue_background_color = "#5DADE2"
+grey_button_color = "#d3d3d3"
+green_button_color = "#77DD77"
+red_button_color = "#FF7276"
+scroll_trough_color = "E0E0E0"
+
+data = [
+    ["Collect money", "00:14:35", "5", "1"],
+    ["5", "00:14:35", "5", "1"],
+    ["4", "00:14:35", "5", "1"],
+    ["3", "00:14:35", "5", "1"],
+    ["2", "00:14:35", "5", "1"],
+    ["1", "00:14:35", "5", "1"],
+    ["Print paper", "00:30:21", "3", "2"]
+]
+# Create a database or connect to an existing database
+conn = sqlite3.connect('task_list.db')
+
+# Create a cursor instance
+c = conn.cursor()
+
+# Table for TaskList database
+c.execute("""CREATE TABLE if not exists TaskList (
+          task_name text,
+          task_time text,
+          task_weight text,
+          task_id integer)
+""")
+
+c.execute("""CREATE TABLE if not exists CompletedTasks (
+          task_name text,
+          task_time text,
+          task_weight text,
+          task_id integer,
+          completion_date text,
+          total_duration text,
+          notes text,
+          PRIMARY KEY (task_id)
+)""")
+
+# Add dummy data to database
+for task in data:
+    c.execute("INSERT INTO TaskList VALUES (:task_name, :task_time, :task_weight, :task_id)",
+              {
+                  "task_name": task[0],
+                  "task_time": task[1],
+                  "task_weight": task[2],
+                  "task_id": task[3]
+              }
+              )
+
+# Commit Changes
+conn.commit()
+
+conn.close()
+
+
+def query_database():
+    # Create a database or connect to an existing database
+    conn = sqlite3.connect('task_list.db')
+
+    # Create a cursor instance
+    c = conn.cursor()
+    c.execute("SELECT * FROM TaskList")
+    tasks = c.fetchall()
+    print(tasks)
+    # Commit Changes
+    conn.commit()
+
+    conn.close()
 
 class App:
     def __init__(self, root):
@@ -297,8 +372,8 @@ class App:
         self.completed_tree.heading("ID", text="ID", anchor=CENTER)
 
         # Define alternating row colors
-        self.completed_tree.tag_configure("oddrow", background="#A9A9A9")  # Light blue for odd rows
-        self.completed_tree.tag_configure("evenrow", background="#d3d3d3")  # Same as Treeview background for even rows
+        self.completed_tree.tag_configure("oddrow", background="white")  # Light blue for odd rows
+        self.completed_tree.tag_configure("evenrow", background=grey_button_color)  # Same as Treeview background for even rows
 
         # Add sample data
         data = [

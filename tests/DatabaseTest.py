@@ -432,52 +432,86 @@ class App:
     def remove_all(self):
         for task in self.task_list.get_children():
             self.task_list.delete(task)
-    
-       
+
     def setup_completedtasks_page(self):
-        self.completedtasks_page.configure(background= blue_background_color)
+        self.completedtasks_page.configure(background=blue_background_color)
         style = ttk.Style()
         style.theme_use('default')
         style.configure("Treeview",
-        background = grey_button_color,
-        foreground = blue_background_color,
-        rowheight = 25,
-        fieldbackground = grey_button_color)
+                        background=grey_button_color,
+                        foreground=blue_background_color,
+                        rowheight=25,
+                        fieldbackground=grey_button_color)
 
-        #Change color when a item is selected
+        # Change color when a item is selected
         style.map("Treeview",
-        background = [('selected', "347083")])
+                  background=[('selected', "347083")])
 
-        #Put the task list inside a frame
-        completedlist_frame = tk.Frame(self.completedtasks_page, bg= blue_background_color)
+        # Put the task list inside a frame
+        completedlist_frame = tk.Frame(self.completedtasks_page, bg=blue_background_color)
         completedlist_frame.pack(pady=10)
 
-        #Create scrollbar
+        # Create scrollbar
         completedlist_scroll = Scrollbar(completedlist_frame)
-        completedlist_scroll.pack(side = RIGHT, fill = Y)
+        completedlist_scroll.pack(side=RIGHT, fill=Y)
 
-        #Set scrollbar
-        completed_list = ttk.Treeview(completedlist_frame, yscrollcommand=completedlist_scroll.set, selectmode = "extended")
+        # Set scrollbar
+        completed_list = ttk.Treeview(completedlist_frame, yscrollcommand=completedlist_scroll.set,
+                                      selectmode="extended")
         completed_list.pack()
 
-        #Task List is vertical scroll
-        completedlist_scroll.config(command = completed_list.yview)
+        self.completed_list = completed_list
 
-        #Format columns
-        completed_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID")
-        completed_list.column("#0", width = 0, stretch=NO)
-        completed_list.column('Task Name', anchor = W, width = 150)
-        completed_list.column('Task Time', anchor = CENTER, width = 100)
-        completed_list.column('Task Weight', anchor = CENTER, width =100)
-        completed_list.column('Task ID',anchor = CENTER, width = 100)
+        # Task List is vertical scroll
+        completedlist_scroll.config(command=completed_list.yview)
 
+        # Format columns
+        completed_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", "Completion Date",
+                                     "Total Duration")
 
-        completed_list.heading("#0", text = "", anchor = W)
-        completed_list.heading("Task Name", text = "Task Name", anchor = W)
-        completed_list.heading("Task Time", text = "Time", anchor = CENTER)
-        completed_list.heading("Task Weight", text = "Weight", anchor = CENTER)
-        completed_list.heading("Task ID", text = "ID", anchor = CENTER)
-       
+        completed_list.column("#0", width=0, stretch=NO)
+        completed_list.column('Task Name', anchor=W, width=120)
+        completed_list.column('Task Time', anchor=CENTER, width=100)
+        completed_list.column('Task Weight', anchor=CENTER, width=75)
+        completed_list.column('Task ID', anchor=CENTER, width=100)
+        completed_list.column('Completion Date', anchor=CENTER, width=150)
+        completed_list.column('Total Duration', anchor=CENTER, width=100)
+
+        completed_list.heading("#0", text="", anchor=W)
+        completed_list.heading("Task Name", text="Task Name", anchor=W)
+        completed_list.heading("Task Time", text="Time", anchor=CENTER)
+        completed_list.heading("Task Weight", text="Weight", anchor=CENTER)
+        completed_list.heading("Task ID", text="ID", anchor=CENTER)
+        completed_list.heading("Completion Date", text="Completed On", anchor=CENTER)
+        completed_list.heading("Total Duration", text="Total Time", anchor=CENTER)
+
+        self.completed_list.tag_configure('oddrow', background="white")
+        self.completed_list.tag_configure('evenrow', background=grey_button_color)
+
+        # load completed tasks data
+        self.load_completed_tasks
+
+    def load_completed_tasks(self):
+        # Clear existing items
+        for item in self.completed_list.get_children():
+            self.completed_list.delete(item)
+
+        conn = sqlite3.connect('task_list.db')
+        c = conn.cursor()
+
+        try:
+            c.execute("SELECT * FROM CompletedTasks ORDER BY completion_date DESC")
+            tasks = c.fetchall()
+
+            for i, task in enumerate(tasks):
+                tag = ('evenrow' if i % 2 == 0 else 'oddrow')
+                self.completed_list.insert('', 'end', values=task, tags=tag)
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"Error loading completed tasks: {str(e)}")
+        finally:
+            conn.close()
+
     #def insert_completed_task(self, task_id):
        
     #def on_item_click(self, event):
