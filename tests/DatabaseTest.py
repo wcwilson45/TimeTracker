@@ -392,6 +392,8 @@ class App:
             self.tt_entry.insert(0, values[1])
             self.ti_entry.insert(0, values[2])
             self.tw_entry.insert(0, values[3])
+
+
     def query_database(self):
     #Create a database or connect to an existing database
         conn = sqlite3.connect('task_list.db')
@@ -496,7 +498,8 @@ class App:
         self.tn_value = self.tn_entry.get()
         self.tt_value = self.tt_entry.get()
         self.tw_value = self.tw_entry.get()
-        self.task_window = EditTaskWindow()
+        self.ti_value = self.ti_entry.get()
+        self.task_window = EditTaskWindow(self.tn_value, self.tt_value, self.tw_value, self.ti_value)
         self.task_window.grab_set()
 
     def open_CurrentTaskWindow(self):
