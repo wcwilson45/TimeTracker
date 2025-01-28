@@ -368,7 +368,10 @@ class App:
 
     def open_CurrentTaskWindow(self):
         self.task_window = CurrentTaskWindow()
-        self.task_window.grab_set()
+
+        # Only set grab if a new window was actually created
+        if self.task_window == CurrentTaskWindow._instance:
+            self.task_window.grab_set()
 
     def reset_timer_values(self):
         """Reset the timer values."""
