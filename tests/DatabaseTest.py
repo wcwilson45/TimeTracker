@@ -29,16 +29,17 @@ red_button_color = "#FF7276"
 scroll_trough_color = "E0E0E0"
 
 
-
+"""
 data = [
             ["Collect money", "00:14:35", "5", "1"],
-            ["5", "00:14:35", "5", "1"],
-            ["4", "00:14:35", "5", "1"],
-            ["3", "00:14:35", "5", "1"],
-            ["2", "00:14:35", "5", "1"],
-            ["1", "00:14:35", "5", "1"],
-            ["Print paper", "00:30:21", "3", "2"]
+            ["Print money", "00:14:35", "5", "2"],
+            ["Do things", "00:14:35", "5", "3"],
+            ["Stuff", "00:14:35", "5", "4"],
+            ["Explain", "00:14:35", "5", "5"],
+            ["Data", "00:14:35", "5", "6"],
+            ["Print paper", "00:30:21", "3", "7"]
         ]
+"""
 #Create a database or connect to an existing database
 conn = sqlite3.connect('task_list.db')
 
@@ -53,7 +54,12 @@ c.execute("""CREATE TABLE if not exists TaskList (
           task_id integer)
 """)
 
+#Table for Completed database
+
+#Table for Tags
+
 #Add dummy data to database
+"""
 for task in data:
     c.execute("INSERT INTO TaskList VALUES (:task_name, :task_time, :task_weight, :task_id)",
               {
@@ -63,25 +69,12 @@ for task in data:
                "task_id": task[3]
               }
               )
-
+"""
 #Commit Changes
 conn.commit()
 
 conn.close()
 
-def query_database():
-    #Create a database or connect to an existing database
-    conn = sqlite3.connect('task_list.db')
-
-    #Create a cursor instance
-    c = conn.cursor()
-    c.execute("SELECT * FROM TaskList")
-    tasks = c.fetchall()
-    print(tasks)
-    #Commit Changes
-    conn.commit()
-
-    conn.close()
 
 
 class App:
@@ -90,9 +83,6 @@ class App:
       self.root.title("Task Manager")
       self.root.geometry("800x1000")
       root.resizable(width = 0, height = 0)
-
-      #Query the database for all information inside
-      query_database()
 
       # Font Tuples for Use on pages
       self.fonts = {
@@ -144,6 +134,11 @@ class App:
       self.setup_full_page(self)
       self.setup_completedtasks_page()
       self.setup_smalloverlay_page()
+
+      #Query the database for all information inside
+      self.query_database()
+
+      
 
     def show_menu(self):
         try:
@@ -223,12 +218,13 @@ class App:
     def setup_full_page(self, task_list):
         self.full_page.configure(background= blue_background_color)
         style = ttk.Style()
-        style.theme_use('default')
+        style.theme_use('clam')
         style.configure("Treeview",
-        background = blue_background_color,
+        background = "black",
         foreground = "black",
         rowheight = 25,
-        fieldbackground = grey_button_color)
+        fieldbackground = grey_button_color,
+        bd = "black")
         
         #Dummy info for name and description. Will become void
         currenttask_name = "John"
@@ -281,7 +277,7 @@ class App:
         tasklist_scroll.grid(row = 0, column = 1, sticky = "ns")
 
         #Set scrollbar
-        self.task_list = ttk.Treeview(tasklist_frame, yscrollcommand=tasklist_scroll.set, selectmode = "extended", style = "Treeview")
+        self.task_list = ttk.Treeview(tasklist_frame, yscrollcommand=tasklist_scroll.set, selectmode = "extended", style  = "Treeview")
         self.task_list.grid(row = 0, column = 0)
 
         #Task List is vertical scroll
@@ -303,21 +299,8 @@ class App:
         self.task_list.heading("Task ID", text = "ID", anchor = CENTER)
 
         #Configure the different rows for color
-        self.task_list.tag_configure('oddrow', background=  "white")
-        self.task_list.tag_configure('evenrow', background=  grey_button_color)
-
-        #Add data to screen
-        global count
-        count = 0
-
-        #Adding the dummy data. Will become void?
-        for record in data:
-            if count % 2 == 0:
-                self.task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[0],record[1],record[2],record[3]), tags = ('evenrow', ""))
-            else:
-                self.task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[0],record[1],record[2],record[3]), tags = ('oddrow', ""))
-            #Increment count
-            count += 1
+        self.task_list.tag_configure('oddrow', background=  "#A9A9A9", foreground= "black")
+        self.task_list.tag_configure('evenrow', background=  grey_button_color, foreground= "black")
 
         #This is the select thing. Will become void after current task table is implemented
         #So Full page will become smaller and when using select button it should put task information at the top.
@@ -374,6 +357,9 @@ class App:
         select_record_button = Button(button_frame, text = "Select Record", command = self.select_record)
         select_record_button.grid(row = 0, column = 7, padx = 6, pady = 10)
 
+        #Uses select button on single click. Takes value from TreeView, not the database
+        self.task_list.bind("<ButtonRelease-1>", self.select_record)
+
 
     #Move a task up in the task list
     def move_up(self):
@@ -387,7 +373,7 @@ class App:
             self.task_list.move(row, self.task_list.parent(row), self.task_list.index(row)+1)
 
 
-    def select_record(self):
+    def select_record(self, e):
         #Clear entry boxes
         self.tn_entry.delete(0, END)
         self.tt_entry.delete(0, END)
@@ -406,6 +392,33 @@ class App:
             self.tt_entry.insert(0, values[1])
             self.ti_entry.insert(0, values[2])
             self.tw_entry.insert(0, values[3])
+    def query_database(self):
+    #Create a database or connect to an existing database
+        conn = sqlite3.connect('task_list.db')
+
+        #Create a cursor instance
+        c = conn.cursor()
+        c.execute("SELECT rowid,* FROM TaskList")
+        tasks = c.fetchall()
+        #Add data to screen
+        global count
+        count = 0
+
+        for record in tasks:
+            print(record)
+            #Adding the dummy data. Will become void?
+        for record in tasks:
+            if count % 2 == 0:
+                self.task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[1],record[2],record[0],record[4]), tags = ('evenrow', ""))
+            else:
+                self.task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[1],record[2],record[0],record[4]), tags = ('oddrow', ""))
+                #Increment count
+            count += 1
+        
+        #Commit Changes
+        conn.commit()
+
+        conn.close()
 
        
     #def insert_task(self, task_id):
@@ -480,6 +493,9 @@ class App:
         self.task_window.grab_set()
     
     def open_EditTaskWindow(self):
+        self.tn_value = self.tn_entry.get()
+        self.tt_value = self.tt_entry.get()
+        self.tw_value = self.tw_entry.get()
         self.task_window = EditTaskWindow()
         self.task_window.grab_set()
 
