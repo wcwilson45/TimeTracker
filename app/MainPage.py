@@ -29,17 +29,17 @@ red_button_color = "#FF7276"
 scroll_trough_color = "E0E0E0"
 
 
-"""
+
 data = [
-            ["Collect money", "00:14:35", "5", "1"],
-            ["Print money", "00:14:35", "5", "2"],
-            ["Do things", "00:14:35", "5", "3"],
-            ["Stuff", "00:14:35", "5", "4"],
-            ["Explain", "00:14:35", "5", "5"],
-            ["Data", "00:14:35", "5", "6"],
-            ["Print paper", "00:30:21", "3", "7"]
+            ["Collect money", "00:14:35", "5", "1", "This task is awesome"],
+            ["Print money", "00:14:35", "5", "2", "This task is not awesome"],
+            ["Do things", "00:14:35", "5", "3", "Do not do this task"],
+            ["Stuff", "00:14:35", "5", "4","Dumb task"],
+            ["Explain", "00:14:35", "5", "5", "Not dumb task"],
+            ["Data", "00:14:35", "5", "6", "Very dumb task"],
+            ["Print paper", "00:30:21", "3", "7", "Oof"]
         ]
-"""
+
 #Create a database or connect to an existing database
 conn = sqlite3.connect('task_list.db')
 
@@ -51,7 +51,8 @@ c.execute("""CREATE TABLE if not exists TaskList (
           task_name text,
           task_time text,
           task_weight text,
-          task_id integer
+          task_id integer,
+          task_description text
           )
 """)
 
@@ -59,7 +60,8 @@ c.execute("""CREATE TABLE if not exists CurrentTask(
           task_name text,
           task_time text,
           task_weight text,
-          task_id integer)
+          task_id integer,
+          task_description text)
 """)
 
 #Table for Completed database
@@ -67,17 +69,18 @@ c.execute("""CREATE TABLE if not exists CurrentTask(
 #Table for Tags
 
 #Add dummy data to database
-"""
+
 for task in data:
     c.execute("INSERT INTO TaskList VALUES (:task_name, :task_time, :task_weight, :task_id)",
               {
                "task_name": task[0],
                "task_time": task[1],
                "task_weight": task[2],
-               "task_id": task[3]
+               "task_id": task[3],
+               "task_description": task[4]
               }
               )
-"""
+
 #Commit Changes
 conn.commit()
 
@@ -235,7 +238,9 @@ class App:
         bd = "black")
         
         #Dummy info for name and description. Will become void
-        currenttask_name = "John"
+        self.currenttask_name_var = tk.StringVar()
+        self.currenttask_name_var.set("No Task Selected")
+
         currenttask_desc = "This is the description"
 
         #Current Task Frame
@@ -243,9 +248,12 @@ class App:
         currenttask_frame.pack(pady=0, side = TOP, fill = 'x')
 
         #Set Labels for Name, Time, and Description
-        Label(currenttask_frame, text = f"Task Name: {currenttask_name}",
+        Label(currenttask_frame, text = f"Task Name:",
                font=self.fonts['Body_Tuple'],
                background="#5DADE2").grid(row=0, column=0, sticky=W,pady=2)
+        self.task_name_label = Label(currenttask_frame, textvariable=self.currenttask_name_var, 
+                                    font=self.fonts['Body_Tuple'], background=blue_background_color)
+        self.task_name_label.grid(row=0, column=1, sticky=W, pady=2)
 
         Label(currenttask_frame, text = "Time: ",
                font=self.fonts['Body_Tuple'],
@@ -261,16 +269,14 @@ class App:
         #Description Scrollbar
         description_scroll = Scrollbar(description_frame)
         description_scroll.grid(row = 0, column = 1, sticky = "ns")
-        description_box = Text(description_frame, yscrollcommand= description_scroll.set,
+        self.description_box = Text(description_frame, yscrollcommand= description_scroll.set,
                                 height=5,
                                     width=62,border = 1, font=self.fonts['Description_Tuple'],
                                     background="#d3d3d3")
-        description_box.grid(row = 0, column = 0)
+        self.description_box.grid(row = 0, column = 0)
 
         #Insert Current Task Description
-        description_box.insert("1.0", currenttask_desc)
-        description_scroll.config(command = description_box.yview)
-
+        description_scroll.config(command = self.description_box.yview)
 
         #Change color when a item is selected
         style.map("Treeview",
@@ -400,6 +406,13 @@ class App:
             self.tt_entry.insert(0, values[1])
             self.ti_entry.insert(0, values[2])
             self.tw_entry.insert(0, values[3])
+
+            self.currenttask_name_var.set(values[0])
+
+            task_description = values[4]
+            self.description_box.delete("1.0", END)
+            self.description_box.insert("1.0", task_description)
+
 
         #Send values from TaskList Table to CurrentTaskList Table
     """def select_current_task(self):
