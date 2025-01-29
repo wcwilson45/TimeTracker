@@ -1,30 +1,25 @@
+
 from tkinter import ttk as ttk
 import tkinter as tk
 import tkinter.font as tkfont
-from tkinter import messagebox
+import sqlite3
+
 
 
 class EditTaskWindow(tk.Tk):
-    def __init__(self, parent):
+    def __init__(self, tn, tt, tw, ti, task_list):
         super().__init__()
-
-        self.parent = parent
-        self.protocol("WM_DELETE_WINDOW", self.on_close)  # Bind the "X" button to a custom method
-        # Make window not maximizable
-        self.resizable(False, False)
 
         # Set the main window geometry and title
         self.geometry("620x350")  # Increased height to accommodate additional fields
         self.title("Edit Task")
         self.configure(bg='#5DADE2')  # Lighter Blue background
-
         # Create fonts
         self.fonts = {
             'header': tkfont.Font(family="SF Pro Display", size=14, weight="bold"),
             'subheader': tkfont.Font(family="SF Pro Display", size=10, weight="bold"),
             'body': tkfont.Font(family="SF Pro Text", size=10)
         }
-
         # Complexity options
         self.complexity_types = ["T-Shirt Size", "Fibonacci"]
         self.tshirt_sizes = ["XXS", "XS", "S", "M", "L", "XL", "XXL"]
@@ -61,6 +56,7 @@ class EditTaskWindow(tk.Tk):
         # Task Name Entry
         self.task_name_entry = ttk.Entry(header_frame, style='Input.TEntry', width=40)
         self.task_name_entry.pack(fill='x', pady=(3, 6))
+        self.task_name_entry.insert(0, tn)
 
         # Content container
         content_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
@@ -178,13 +174,10 @@ class EditTaskWindow(tk.Tk):
         self.timer_var = tk.StringVar()
         self.timer_entry = ttk.Entry(timer_frame, style='Input.TEntry', textvariable=self.timer_var)
         self.timer_entry.pack(fill='x')
+        self.timer_entry.insert(0, tt)
 
-    def on_close(self):
-        # Reset the reference in the parent App class
-        if self.parent:
-            self.parent.edit_task_window = None
-        # Destroy the window
-        self.destroy()
+
+        
 
     def update_values(self, event=None):
         selected_type = self.type_combo.get()
@@ -200,33 +193,16 @@ class EditTaskWindow(tk.Tk):
         # Implement the cancel action (e.g., close the window)
         self.destroy()
 
-        #Reset the refernece in the parent app
-        if self.parent:
-            self.parent.edit_task_window = None
-
     def confirm_action(self):
-        #Show a confimration dialog
-        confirm = messagebox.askyesno("Confirm Edit", "Are you sure you want to edit this task?")
-        if confirm:
-            # If the user confirms, save the task data
-            self.destroy()
-        else:
-            # Do nothing if the user cancels
-            return
-        
-        #Reset the refernece in the parent app
-        if self.parent:
-            self.parent.edit_task_window = None
+        # Implement the confirm action (e.g., save the task data)
+        pass
 
     def delete_action(self):
-        confirm = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this task?")
-        if confirm:
-            # Logic to delete the task
-            print("Task deleted")  # Replace this with actual delete logic
-            self.destroy()  # Close the window after deletion (optional)
-        else:
-            pass
+        pass
 
-        #Reset the refernece in the parent app
-        if self.parent:
-            self.parent.edit_task_window = None
+
+    def update_task(self):
+        self.task_name_entry.get()
+        self.timer_entry.get()
+
+        #Return values
