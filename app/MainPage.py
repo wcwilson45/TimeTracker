@@ -60,8 +60,7 @@ c.execute("""CREATE TABLE if not exists TaskList (
           task_time text,
           task_weight text,
           task_id integer,
-          task_description text
-          )
+          task_description text)
 """)
 
 c.execute("""CREATE TABLE if not exists CurrentTask(
@@ -201,7 +200,7 @@ class App:
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background="#5DADE2")
-            self.root.geometry("700x300")
+            self.root.geometry("600x450")
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background="#5DADE2")
@@ -521,19 +520,19 @@ class App:
 
         # Put the task list inside a frame
         completedlist_frame = tk.Frame(self.completedtasks_page, bg=blue_background_color)
-        completedlist_frame.pack(pady=10)
+        completedlist_frame.pack(expand=True, fill='both', pady=10, padx=10)
 
         # Create scrollbar
         completedlist_scroll = Scrollbar(completedlist_frame)
         completedlist_scroll.pack(side=RIGHT, fill=Y)
 
-        # Set scrollbar
-        completed_list = ttk.Treeview(completedlist_frame, yscrollcommand=completedlist_scroll.set,
-                                      selectmode="extended")
-        completed_list.pack()
+        completed_list = ttk.Treeview(completedlist_frame,
+                                      yscrollcommand=completedlist_scroll.set,
+                                      selectmode="extended",
+                                      height=20)  # Added height parameter
+        completed_list.pack(expand=True, fill='both')  # Added expand=True, fill='both'
 
         self.completed_list = completed_list
-
         # Task List is vertical scroll
         completedlist_scroll.config(command=completed_list.yview)
 
