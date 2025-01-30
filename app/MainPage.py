@@ -40,6 +40,14 @@ data = [
             ["Print paper", "00:30:21", "3", "7", "Oof"]
         ]
 
+completed_data = [
+    ["Write Documentation", "01:30:00", "5", "101", "2024-01-28 15:30:00", "01:45:23"],
+    ["Debug Login", "02:00:00", "7", "102", "2024-01-27 14:20:00", "02:15:45"],
+    ["Team Meeting", "01:00:00", "3", "103", "2024-01-27 10:00:00", "00:55:30"],
+    ["Code Review", "00:45:00", "4", "104", "2024-01-26 16:45:00", "00:50:15"],
+    ["Test Features", "03:00:00", "8", "105", "2024-01-26 11:30:00", "03:30:00"]
+]
+
 #Create a database or connect to an existing database
 conn = sqlite3.connect('task_list.db')
 
@@ -65,13 +73,22 @@ c.execute("""CREATE TABLE if not exists CurrentTask(
 """)
 
 #Table for Completed database
+c.execute("""CREATE TABLE if not exists CompletedTasks (
+          task_name text,
+          task_time text,
+          task_weight text,
+          task_id integer,
+          completion_date text,
+          total_duration text,
+          PRIMARY KEY (task_id)
+)""")
 
 #Table for Tags
 
 #Add dummy data to database
 
 for task in data:
-    c.execute("INSERT INTO TaskList VALUES (:task_name, :task_time, :task_weight, :task_id)",
+    c.execute("INSERT INTO TaskList VALUES (:task_name, :task_time, :task_weight, :task_id, :task_description)",
               {
                "task_name": task[0],
                "task_time": task[1],
@@ -80,6 +97,19 @@ for task in data:
                "task_description": task[4]
               }
               )
+    
+# Add completed tasks dummy data
+for task in completed_data:
+    c.execute("""INSERT OR REPLACE INTO CompletedTasks VALUES 
+              (:task_name, :task_time, :task_weight, :task_id, :completion_date, :total_duration)""",
+              {
+                  "task_name": task[0],
+                  "task_time": task[1],
+                  "task_weight": task[2],
+                  "task_id": task[3],
+                  "completion_date": task[4],
+                  "total_duration": task[5]
+              })
 
 #Commit Changes
 conn.commit()
@@ -94,6 +124,7 @@ class App:
       self.root.title("Task Manager")
       self.root.geometry("800x1000")
       root.resizable(width = 0, height = 0)
+      self.current_sort_reverse = False
 
       # Font Tuples for Use on pages
       self.fonts = {
@@ -475,48 +506,110 @@ class App:
     
        
     def setup_completedtasks_page(self):
-        self.completedtasks_page.configure(background= blue_background_color)
+        self.completedtasks_page.configure(background=blue_background_color)
         style = ttk.Style()
         style.theme_use('default')
         style.configure("Treeview",
-        background = grey_button_color,
-        foreground = blue_background_color,
-        rowheight = 25,
-        fieldbackground = grey_button_color)
+                        background=grey_button_color,
+                        foreground=blue_background_color,
+                        rowheight=25,
+                        fieldbackground=grey_button_color)
 
-        #Change color when a item is selected
+        # Change color when a item is selected
         style.map("Treeview",
-        background = [('selected', "347083")])
+                  background=[('selected', "347083")])
 
-        #Put the task list inside a frame
-        completedlist_frame = tk.Frame(self.completedtasks_page, bg= blue_background_color)
+        # Put the task list inside a frame
+        completedlist_frame = tk.Frame(self.completedtasks_page, bg=blue_background_color)
         completedlist_frame.pack(pady=10)
 
-        #Create scrollbar
+        # Create scrollbar
         completedlist_scroll = Scrollbar(completedlist_frame)
-        completedlist_scroll.pack(side = RIGHT, fill = Y)
+        completedlist_scroll.pack(side=RIGHT, fill=Y)
 
-        #Set scrollbar
-        completed_list = ttk.Treeview(completedlist_frame, yscrollcommand=completedlist_scroll.set, selectmode = "extended")
+        # Set scrollbar
+        completed_list = ttk.Treeview(completedlist_frame, yscrollcommand=completedlist_scroll.set,
+                                      selectmode="extended")
         completed_list.pack()
 
-        #Task List is vertical scroll
-        completedlist_scroll.config(command = completed_list.yview)
+        self.completed_list = completed_list
 
-        #Format columns
-        completed_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID")
-        completed_list.column("#0", width = 0, stretch=NO)
-        completed_list.column('Task Name', anchor = W, width = 150)
-        completed_list.column('Task Time', anchor = CENTER, width = 100)
-        completed_list.column('Task Weight', anchor = CENTER, width =100)
-        completed_list.column('Task ID',anchor = CENTER, width = 100)
+        # Task List is vertical scroll
+        completedlist_scroll.config(command=completed_list.yview)
 
+        # Format columns
+        completed_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", "Completion Date",
+                                     "Total Duration")
 
-        completed_list.heading("#0", text = "", anchor = W)
-        completed_list.heading("Task Name", text = "Task Name", anchor = W)
-        completed_list.heading("Task Time", text = "Time", anchor = CENTER)
-        completed_list.heading("Task Weight", text = "Weight", anchor = CENTER)
-        completed_list.heading("Task ID", text = "ID", anchor = CENTER)
+        completed_list.column("#0", width=0, stretch=NO)
+        completed_list.column('Task Name', anchor=W, width=120)
+        completed_list.column('Task Time', anchor=CENTER, width=100)
+        completed_list.column('Task Weight', anchor=CENTER, width=75)
+        completed_list.column('Task ID', anchor=CENTER, width=100)
+        completed_list.column('Completion Date', anchor=CENTER, width=150)
+        completed_list.column('Total Duration', anchor=CENTER, width=100)
+
+        completed_list.heading("#0", text="", anchor=W)
+        completed_list.heading("Task Name", text="Task Name", anchor=W,
+                      command=lambda: self.sort_completed_tasks("Task Name"))
+        completed_list.heading("Task Time", text="Time", anchor=CENTER,
+                      command=lambda: self.sort_completed_tasks("Task Time"))
+        completed_list.heading("Task Weight", text="Weight", anchor=CENTER,
+                      command=lambda: self.sort_completed_tasks("Task Weight"))
+        completed_list.heading("Task ID", text="ID", anchor=CENTER,
+                      command=lambda: self.sort_completed_tasks("Task ID"))
+        completed_list.heading("Completion Date", text="Completed On", anchor=CENTER,
+                      command=lambda: self.sort_completed_tasks("Completion Date"))
+        completed_list.heading("Total Duration", text="Total Time", anchor=CENTER,
+                      command=lambda: self.sort_completed_tasks("Total Duration"))
+
+        self.completed_list.tag_configure('oddrow', background="white")
+        self.completed_list.tag_configure('evenrow', background=grey_button_color)
+
+        # load completed tasks data
+        self.load_completed_tasks()
+
+    def load_completed_tasks(self):
+        # Clear existing items
+        for item in self.completed_list.get_children():
+            self.completed_list.delete(item)
+
+        conn = sqlite3.connect('task_list.db')
+        c = conn.cursor()
+
+        try:
+            c.execute("SELECT * FROM CompletedTasks ORDER BY completion_date DESC")
+            tasks = c.fetchall()
+
+            for i, task in enumerate(tasks):
+                tag = ('evenrow' if i % 2 == 0 else 'oddrow')
+                self.completed_list.insert('', 'end', values=task, tags=tag)
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"Error loading completed tasks: {str(e)}")
+        finally:
+            conn.close()
+
+    def sort_completed_tasks(self, col):  # Make sure this is indented under the App class
+        """Sort completed tasks by column"""
+        # Get all items from the tree
+        items = [(self.completed_list.set(k, col), k) for k in self.completed_list.get_children("")]
+        
+        # Sort the items
+        items.sort(reverse=self.current_sort_reverse)
+        
+        # Rearrange items in sorted positions
+        for index, (val, k) in enumerate(items):
+            self.completed_list.move(k, "", index)
+            
+            # Recolor rows after sorting
+            if index % 2 == 0:
+                self.completed_list.item(k, tags=('evenrow',))
+            else:
+                self.completed_list.item(k, tags=('oddrow',))
+        
+        # Reverse sort direction for next click
+        self.current_sort_reverse = not self.current_sort_reverse
        
     #def insert_completed_task(self, task_id):
        
