@@ -5,6 +5,7 @@ from .CommitHistoryPage import CommitHistoryWindow
 from .AddTaskPage import AddTaskWindow
 from .CurrentTaskWindow import CurrentTask
 from .CurrentTaskPage import CurrentTaskWindow
+from .TagsDB import TagsDB
 
 #from app.ui import SmallOverlay
 #from app.ui import CompletionPage
