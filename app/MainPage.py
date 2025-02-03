@@ -11,7 +11,8 @@ from ui import (
     EditTaskWindow,
     CommitHistoryWindow,
     AddTaskWindow,
-    CurrentTaskWindow
+    CurrentTaskWindow,
+    TagsDB
 )
 
 
@@ -160,6 +161,7 @@ class App:
       self.full_page = tk.Frame(self.main_container)
       self.completedtasks_page = tk.Frame(self.main_container)
       self.smalloverlay_page = tk.Frame(self.main_container)
+      self.tags_database_page = TagsDB(self.main_container)
 
       #Show main page at start-up
       self.current_page = self.full_page
@@ -170,6 +172,7 @@ class App:
       self.popup_menu.add_command(label="NAVSEA Time Tracker", command=lambda: self.switch_page("NAVSEA Time Tracker"))
       self.popup_menu.add_command(label="Completed Tasks", command=lambda: self.switch_page("Completed Tasks"))
       self.popup_menu.add_command(label="Small Overlay", command=lambda: self.switch_page("Small Overlay"))
+      self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
       self.popup_menu.configure(bg="#5DADE2")
 
       self.setup_full_page(self)
@@ -205,6 +208,11 @@ class App:
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background="#5DADE2")
             self.root.geometry("230x160")
+        elif page_name == "Tags Database":
+            self.current_page = self.tags_database_page  
+            self.page_title.config(text="Tags Database", background="#5DADE2") #CHANGED REMEMBER <<<<<<<<<<
+            self.root.geometry("530x600")  
+
 
 
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
