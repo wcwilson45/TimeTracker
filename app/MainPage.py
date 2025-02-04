@@ -204,6 +204,7 @@ class App:
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background="#5DADE2")
             self.root.geometry("600x450")
+            self.export_button.pack(side='right', padx=5)
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background="#5DADE2")
@@ -510,8 +511,7 @@ class App:
     def remove_all(self):
         for task in self.task_list.get_children():
             self.task_list.delete(task)
-    
-       
+
     def setup_completedtasks_page(self):
         self.completedtasks_page.configure(background=blue_background_color)
         style = ttk.Style()
@@ -522,29 +522,26 @@ class App:
                         rowheight=25,
                         fieldbackground=grey_button_color)
 
-        # Change color when a item is selected
-        style.map("Treeview",
-                  background=[('selected', "347083")])
+        self.export_button = ttk.Button(self.menu_frame, text="Export")
+        style.map("Treeview", background=[('selected', "347083")])
 
-        # Put the task list inside a frame
+        # Tree view setup
         completedlist_frame = tk.Frame(self.completedtasks_page, bg=blue_background_color)
-        completedlist_frame.pack(expand=True, fill='both', pady=10, padx=10)
+        completedlist_frame.pack(pady=5, padx=10)
 
-        # Create scrollbar
         completedlist_scroll = Scrollbar(completedlist_frame)
         completedlist_scroll.pack(side=RIGHT, fill=Y)
 
         completed_list = ttk.Treeview(completedlist_frame,
                                       yscrollcommand=completedlist_scroll.set,
                                       selectmode="extended",
-                                      height=20)  # Added height parameter
-        completed_list.pack(expand=True, fill='both')  # Added expand=True, fill='both'
+                                      height=13)
+        completed_list.pack()
 
         self.completed_list = completed_list
-        # Task List is vertical scroll
         completedlist_scroll.config(command=completed_list.yview)
 
-        # Format columns
+        # Column configuration
         completed_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", "Completion Date",
                                      "Total Duration")
 
@@ -558,22 +555,31 @@ class App:
 
         completed_list.heading("#0", text="", anchor=W)
         completed_list.heading("Task Name", text="Task Name", anchor=W,
-                      command=lambda: self.sort_completed_tasks("Task Name"))
+                               command=lambda: self.sort_completed_tasks("Task Name"))
         completed_list.heading("Task Time", text="Time", anchor=CENTER,
-                      command=lambda: self.sort_completed_tasks("Task Time"))
+                               command=lambda: self.sort_completed_tasks("Task Time"))
         completed_list.heading("Task Weight", text="Weight", anchor=CENTER,
-                      command=lambda: self.sort_completed_tasks("Task Weight"))
+                               command=lambda: self.sort_completed_tasks("Task Weight"))
         completed_list.heading("Task ID", text="ID", anchor=CENTER,
-                      command=lambda: self.sort_completed_tasks("Task ID"))
+                               command=lambda: self.sort_completed_tasks("Task ID"))
         completed_list.heading("Completion Date", text="Completed On", anchor=CENTER,
-                      command=lambda: self.sort_completed_tasks("Completion Date"))
+                               command=lambda: self.sort_completed_tasks("Completion Date"))
         completed_list.heading("Total Duration", text="Total Time", anchor=CENTER,
-                      command=lambda: self.sort_completed_tasks("Total Duration"))
+                               command=lambda: self.sort_completed_tasks("Total Duration"))
 
         self.completed_list.tag_configure('oddrow', background="white")
         self.completed_list.tag_configure('evenrow', background=grey_button_color)
 
-        # load completed tasks data
+        # Button frame
+        bottom_frame = tk.Frame(self.completedtasks_page, bg=blue_background_color)
+        bottom_frame.pack(pady=5, padx=10)
+
+        delete_button = ttk.Button(bottom_frame, text="Delete")
+        delete_button.pack(side='left', padx=(0, 5))
+
+        delete_all_button = ttk.Button(bottom_frame, text="Delete All")
+        delete_all_button.pack(side='left')
+
         self.load_completed_tasks()
 
     def load_completed_tasks(self):
