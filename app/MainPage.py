@@ -518,7 +518,7 @@ class App:
         style.theme_use('default')
         style.configure("Treeview",
                         background=grey_button_color,
-                        foreground=blue_background_color,
+                        foreground="black",
                         rowheight=25,
                         fieldbackground=grey_button_color)
 
@@ -572,13 +572,13 @@ class App:
 
         # Button frame
         bottom_frame = tk.Frame(self.completedtasks_page, bg=blue_background_color)
-        bottom_frame.pack(pady=5, padx=10)
-
-        delete_button = ttk.Button(bottom_frame, text="Delete")
-        delete_button.pack(side='left', padx=(0, 5))
+        bottom_frame.pack(fill='x', side='bottom', pady=5, padx=10)
 
         delete_all_button = ttk.Button(bottom_frame, text="Delete All")
-        delete_all_button.pack(side='left')
+        delete_all_button.pack(side='right')
+
+        delete_button = ttk.Button(bottom_frame, text="Delete")
+        delete_button.pack(side='right', padx=(0, 5))
 
         self.load_completed_tasks()
 
