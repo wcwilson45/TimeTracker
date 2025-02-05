@@ -1,27 +1,40 @@
-from tkinter import ttk as ttk
+from tkinter import *
+from tkinter.ttk import *
 import tkinter as tk
+from tkinter import ttk, messagebox
 import tkinter.font as tkfont
-from tkinter import messagebox
+import pathlib
+import sqlite3
 from datetime import date
 
+background_color = "#A9A9A9"
+
+green_btn_color = "#b2fba5"
+org_btn_color = "#e99e56"
+
+
+
 class AddTaskWindow(tk.Tk):
-    def __init__(self, parent):
+    def __init__(self):
         super().__init__()
 
-        self.parent = parent
-        self.protocol("WM_DELETE_WINDOW", self.on_close)  # Bind the "X" button to a custom method
-         # Make window not maximizable
-        self.resizable(False, False)
+        # Define path
+        self.path = pathlib.Path(__file__).parent
+        self.path = str(self.path).replace("ui", '') + 'task_list.db'
 
-        # Set the main window geometry and title
-        self.geometry("520x275")  # Increased height to accommodate additional fields
+        print(self.path)
+
+
+
+        # Set the main window properties
+        self.geometry("700x250")
         self.title("Add Task")
-        self.configure(bg='#5DADE2')  # Lighter Blue background
+        self.configure(bg=background_color)
 
         # Create fonts
         self.fonts = {
-            'header': tkfont.Font(family="SF Pro Display", size=14, weight="bold"),
-            'subheader': tkfont.Font(family="SF Pro Display", size=10, weight="bold"),
+            'header': tkfont.Font(family="SF Pro Display", size=24, weight="bold"),
+            'subheader': tkfont.Font(family="SF Pro Display", size=8, weight="bold"),
             'body': tkfont.Font(family="SF Pro Text", size=10)
         }
 
@@ -32,19 +45,10 @@ class AddTaskWindow(tk.Tk):
 
         # Style configurations
         self.style = ttk.Style(self)
-        self.style.theme_use("alt")  # Using "alt" theme for better customization
-        self.style.configure('MainFrame.TFrame', background='#5DADE2')  # Lighter Blue for frames
+        self.style.theme_use("alt")
+        self.style.configure('MainFrame.TFrame', background=background_color)  # Light Blue for frames
         self.style.configure('Input.TEntry', fieldbackground='#d3d3d3', font=("SF Pro Text", 10))
-        self.style.configure('Input.TCombobox', fieldbackground='#d3d3d3', background="#5DADE2", font=("SF Pro Text", 10))
-        self.style.configure('TLabel', background='#5DADE2', font=("SF Pro Text", 10))  # Lighter Blue for labels
-        self.style.configure('TButton', background='#5DADE2', font=("SF Pro Text", 10))  # Default Lighter Blue for buttons
-
-        # Custom button styles
-        self.style.configure('ConfirmButton.TButton', background='#90EE90', font=("SF Pro Text", 10))
-        self.style.configure('CancelButton.TButton', background='#F08080', font=("SF Pro Text", 10))
-
-        # Scrollbar style
-        self.style.configure('Vertical.TScrollbar', troughcolor="#E0E0E0", background="#AED6F1", bordercolor="#5DADE2", arrowcolor="#5DADE2")
+        self.style.configure('TLabel', background=background_color, font=("SF Pro Text", 8))  # Light Blue for labels
 
         # Main container
         main_frame = ttk.Frame(self, style='MainFrame.TFrame')
@@ -54,13 +58,11 @@ class AddTaskWindow(tk.Tk):
         header_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
         header_frame.pack(fill='x', pady=(0, 6))
 
-        # Task Name Label
-        label = ttk.Label(header_frame, text="Task Name:", font=self.fonts['subheader'], style='TLabel')
-        label.pack(anchor='w')
-
-        # Task Name Entry
+        # Task Name
+        label = ttk.Label(header_frame, text="Task Name", font=self.fonts['header'], style='TLabel')
+        label.pack(side='left', padx=(0, 10))
         self.task_name_entry = ttk.Entry(header_frame, style='Input.TEntry', width=40)
-        self.task_name_entry.pack(fill='x', pady=(3, 6))
+        self.task_name_entry.pack(side='left', fill='x', expand=True)
 
         # Content container
         content_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
@@ -74,93 +76,69 @@ class AddTaskWindow(tk.Tk):
         label = ttk.Label(left_frame, text="Description:", font=self.fonts['subheader'], style='TLabel')
         label.pack(anchor='w')
 
-        # Create a frame for the text and scrollbar
         desc_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
         desc_frame.pack(fill='x', pady=(3, 6))
 
-        # Text widget with scrollbar
-        desc_text = tk.Text(desc_frame, height=7, width=30, bg='#d3d3d3', relief="solid", bd=1,
-                            font=("SF Pro Text", 10))
-        desc_text.pack(side='left', fill='both', expand=True)
+        desc_scrollbar = ttk.Scrollbar(desc_frame, orient='vertical')
+        desc_scrollbar.pack(side='right', fill='y')
 
-        # Add a vertical scrollbar and apply the custom style
-        scrollbar = ttk.Scrollbar(desc_frame, orient="vertical", command=desc_text.yview, style='Vertical.TScrollbar')
-        scrollbar.pack(side='right', fill='y')
+        self.desc_text = tk.Text(
+            desc_frame, height=7, width=30, bg='#d3d3d3', relief="solid", bd=1, font=("SF Pro Text", 10),
+            yscrollcommand=desc_scrollbar.set
+        )
+        self.desc_text.pack(side='left', fill='both', expand=True)
+        desc_scrollbar.config(command=self.desc_text.yview)
 
-        # Link the scrollbar with the text widget
-        desc_text.configure(yscrollcommand=scrollbar.set)
-
-        # Button frame below Description
+        # Button frame
         button_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        button_frame.pack(fill='x', pady=(10, 5))
+        button_frame.pack(fill='x', pady=(3, 6))
 
-        # Cancel button
-        cancel_btn = tk.Button(button_frame, text="Cancel", command=self.cancel_action,
-                               bg="#F08080", fg="#000000", font=("SF Pro Text", 10),
-                               relief="flat", activebackground="#F49797", activeforeground="#000000")
-        cancel_btn.pack(side='left', padx=(10, 5))
+        cancel_btn = tk.Button(button_frame, text="Cancel", command=self.cancel_action, bg=org_btn_color)
+        cancel_btn.pack(side='left', padx=(0, 8))
 
-        # Confirm button
-        confirm_btn = tk.Button(button_frame, text="Confirm", command=self.confirm_action,
-                                bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
-                                relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
+        confirm_btn = tk.Button(button_frame, text="Confirm", command=self.confirm_action, bg=green_btn_color)
         confirm_btn.pack(side='left')
 
-        #Autofill today's date button
-        autofill_date_btn = tk.Button(button_frame, text="Autofill date", command=self.autofill_date,
-                                bg="#A020F0", fg="#000000", font=("SF Pro Text", 10),
-                                relief="flat", activebackground="#800080", activeforeground="#000000")
-        autofill_date_btn.pack(side='right')
 
         # Right column
         right_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
         right_frame.pack(side='left', fill='both', expand=True)
 
-        # Time Complexity with nested dropdowns
-        label = ttk.Label(right_frame, text="Time Complexity:", font=self.fonts['subheader'], style='TLabel')
-        label.pack(anchor='w')
-
-        # Complexity type frame
-        complexity_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
-        complexity_frame.pack(fill='x', pady=(3, 6))
-
-        # Type selector
-        self.type_combo = ttk.Combobox(complexity_frame, values=self.complexity_types, style='Input.TCombobox', state='readonly')
-        self.type_combo.pack(fill='x', pady=(0, 3))
-        self.type_combo.set("Select Type")
-
-        # Value selector
-        self.value_combo = ttk.Combobox(complexity_frame, style='Input.TCombobox', state='readonly')
-        self.value_combo.pack(fill='x')
-        self.value_combo.set("Select Value")
-
-        # Bind the type selection to update value options
-        self.type_combo.bind('<<ComboboxSelected>>', self.update_values)
-
         # Tags
         label = ttk.Label(right_frame, text="Tags:", font=self.fonts['subheader'], style='TLabel')
         label.pack(anchor='w')
-        tag_entry = ttk.Entry(right_frame, style='Input.TEntry')
-        tag_entry.pack(fill='x', pady=(3, 6))
+        self.tag_entry = ttk.Entry(right_frame, style='Input.TEntry')
+        self.tag_entry.pack(fill='x', pady=(3, 6))
 
-        # Start Date
+        # Time Complexity
+        label = ttk.Label(right_frame, text="Time Complexity:", font=self.fonts['subheader'], style='TLabel')
+        label.pack(anchor='w')
+
+        #Autofill today's date button
+        autofill_date_btn = tk.Button(button_frame, text="Autofill date", command=self.autofill_date,
+                                bg="#E39ff6", fg="#000000", font=("SF Pro Text", 10), activebackground="#800080", activeforeground="#000000")
+        autofill_date_btn.pack(side='right')
+
+        complexity_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
+        complexity_frame.pack(fill='x', pady=(3, 6))
+
+        self.type_combo = ttk.Combobox(complexity_frame, values=self.complexity_types, state='readonly')
+        self.type_combo.pack(fill='x', pady=(0, 3))
+        self.type_combo.set("Select Type")
+
+        self.value_combo = ttk.Combobox(complexity_frame, state='readonly')
+        self.value_combo.pack(fill='x')
+        self.value_combo.set("Select Value")
+
+        self.type_combo.bind('<<ComboboxSelected>>', self.update_values)
+
+        # Date Completed
         label = ttk.Label(right_frame, text="Start Date (MM-DD-YYYY):", font=self.fonts['subheader'], style='TLabel')
         label.pack(anchor='w')
 
-        # Start Date frame
-        start_date_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
-        start_date_frame.pack(fill='x', pady=(3, 6))
-
-        self.start_date_var = tk.StringVar()
-        self.start_date_entry = ttk.Entry(start_date_frame, style='Input.TEntry', textvariable=self.start_date_var)
-        self.start_date_entry.pack(fill='x')
-
-    def on_close(self):
-        # Reset the reference in the parent App class
-        if self.parent:
-            self.parent.add_task_window = None
-        # Destroy the window
-        self.destroy()
+        self.date_var = tk.StringVar()
+        self.date_entry = ttk.Entry(right_frame, textvariable=self.date_var)
+        self.date_entry.pack(fill='x')
 
     def update_values(self, event=None):
         selected_type = self.type_combo.get()
@@ -173,21 +151,63 @@ class AddTaskWindow(tk.Tk):
         self.value_combo.set("Select Value")
 
     def cancel_action(self):
-        # Implement the cancel action (e.g., close the window)
         self.destroy()
-
-        #Reset the refernece in the parent app
-        if self.parent:
-            self.parent.add_task_window = None
+        
 
     def confirm_action(self):
         confirm = messagebox.askyesno("Confirm Add", "Are you sure you want to add this task?")
+        task_name = self.task_name_entry.get()
+        description = self.desc_text.get("1.0", tk.END).strip()
+        tags = self.tag_entry.get()
+        complexity_type = self.type_combo.get()
+        complexity_value = self.value_combo.get()
+        start_date = self.date_var.get()
+        task_time = "00:00:00" 
+        end_date = "01-02-2025"
+
         if confirm:
-            # Logic to save the task
-            pass
+            # Connect to the database
+            conn = sqlite3.connect(self.path)
+            c = conn.cursor()
+
+            c.execute("SELECT MAX(task_id) FROM TaskList")
+            last_id = c.fetchone()[0]
+            task_id = (last_id + 1) if last_id else 1
+
+
+
+            # Insert data
+            c.execute(
+            "INSERT INTO TaskList VALUES(:task_name, :task_time, :task_weight, :task_id, :task_start_date, :task_end_date, :task_description, :task_weight_type, :task_tags)",
+            {
+                "task_name": task_name,
+                "task_time": task_time,
+                "task_weight": complexity_value,
+                "task_id": task_id,
+                "task_start_date": start_date,
+                "task_end_date": end_date,
+                "task_description": description,
+                "task_weight_type": complexity_type,
+                "task_tags": tags
+            }
+        )
+
+
+            conn.commit()
+            conn.close()
+
+
+            self.destroy()
+
         else:
             return
+
     def autofill_date(self):
         CurrentDate = date.today()
-        self.start_date_entry.delete(0, "end")
-        self.start_date_entry.insert(0, CurrentDate.strftime("%m-%d-%Y"))
+        self.date_entry.delete(0, "end")
+        self.date_entry.insert(0, CurrentDate.strftime("%m-%d-%Y"))
+
+
+if __name__ == "__main__":
+    app = AddTaskWindow()
+    app.mainloop()
