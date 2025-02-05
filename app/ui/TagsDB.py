@@ -37,27 +37,6 @@ class TagsDB(tk.Frame):
         # Close connection to database
         conn.close()
 
-        def create_table_again():
-            # Create a database or connect to one that exists
-            conn = sqlite3.connect('tree_crm.db')
-
-            # Create a cursor instance
-            c = conn.cursor()
-
-            # Create Table
-            c.execute("""
-            CREATE TABLE IF NOT EXISTS tags (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tag_name TEXT,
-            description TEXT
-            )
-        """)
-            # Commit changes
-            conn.commit()
-
-            # Close our connection
-            conn.close()
-
         def query_database():
             # Create or Connect to the database
             conn = sqlite3.connect('tags.db')
@@ -279,8 +258,6 @@ class TagsDB(tk.Frame):
                 id_display.configure(text="")
 
 
-                # Recreate The Table
-                create_table_again()
 
                 
 
