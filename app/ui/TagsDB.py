@@ -256,7 +256,15 @@ class TagsDB(tk.Frame):
 
                 # Delete Everything From The Table
                 c.execute("DROP TABLE tags")
-                    
+
+                c.execute("""
+                    CREATE TABLE IF NOT EXISTS tags (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tag_name TEXT,
+                    description TEXT
+                    )
+                """)
+                            
 
 
                 # Commit changes
