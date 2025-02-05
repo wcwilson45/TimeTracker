@@ -22,20 +22,20 @@ class CompletedTasksWindow(tk.Tk):
 
         self.geometry("500x475")
         self.title("Task Details")
-        self.configure(bg="#5DADE2")
+        self.configure(bg="#A9A9A9")  # Changed to match main page
 
         # Configure styles
         self.style = ttk.Style()
         self.style.theme_use('alt')
-        self.style.configure("Info.TLabel", font=("Arial", 10), background='#5DADE2')
-        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#D3D3D3', padding=2, foreground='white')
+        self.style.configure("Info.TLabel", font=("Arial", 10), background='#A9A9A9')  # Changed
+        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#A9A9A9', padding=2, foreground='black')  # Changed
 
         # Main container
-        self.main_container = tk.Frame(self, bg='#5DADE2', bd=0)
+        self.main_container = tk.Frame(self, bg='#A9A9A9', bd=0)
         self.main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
         # Top frame for title
-        self.top_frame = tk.Frame(self.main_container, bg='#5DADE2', bd=0)
+        self.top_frame = tk.Frame(self.main_container, bg='#A9A9A9', bd=0)  # Changed
         self.top_frame.pack(fill=tk.X, pady=(0, 5))
 
         # Header
@@ -43,21 +43,21 @@ class CompletedTasksWindow(tk.Tk):
             self.top_frame,
             text="Test Task",
             font=("Arial", 16, "bold"),
-            bg='#5DADE2',
+            bg='#A9A9A9',  # Changed
             bd=0
         )
         self.header_label.pack(side=tk.LEFT)
 
         # Main content frame using grid
-        self.content_frame = tk.Frame(self.main_container, bg='#5DADE2', bd=0)
+        self.content_frame = tk.Frame(self.main_container, bg='#A9A9A9', bd=0)  # Changed
         self.content_frame.pack(fill=tk.BOTH, expand=True)
 
         # Left panel (description and commit history)
-        self.left_panel = tk.Frame(self.content_frame, bg='#5DADE2', bd=0, width=300)
+        self.left_panel = tk.Frame(self.content_frame, bg='#A9A9A9', bd=0, width=300)  # Changed
         self.left_panel.grid(row=0, column=0, sticky='nsew', padx=(0, 10))
 
         # Right panel (info and buttons)
-        self.right_panel = tk.Frame(self.content_frame, bg='#5DADE2', bd=0, width=160)
+        self.right_panel = tk.Frame(self.content_frame, bg='#A9A9A9', bd=0, width=160)  # Changed
         self.right_panel.grid(row=0, column=1, sticky='n')
         self.right_panel.grid_propagate(False)
 
@@ -70,9 +70,9 @@ class CompletedTasksWindow(tk.Tk):
         self.create_collapsible_section(self.left_panel, "Commit History:", "Enter commit history...", height=12)
 
         # Tags
-        self.tags_frame = tk.Frame(self.right_panel, bg='#5DADE2', bd=0)
+        self.tags_frame = tk.Frame(self.right_panel, bg='#A9A9A9', bd=0)  # Changed
         self.tags_frame.pack(fill=tk.X, pady=(25, 5))
-        tk.Label(self.tags_frame, text="Tags:", font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
+        tk.Label(self.tags_frame, text="Tags:", font=("Arial", 10), bg='#A9A9A9').pack(anchor=tk.W)  # Changed
 
         # Create tag labels
         self.create_tag("Blue")
@@ -85,7 +85,7 @@ class CompletedTasksWindow(tk.Tk):
         self.create_info_field("Date Completed:", "Test Date")
 
         # Buttons at the bottom
-        self.button_frame = tk.Frame(self.content_frame, bg='#5DADE2', bd=0)
+        self.button_frame = tk.Frame(self.content_frame, bg='#A9A9A9', bd=0)  # Changed
         self.button_frame.place(relx=1.0, x=6.5, y=405.75, anchor="e")
 
         # Cancel and Complete buttons
@@ -93,7 +93,7 @@ class CompletedTasksWindow(tk.Tk):
             self.button_frame,
             text="Cancel",
             command=self.open_commit_history_page,
-            bg='#F08080',
+            bg='#e99e56',  # Changed to del_btn_color
             fg='black',
             relief='flat',
             padx=10,
@@ -105,7 +105,7 @@ class CompletedTasksWindow(tk.Tk):
             self.button_frame,
             text="Complete",
             command=self.destroy,
-            bg='#90EE90',
+            bg='#b2fba5',  # Changed to main_btn_color
             fg='black',
             relief='flat',
             padx=10,
@@ -114,23 +114,23 @@ class CompletedTasksWindow(tk.Tk):
         self.complete_btn.pack(side=tk.LEFT)
 
     def create_collapsible_section(self, parent, title, placeholder, height=7):
-        frame = tk.Frame(parent, bg='#5DADE2', bd=0)
+        frame = tk.Frame(parent, bg='#A9A9A9', bd=0)  # Changed
         frame.pack(fill=tk.X, pady=(0, 5))
 
-        header_frame = tk.Frame(frame, bg='#5DADE2')
+        header_frame = tk.Frame(frame, bg='#A9A9A9')  # Changed
         header_frame.pack(fill=tk.X, anchor=tk.W)
 
-        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#5DADE2',).pack(side=tk.LEFT, padx=5, pady=2)
+        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#A9A9A9').pack(side=tk.LEFT, padx=5, pady=2)  # Changed
 
         if title == "Commit History:":
-            container_frame = tk.Frame(frame, bg='#D3D3D3', bd=1, relief='solid')
+            container_frame = tk.Frame(frame, bg='#A9A9A9', bd=1, relief='solid')  # Changed
             container_frame.pack(fill=tk.X, anchor=tk.W, padx=5, pady=(0, 2))
 
-            tree_frame = tk.Frame(container_frame, bg='#D3D3D3')
+            tree_frame = tk.Frame(container_frame, bg='#A9A9A9')  # Changed
             tree_frame.pack(fill=tk.BOTH, expand=True)
 
             tree = ttk.Treeview(tree_frame, columns=("Date",), show="headings", height=7)
-            tree.heading("Date", text="Date", anchor="center",)
+            tree.heading("Date", text="Date", anchor="center")
             tree.column("Date", anchor="center", width=150)
 
             scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
@@ -145,8 +145,8 @@ class CompletedTasksWindow(tk.Tk):
                 tag = "oddrow" if i % 2 == 0 else "evenrow"
                 tree.insert("", "end", values=(date,), tags=(tag,))
 
-            tree.tag_configure("oddrow", background="#D3D3D3")
-            tree.tag_configure("evenrow", background="#A9A9A9")
+            tree.tag_configure("oddrow", background="#A9A9A9")  # Changed
+            tree.tag_configure("evenrow", background="#d3d3d3")  # Changed to grey_button_color
             tree.tag_configure('selected', background='#b3b3b3')
 
             def on_commit_click(event):
@@ -162,13 +162,13 @@ class CompletedTasksWindow(tk.Tk):
             tree.bind("<Button-1>", on_commit_click)
 
         else:
-            container_frame = tk.Frame(frame, bg='#D3D3D3', bd=1, relief='solid')
+            container_frame = tk.Frame(frame, bg='#A9A9A9', bd=1, relief='solid')  # Changed
             container_frame.pack(fill=tk.X, anchor=tk.W, padx=5, pady=(0, 2))
 
             scrollbar = tk.Scrollbar(container_frame, orient="vertical")
             scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-            text = tk.Text(container_frame, height=height, wrap=tk.WORD, bg='#D3D3D3', bd=0,
+            text = tk.Text(container_frame, height=height, wrap=tk.WORD, bg='#d3d3d3', bd=0,  # Changed to grey_button_color
                           yscrollcommand=scrollbar.set)
             text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -180,7 +180,7 @@ class CompletedTasksWindow(tk.Tk):
             self.tags_frame,
             text=text,
             font=("Arial", 8),
-            bg='#5DADE2',
+            bg='#d3d3d3',  # Changed to grey_button_color
             fg='black',
             padx=5,
             pady=2
@@ -188,16 +188,15 @@ class CompletedTasksWindow(tk.Tk):
         tag_label.pack(side=tk.LEFT, padx=(0, 5))
 
     def create_info_field(self, label_text, value_text):
-        frame = tk.Frame(self.right_panel, bg='#5DADE2', bd=0)
+        frame = tk.Frame(self.right_panel, bg='#A9A9A9', bd=0)  # Changed
         frame.pack(fill=tk.X, pady=(0, 5))
 
-        tk.Label(frame, text=label_text, font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
-        tk.Label(frame, text=value_text, font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
+        tk.Label(frame, text=label_text, font=("Arial", 10), bg='#A9A9A9').pack(anchor=tk.W)  # Changed
+        tk.Label(frame, text=value_text, font=("Arial", 10), bg='#A9A9A9').pack(anchor=tk.W)  # Changed
 
     def open_commit_history_page(self):
         self.task_window = CommitHistoryWindow()
         self.task_window.grab_set()
-
 
 if __name__ == "__main__":
     root = tk.Tk()
