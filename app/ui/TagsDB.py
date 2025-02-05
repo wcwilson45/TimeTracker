@@ -7,6 +7,10 @@ import sqlite3
 import csv
 from tkinter import messagebox
 
+background_color = "#A9A9A9"
+green_btn_color = "#b2fba5"
+org_btn_color = "#e99e56"
+
 class TagsDB(tk.Frame):
     def __init__(self,parent):
         super().__init__(parent)
@@ -89,7 +93,7 @@ class TagsDB(tk.Frame):
 
 
         # Set the main window 
-        self.configure(bg='#5DADE2')
+        self.configure(bg= background_color)
 
         # Create fonts
         self.fonts = {
@@ -103,10 +107,10 @@ class TagsDB(tk.Frame):
         style.theme_use("alt")  
         style.configure('Input.TEntry', fieldbackground='#d3d3d3', font=("SF Pro Text", 10))
         style.configure('TLabel', background='#d3d3d3', font=("SF Pro Text", 10))  
-        style.configure('TButton', background='#5DADE2', font=("SF Pro Text", 10))
+        style.configure('TButton', background= background_color, font=("SF Pro Text", 10))
 
         # Create a Treeview Frame
-        tree_frame = tk.Frame(self, bg='#5DADE2')
+        tree_frame = tk.Frame(self, bg= background_color)
         tree_frame.grid(row=1, column=0, sticky="nsew")
 
         # Change color when a item is selected
@@ -156,26 +160,26 @@ class TagsDB(tk.Frame):
         my_tree.heading("Description", text="Description", anchor=W)
         
         
-        data_frame = tk.Frame(self,background="#5DADE2")
+        data_frame = tk.Frame(self,background=background_color)
         data_frame.grid(row=2, column=0, sticky="w")
 
      
         # ID Label
-        id_label = ttk.Label(data_frame, text="ID: ", font=("SF Pro Text", 10, "bold"), background="#5DADE2")
+        id_label = ttk.Label(data_frame, text="ID: ", font=("SF Pro Text", 10, "bold"), background=background_color)
         id_label.grid(row=0, column=0, pady=1, sticky="w")
 
         # Change the ID entry to a Label to hold the ID (non-editable)
-        id_display = ttk.Label(data_frame, font=("SF Pro Text", 10, "bold"), background="#5DADE2")
+        id_display = ttk.Label(data_frame, font=("SF Pro Text", 10, "bold"), background=background_color)
         id_display.grid(row=0, column=0, padx=20, pady=3, sticky="w")
 
         # Tag Name Label & Entry
-        n_label = ttk.Label(data_frame, text="Tag Name", font=("SF Pro Text", 10, "bold"),background="#5DADE2")
+        n_label = ttk.Label(data_frame, text="Tag Name", font=("SF Pro Text", 10, "bold"),background=background_color)
         n_label.grid(row=3, column=0, padx=1, pady=5, sticky="w")
         n_entry = tk.Entry(data_frame, font=("SF Pro Text", 10), bg="#d3d3d3")
         n_entry.grid(row=4, column=0, padx=1, pady=1, sticky="w")
 
         # Description Label & Textbox
-        desc_label = Label(data_frame, text="Description", font=("SF Pro Text", 10, "bold"),background="#5DADE2")
+        desc_label = Label(data_frame, text="Description", font=("SF Pro Text", 10, "bold"),background=background_color)
         desc_label.grid(row=5, column=0, padx=1, pady=5, sticky="w")
         desc_text = Text(data_frame, font=("SF Pro Text", 12), height=5, width=40, background="#d3d3d3")
         desc_text.grid(row=6, column=0, padx=1, pady=1, sticky="w")
@@ -252,15 +256,7 @@ class TagsDB(tk.Frame):
 
                 # Delete Everything From The Table
                 c.execute("DROP TABLE tags")
-                
-
-                c.execute("""
-                    CREATE TABLE IF NOT EXISTS tags (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    tag_name TEXT,
-                    description TEXT
-                    )
-                """)
+                    
 
 
                 # Commit changes
@@ -457,11 +453,11 @@ class TagsDB(tk.Frame):
         # Search Bar
 
         # Frame for search bar
-        search_frame = tk.Frame(self, bg='#5DADE2')
+        search_frame = tk.Frame(self, bg= background_color)
         search_frame.grid(row=0, column=0, padx=1, pady=1, sticky="ew")
         
         # Search bar label
-        search_label = Label(search_frame, text="Search by Tag Name:", font=("SF Pro Text", 10, "bold"), background="#5DADE2")
+        search_label = Label(search_frame, text="Search by Tag Name:", font=("SF Pro Text", 10, "bold"), background=background_color)
         search_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         # Entry for search bar for user to input search
@@ -474,7 +470,7 @@ class TagsDB(tk.Frame):
         my_tree.bind("<ButtonRelease-1>", select_tag)
 
        # Frame for the buttons
-        button_frame = tk.Frame(self, background="#5DADE2")
+        button_frame = tk.Frame(self, background=background_color)
         button_frame.grid(row=7, column=0, pady=1, padx=1, sticky="w")
 
         # Configure columns of the button_frame to distribute the space evenly
@@ -488,46 +484,46 @@ class TagsDB(tk.Frame):
 
         # Add Tag Button
         add_btn = tk.Button(button_frame, text=" Add Tag ",  
-                            bg="#90EE90", fg="#000000", font=("SF Pro Text", 10), command=add_Tag,
-                            relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
+                            bg=green_btn_color, fg="#000000", font=("SF Pro Text", 10), command=add_Tag,
+                            activebackground="#A8F0A8", activeforeground="#000000")
         add_btn.grid(row=0, column=0, pady=2, padx=(0, 3), sticky="w")
 
         # Update Button
         update_btn = tk.Button(button_frame, text="Update Tag", command=update_Tag,
-                            bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
-                            relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
+                            bg=green_btn_color, fg="#000000", font=("SF Pro Text", 10),
+                            activebackground="#A8F0A8", activeforeground="#000000")
         update_btn.grid(row=0, column=1, pady=2, padx=3, sticky="ew")
 
         # Clear Task Button
         clc_btn = tk.Button(button_frame, text="Clear Task", command=clear_Tag,
-                            bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
-                            relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
+                            bg=green_btn_color, fg="#000000", font=("SF Pro Text", 10),
+                            activebackground="#A8F0A8", activeforeground="#000000")
         clc_btn.grid(row=0, column=2, pady=2, padx=3, sticky="ew")
 
 
         # Delete Tag Button
         del_btn = tk.Button(button_frame, text="Delete Tag", command=del_Tag,
-                            bg="#FFA500", fg="#000000", font=("SF Pro Text", 10),
-                            relief="flat", activebackground="#FFB347", activeforeground="#000000")
+                            bg=org_btn_color, fg="#000000", font=("SF Pro Text", 10),
+                            activebackground="#FFB347", activeforeground="#000000")
         del_btn.grid(row=0, column=5, pady=2, padx=(100, 3), sticky="ew")
 
         # Remove All Button
         remove_all_btn = tk.Button(button_frame, text="Remove All", command=remove_all_Tags,
-                                    bg="#FFA500", fg="#000000", font=("SF Pro Text", 10),
-                                    relief="flat", activebackground="#FFB347", activeforeground="#000000")
+                                    bg=org_btn_color, fg="#000000", font=("SF Pro Text", 10),
+                                    activebackground="#FFB347", activeforeground="#000000")
         remove_all_btn.grid(row=0, column=6, pady=2, padx=3, sticky="ew")
 
 
         # Import Button
         import_btn = tk.Button(search_frame, text=" Import ", command=import_Tags,
-                                    bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
-                                    relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
+                                    bg=green_btn_color, fg="#000000", font=("SF Pro Text", 10),
+                                    activebackground="#A8F0A8", activeforeground="#000000")
         import_btn.grid(row=0, column=2, pady=3, padx=(85,3), sticky="w")
 
         # Import Button
         export_btn = tk.Button(search_frame, text=" Export ", command=export_Tags,
-                                    bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
-                                    relief="flat", activebackground="#A8F0A8", activeforeground="#000000")
+                                    bg=green_btn_color, fg="#000000", font=("SF Pro Text", 10),
+                                    activebackground="#A8F0A8", activeforeground="#000000")
         export_btn.grid(row=0, column=2, pady=3, padx=(145,3), sticky="e")
 
         # Run to pull data from database on start
