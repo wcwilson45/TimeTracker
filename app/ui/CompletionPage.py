@@ -10,7 +10,7 @@ from .CommitHistoryPage import CommitHistoryWindow
 
 
 class CompletedTasksWindow(tk.Tk):
-    def __init__(self, task_name, completed_date, time_taken):
+    def __init__(self):
         super().__init__()
 
         # Font Tuples for Use on pages
@@ -41,7 +41,7 @@ class CompletedTasksWindow(tk.Tk):
         # Header
         self.header_label = tk.Label(
             self.top_frame,
-            text=task_name,
+            text="Test Task",
             font=("Arial", 16, "bold"),
             bg='#5DADE2',
             bd=0
@@ -80,9 +80,9 @@ class CompletedTasksWindow(tk.Tk):
         self.create_tag("Tech")
 
         # Time information
-        self.create_info_field("Time of Completion:", time_taken)
+        self.create_info_field("Time of Completion:", "Test Time")
         self.create_info_field("Time Complexity:", "5")
-        self.create_info_field("Date Completed:", completed_date)
+        self.create_info_field("Date Completed:", "Test Date")
 
         # Buttons at the bottom
         self.button_frame = tk.Frame(self.content_frame, bg='#5DADE2', bd=0)

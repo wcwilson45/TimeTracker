@@ -352,7 +352,7 @@ class App:
         reload_button = tk.Button(top_btn_frame, text = "Reload TaskList",bg = main_btn_color, command = self.query_database)
         reload_button.grid(row = 0, column = 0, padx = 4, pady = 6)
 
-        complete_task_btn = tk.Button(top_btn_frame, text = "Complete Task", bg = main_btn_color)
+        complete_task_btn = tk.Button(top_btn_frame, text = "Complete Task", bg = main_btn_color, command = self.open_CompletionPage)
         complete_task_btn.grid(row = 0, column = 3, padx = 4, pady = 6)
 
         complete_curtask_btn = tk.Button(top_btn_frame, text = "Complete Current", bg = main_btn_color)
@@ -788,6 +788,9 @@ class App:
 
     def open_CurrentTaskWindow(self):
         self.task_window = CurrentTaskWindow()
+
+    def open_CompletionPage(self):
+        self.task_window = CompletedTasksWindow()
         self.task_window.grab_set()
 
     
