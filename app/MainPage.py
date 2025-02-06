@@ -552,9 +552,9 @@ class App:
 
         if cur_task:  # Prevent error if CurrentTask is empty
             #Enable entry boxes to change information
-            self.task_name_entry.configure(state = NORMAL)
-            self.current_id_entry.configure(state = NORMAL)
-            self.description_box.configure(state = NORMAL)
+            self.task_name_entry.configure(state = NORMAL,foreground= "black")
+            self.current_id_entry.configure(state = NORMAL,foreground= "black")
+            self.description_box.configure(state = NORMAL,foreground= "black")
 
             #Switch out entry boxes for all information
             self.task_name_entry.delete(0, END)
@@ -564,40 +564,22 @@ class App:
             self.description_box.delete("1.0", END)
             self.description_box.insert("1.0", cur_task[6])  # Assuming description is at index 6
             #Disable entry boxes
-            self.task_name_entry.configure(state = NORMAL)
-            self.current_id_entry.configure(state = NORMAL)
+            self.task_name_entry.configure(state = DISABLED)
+            self.current_id_entry.configure(state = DISABLED)
             self.description_box.configure(state = DISABLED)
             
         else:
-            self.current_task_name = "No Current Task"
-            self.current_task_id = None
+            self.task_name_entry.configure(state = NORMAL,foreground= "black")
+            self.current_id_entry.configure(state = NORMAL,foreground= "black")
+            self.description_box.configure(state = NORMAL,foreground= "black")
+            self.task_name_entry.insert(0 , "No Current Task")
             self.description_box.delete("1.0", "end")
+            self.task_name_entry.configure(state = DISABLED)
+            self.current_id_entry.configure(state = DISABLED)
+            self.description_box.configure(state = DISABLED)
+
 
         self.query_database()
-
-        conn.close()
-
-    def query_current_task(self):
-        #Create a database or connect to an existing database
-        conn = sqlite3.connect('task_list.db')
-
-        #Create a cursor instance
-        c = conn.cursor()
-        c.execute("SELECT * FROM CurrentTask")
-        task = c.fetchone()
-
-        if task:
-            self.current_task_name = task[0]
-            self.current_task_id = task[3]
-            self.description_box.delete("1.0", END)
-            self.description_box.insert("1.0", task[6])
-        else:
-            self.current_task_name = "No Current Task"
-            self.current_task_id = None
-            self.description_box.delete("1.0", "end")
-        
-        #Commit Changes
-        conn.commit()
 
         conn.close()
 
