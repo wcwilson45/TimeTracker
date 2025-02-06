@@ -790,8 +790,23 @@ class App:
         self.task_window = CurrentTaskWindow()
 
     def open_CompletionPage(self):
-        self.task_window = CompletedTasksWindow()
-        self.task_window.grab_set()
+        selected = self.task_list.selection()
+        if selected:
+            values = self.task_list.item(selected[0], "values")
+            task_name = values[0]
+            task_time = values[1]
+            task_weight = values[2]
+            task_id = values[3]
+
+            self.task_window = CompletedTasksWindow(
+                task_name=task_name,
+                task_time=task_time,
+                task_weight=task_weight,
+                task_id=task_id
+            )
+            self.task_window.grab_set()
+        else:
+            messagebox.showwarning("Selection Required", "Please select a task to complete.")
 
     
     def update_timer(self):
