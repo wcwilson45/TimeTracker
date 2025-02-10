@@ -140,7 +140,7 @@ class App:
     def __init__(self, root):
       self.root = root
       self.root.title("Task Manager")
-      self.root.geometry("488x700")
+      self.root.geometry("488x650")
       root.resizable(width = 0, height = 0)
 
       # Font Tuples for Use on pages
@@ -216,11 +216,13 @@ class App:
         if page_name == "NAVSEA Time Tracker":
             self.current_page = self.full_page
             self.page_title.config(text="NAVSEA Time Tracker", background= background_color)
-            self.root.geometry("488x700")
+            self.root.geometry("488x650")
+            self.query_database()
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background= background_color)
             self.root.geometry("600x450")
+            self.load_completed_tasks()
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background=background_color)
@@ -563,7 +565,7 @@ class App:
             self.current_id_entry.insert(0, cur_task[3])
             self.description_box.delete("1.0", END)
             self.description_box.insert("1.0", cur_task[6])  # Assuming description is at index 6
-            #Disable entry boxes
+            #Disable entry boxes                             
             self.task_name_entry.configure(state = DISABLED)
             self.current_id_entry.configure(state = DISABLED)
             self.description_box.configure(state = DISABLED)
@@ -582,9 +584,9 @@ class App:
         self.query_database()
 
         conn.close()
+      
 
-
-
+        
     def query_database(self):
         for record in self.task_list.get_children():
             self.task_list.delete(record)
@@ -617,6 +619,8 @@ class App:
         conn.close()
        
     #def insert_task(self, task_id):
+
+    
 
     def remove_current_task(self):
         x = self.task_list.selection()[0]
@@ -700,11 +704,11 @@ class App:
                                      "Total Duration")
 
         completed_list.column("#0", width=0, stretch=NO)
-        completed_list.column('Task Name', anchor=W, width=120)
-        completed_list.column('Task Time', anchor=CENTER, width=100)
-        completed_list.column('Task Weight', anchor=CENTER, width=75)
-        completed_list.column('Task ID', anchor=CENTER, width=100)
-        completed_list.column('Completion Date', anchor=CENTER, width=150)
+        completed_list.column('Task Name', anchor=W, width=135)
+        completed_list.column('Task Time', anchor=CENTER, width=75)
+        completed_list.column('Task Weight', anchor=CENTER, width=50)
+        completed_list.column('Task ID', anchor=CENTER, width=50)
+        completed_list.column('Completion Date', anchor=CENTER, width=135)
         completed_list.column('Total Duration', anchor=CENTER, width=100)
 
         completed_list.heading("#0", text="", anchor=W)
@@ -736,6 +740,9 @@ class App:
 
         export_button = tk.Button(bottom_frame, text="Export", bg = main_btn_color)
         export_button.pack(side = "left")
+
+        rld_button = tk.Button(bottom_frame, text = "Reload List",bg = main_btn_color, command = self.load_completed_tasks)
+        rld_button.pack(side = "left", padx = 6)
 
         self.load_completed_tasks()
 
@@ -791,6 +798,7 @@ class App:
     def open_AddTaskWindow(self):
         self.task_window = AddTaskWindow()
         self.task_window.grab_set()
+        self.query_database()
 
     def open_AddCompleteTaskWindow(self, task_id):
         self.task_window = CompletedTasksWindow(
@@ -799,12 +807,12 @@ class App:
         self.task_window.grab_set()
     
     def open_EditTaskWindow(self):
-        self.tn_value = self.tn_entry.get()
-        self.tt_value = self.tt_entry.get()
-        self.tw_value = self.tw_entry.get()
-        self.ti_value = self.ti_entry.get()
-        self.task_window = EditTaskWindow(self.tn_value, self.tt_value, self.tw_value, self.ti_value, self.task_list)
-        self.task_window.grab_set()
+        task_id = self.ti_entry.get()
+        if task_id:
+            self.task_window = EditTaskWindow(task_id = task_id)
+            self.task_window.grab_set()
+        else:
+            messagebox.showwarning("Selection Required", "Please select a task to complete.")
 
     def open_CurrentTaskWindow(self):
         self.task_window = CurrentTaskWindow()
@@ -876,6 +884,8 @@ class App:
         # Small Overlay buttons
         self.small_overlay_start_button.config(state=DISABLED if start_disabled else NORMAL)
         self.small_overlay_stop_button.config(state=NORMAL if start_disabled else DISABLED)
+
+    
 
 if __name__ == "__main__":
     root = tk.Tk()
