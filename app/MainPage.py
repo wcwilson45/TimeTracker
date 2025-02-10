@@ -12,7 +12,8 @@ from ui import (
     CommitHistoryWindow,
     AddTaskWindow,
     CurrentTaskWindow,
-    TagsDB
+    TagsDB,
+    CompletedTasksList
 )
 
 
@@ -176,7 +177,7 @@ class App:
 
       #Create pages
       self.full_page = tk.Frame(self.main_container)
-      self.completedtasks_page = tk.Frame(self.main_container)
+      self.completedtasks_page = CompletedTasksList(self.main_container, self)
       self.smalloverlay_page = tk.Frame(self.main_container)
       self.tags_database_page = TagsDB(self.main_container)
 
@@ -193,7 +194,7 @@ class App:
       self.popup_menu.configure(bg= background_color)
 
       self.setup_full_page()
-      self.setup_completedtasks_page()
+      self.completedtasks_page.pack_forget()
       self.setup_smalloverlay_page()
 
       #Query the database for all information inside
@@ -221,8 +222,8 @@ class App:
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background= background_color)
-            self.root.geometry("600x450")
-            self.load_completed_tasks()
+            self.root.geometry("600x400")
+            self.completedtasks_page.load_completed_tasks()
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background=background_color)
@@ -669,131 +670,6 @@ class App:
 
         # Close our connection
         conn.close()
-    
-       
-    def setup_completedtasks_page(self):
-        self.completedtasks_page.configure(background=background_color)
-        style = ttk.Style()
-        style.theme_use('default')
-        style.configure("Treeview",
-                        background=grey_button_color,
-                        foreground="black",
-                        rowheight=25,
-                        fieldbackground=grey_button_color)
-
-        style.map("Treeview", background=[('selected', "347083")])
-
-        # Tree view setup
-        completedlist_frame = tk.Frame(self.completedtasks_page, bg=background_color)
-        completedlist_frame.pack(pady=5, padx=10)
-
-        completedlist_scroll = Scrollbar(completedlist_frame)
-        completedlist_scroll.pack(side=RIGHT, fill=Y)
-
-        completed_list = ttk.Treeview(completedlist_frame,
-                                      yscrollcommand=completedlist_scroll.set,
-                                      selectmode="extended",
-                                      height=13)
-        completed_list.pack()
-
-        self.completed_list = completed_list
-        completedlist_scroll.config(command=completed_list.yview)
-
-        # Column configuration
-        completed_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", "Completion Date",
-                                     "Total Duration")
-
-        completed_list.column("#0", width=0, stretch=NO)
-        completed_list.column('Task Name', anchor=W, width=135)
-        completed_list.column('Task Time', anchor=CENTER, width=75)
-        completed_list.column('Task Weight', anchor=CENTER, width=50)
-        completed_list.column('Task ID', anchor=CENTER, width=50)
-        completed_list.column('Completion Date', anchor=CENTER, width=135)
-        completed_list.column('Total Duration', anchor=CENTER, width=100)
-
-        completed_list.heading("#0", text="", anchor=W)
-        completed_list.heading("Task Name", text="Task Name", anchor=W,
-                               command=lambda: self.sort_completed_tasks("Task Name"))
-        completed_list.heading("Task Time", text="Time", anchor=CENTER,
-                               command=lambda: self.sort_completed_tasks("Task Time"))
-        completed_list.heading("Task Weight", text="Weight", anchor=CENTER,
-                               command=lambda: self.sort_completed_tasks("Task Weight"))
-        completed_list.heading("Task ID", text="ID", anchor=CENTER,
-                               command=lambda: self.sort_completed_tasks("Task ID"))
-        completed_list.heading("Completion Date", text="Completed On", anchor=CENTER,
-                               command=lambda: self.sort_completed_tasks("Completion Date"))
-        completed_list.heading("Total Duration", text="Total Time", anchor=CENTER,
-                               command=lambda: self.sort_completed_tasks("Total Duration"))
-
-        self.completed_list.tag_configure('oddrow', background="white")
-        self.completed_list.tag_configure('evenrow', background=grey_button_color)
-
-        # Button frame
-        bottom_frame = tk.Frame(self.completedtasks_page, bg=background_color)
-        bottom_frame.pack(fill='x', side='bottom', pady=5, padx=10)
-
-        delete_all_button = tk.Button(bottom_frame, text="Delete All", bg=del_btn_color)
-        delete_all_button.pack(side='right')
-
-        delete_button = tk.Button(bottom_frame, text="Delete", bg=del_btn_color)
-        delete_button.pack(side='right', padx=(0, 5))
-
-        export_button = tk.Button(bottom_frame, text="Export", bg = main_btn_color)
-        export_button.pack(side = "left")
-
-        rld_button = tk.Button(bottom_frame, text = "Reload List",bg = main_btn_color, command = self.load_completed_tasks)
-        rld_button.pack(side = "left", padx = 6)
-
-        self.load_completed_tasks()
-
-
-    def load_completed_tasks(self):
-        # Clear existing items
-        for item in self.completed_list.get_children():
-            self.completed_list.delete(item)
-
-        conn = sqlite3.connect('task_list.db')
-        c = conn.cursor()
-
-        try:
-            c.execute("SELECT * FROM CompletedTasks ORDER BY completion_date DESC")
-            tasks = c.fetchall()
-
-            for i, task in enumerate(tasks):
-                tag = ('evenrow' if i % 2 == 0 else 'oddrow')
-                self.completed_list.insert('', 'end', values=task, tags=tag)
-
-        except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error loading completed tasks: {str(e)}")
-        finally:
-            conn.close()
-
-    def sort_completed_tasks(self, col):  # Make sure this is indented under the App class
-        """Sort completed tasks by column"""
-        # Get all items from the tree
-        items = [(self.completed_list.set(k, col), k) for k in self.completed_list.get_children("")]
-        
-        # Sort the items
-        items.sort(reverse=self.current_sort_reverse)
-        
-        # Rearrange items in sorted positions
-        for index, (val, k) in enumerate(items):
-            self.completed_list.move(k, "", index)
-            
-            # Recolor rows after sorting
-            if index % 2 == 0:
-                self.completed_list.item(k, tags=('evenrow',))
-            else:
-                self.completed_list.item(k, tags=('oddrow',))
-        
-        # Reverse sort direction for next click
-        self.current_sort_reverse = not self.current_sort_reverse
-       
-    #def insert_completed_task(self, task_id):
-       
-    #def on_item_click(self, event):
-       
-    #def current_item_click(self, event):
        
     def open_AddTaskWindow(self):
         self.task_window = AddTaskWindow()
