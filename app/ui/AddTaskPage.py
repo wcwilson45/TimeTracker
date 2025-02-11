@@ -15,16 +15,18 @@ org_btn_color = "#e99e56"
 
 
 class AddTaskWindow(tk.Tk):
-    def __init__(self):
+    def __init__(self, main_app):
         super().__init__()
+        self.main_app = main_app
+        self.main_app.task_window = self
 
         # Define path
         self.path = pathlib.Path(__file__).parent
         self.path = str(self.path).replace("ui", '') + 'task_list.db'
 
-        print(self.path)
+        self.grab_set()
 
-
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Set the main window properties
         self.geometry("700x250")
@@ -47,7 +49,7 @@ class AddTaskWindow(tk.Tk):
         self.style = ttk.Style(self)
         self.style.theme_use("alt")
         self.style.configure('MainFrame.TFrame', background=background_color)  # Light Blue for frames
-        self.style.configure('Input.TEntry', fieldbackground='#d3d3d3', font=("SF Pro Text", 10))
+        self.style.configure('Input.TEntry', background='d3d3d3', fieldbackground='#d3d3d3', font=("SF Pro Text", 10))
         self.style.configure('TLabel', background=background_color, font=("SF Pro Text", 8))  # Light Blue for labels
 
         # Main container
@@ -89,14 +91,16 @@ class AddTaskWindow(tk.Tk):
         self.desc_text.pack(side='left', fill='both', expand=True)
         desc_scrollbar.config(command=self.desc_text.yview)
 
+        button_width = 9
+
         # Button frame
         button_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
         button_frame.pack(fill='x', pady=(3, 6))
 
-        cancel_btn = tk.Button(button_frame, text="Cancel", command=self.cancel_action, bg=org_btn_color)
+        cancel_btn = tk.Button(button_frame, text="Cancel", command=self.cancel_action, bg=org_btn_color, width=button_width)
         cancel_btn.pack(side='left', padx=(0, 8))
 
-        confirm_btn = tk.Button(button_frame, text="Confirm", command=self.confirm_action, bg=green_btn_color)
+        confirm_btn = tk.Button(button_frame, text="Confirm", command=self.confirm_action, bg=green_btn_color, width=button_width)
         confirm_btn.pack(side='left')
 
 
@@ -116,7 +120,7 @@ class AddTaskWindow(tk.Tk):
 
         #Autofill today's date button
         autofill_date_btn = tk.Button(button_frame, text="Autofill date", command=self.autofill_date,
-                                bg="#E39ff6", fg="#000000", font=("SF Pro Text", 10), activebackground="#800080", activeforeground="#000000")
+                                bg="#E39ff6", fg="#000000", font=("SF Pro Text", 10), activebackground="#800080", activeforeground="#000000", width=button_width)
         autofill_date_btn.pack(side='right')
 
         complexity_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
@@ -132,12 +136,12 @@ class AddTaskWindow(tk.Tk):
 
         self.type_combo.bind('<<ComboboxSelected>>', self.update_values)
 
-        # Date Completed
+        # Date
         label = ttk.Label(right_frame, text="Start Date (MM-DD-YYYY):", font=self.fonts['subheader'], style='TLabel')
         label.pack(anchor='w')
 
         self.date_var = tk.StringVar()
-        self.date_entry = ttk.Entry(right_frame, textvariable=self.date_var)
+        self.date_entry = ttk.Entry(right_frame, textvariable=self.date_var, style='Input.TEntry')
         self.date_entry.pack(fill='x')
 
     def update_values(self, event=None):
@@ -151,7 +155,9 @@ class AddTaskWindow(tk.Tk):
         self.value_combo.set("Select Value")
 
     def cancel_action(self):
+        self.main_app.add_button.config(state=tk.NORMAL)
         self.destroy()
+        self.main_app.task_window = None
         
 
     def confirm_action(self):
@@ -196,10 +202,13 @@ class AddTaskWindow(tk.Tk):
             conn.commit()
             conn.close()
 
-
+            self.main_app.add_button.config(state=tk.NORMAL)
             self.destroy()
+            self.main_app.task_window = None
 
         else:
+            self.lift()
+            self.focus_force()
             return
 
     def autofill_date(self):
@@ -207,6 +216,10 @@ class AddTaskWindow(tk.Tk):
         self.date_entry.delete(0, "end")
         self.date_entry.insert(0, CurrentDate.strftime("%m-%d-%Y"))
 
+    def on_close(self):
+        self.main_app.add_button.config(state=tk.NORMAL)
+        self.destroy()
+        self.main_app.task_window = None  # Reset reference to allow reopening
 
 if __name__ == "__main__":
     app = AddTaskWindow()

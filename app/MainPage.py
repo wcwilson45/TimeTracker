@@ -144,6 +144,8 @@ class App:
       self.root.geometry("488x650")
       root.resizable(width = 0, height = 0)
 
+      self.task_window = None
+
       # Font Tuples for Use on pages
       self.fonts = {
             "Title_Tuple": tkfont.Font(family ="SF Pro Display", size =24, weight ="bold"),
@@ -199,8 +201,6 @@ class App:
 
       #Query the database for all information inside
       self.query_database()
-
-      
 
     def show_menu(self):
         try:
@@ -445,8 +445,8 @@ class App:
         update_button = tk.Button(button_frame, text = "Edit Task",bg = main_btn_color, command = self.open_EditTaskWindow)
         update_button.grid(row = 0, column = 0, padx = 6, pady = 10)
 
-        add_button = tk.Button(button_frame, text = "Add Task",bg = main_btn_color, command = self.open_AddTaskWindow)
-        add_button.grid(row = 0, column = 1, padx = 6, pady = 10)
+        self.add_button = tk.Button(button_frame, text = "Add Task",bg = main_btn_color, command = self.open_AddTaskWindow)
+        self.add_button.grid(row = 0, column = 1, padx = 6, pady = 10)
 
         remove_button = tk.Button(button_frame, text = "Remove Task",bg = del_btn_color, command = self.remove_current_task)
         remove_button.grid(row = 0, column = 3, padx = 6, pady = 10)
@@ -672,9 +672,15 @@ class App:
         conn.close()
        
     def open_AddTaskWindow(self):
-        self.task_window = AddTaskWindow()
-        self.task_window.grab_set()
-        self.query_database()
+        if self.task_window is None or not self.task_window.winfo_exists():
+            self.add_button.config(state=tk.DISABLED)  # Disable the button
+            self.task_window = AddTaskWindow(self)  # Pass self to allow callback
+        else:
+            self.task_window.deiconify()
+            self.task_window.lift()
+
+
+    
 
     def open_AddCompleteTaskWindow(self, task_id):
         self.task_window = CompletedTasksWindow(
@@ -760,8 +766,6 @@ class App:
         # Small Overlay buttons
         self.small_overlay_start_button.config(state=DISABLED if start_disabled else NORMAL)
         self.small_overlay_stop_button.config(state=NORMAL if start_disabled else DISABLED)
-
-    
 
 if __name__ == "__main__":
     root = tk.Tk()
