@@ -18,7 +18,7 @@ class AddTaskWindow(tk.Tk):
     def __init__(self, main_app):
         super().__init__()
         self.main_app = main_app
-        self.main_app.task_window = self
+        self.main_app.addtask_window = self
 
         # Define path
         self.path = pathlib.Path(__file__).parent
@@ -155,9 +155,7 @@ class AddTaskWindow(tk.Tk):
         self.value_combo.set("Select Value")
 
     def cancel_action(self):
-        self.main_app.add_button.config(state=tk.NORMAL)
-        self.destroy()
-        self.main_app.task_window = None
+        self.on_close()
         
 
     def confirm_action(self):
@@ -202,9 +200,7 @@ class AddTaskWindow(tk.Tk):
             conn.commit()
             conn.close()
 
-            self.main_app.add_button.config(state=tk.NORMAL)
-            self.destroy()
-            self.main_app.task_window = None
+            self.on_close()
 
         else:
             self.lift()
@@ -217,9 +213,9 @@ class AddTaskWindow(tk.Tk):
         self.date_entry.insert(0, CurrentDate.strftime("%m-%d-%Y"))
 
     def on_close(self):
+        self.main_app.addtask_window = None  # Reset reference to allow reopening
         self.main_app.add_button.config(state=tk.NORMAL)
         self.destroy()
-        self.main_app.task_window = None  # Reset reference to allow reopening
 
 if __name__ == "__main__":
     app = AddTaskWindow()

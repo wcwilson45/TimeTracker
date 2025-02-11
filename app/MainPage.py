@@ -144,7 +144,10 @@ class App:
       self.root.geometry("488x650")
       root.resizable(width = 0, height = 0)
 
-      self.task_window = None
+      self.addtask_window = None
+      self.edittask_window = None
+
+      self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
       # Font Tuples for Use on pages
       self.fonts = {
@@ -201,6 +204,20 @@ class App:
 
       #Query the database for all information inside
       self.query_database()
+
+    def on_close(self):
+        confirm = messagebox.askyesno("Confirm Exit", "Are you sure you want to exit the program?")
+
+        if confirm:
+            if self.addtask_window:
+                self.addtask_window.destroy()
+            if self.edittask_window:
+                self.edittask_window.destroy()
+            self.root.destroy()
+        else:
+            self.root.lift()
+            self.root.focus_force()
+            return
 
     def show_menu(self):
         try:
@@ -442,8 +459,8 @@ class App:
 
 
         #Buttons
-        update_button = tk.Button(button_frame, text = "Edit Task",bg = main_btn_color, command = self.open_EditTaskWindow)
-        update_button.grid(row = 0, column = 0, padx = 6, pady = 10)
+        self.update_button = tk.Button(button_frame, text = "Edit Task",bg = main_btn_color, command = self.open_EditTaskWindow)
+        self.update_button.grid(row = 0, column = 0, padx = 6, pady = 10)
 
         self.add_button = tk.Button(button_frame, text = "Add Task",bg = main_btn_color, command = self.open_AddTaskWindow)
         self.add_button.grid(row = 0, column = 1, padx = 6, pady = 10)
@@ -672,12 +689,12 @@ class App:
         conn.close()
        
     def open_AddTaskWindow(self):
-        if self.task_window is None or not self.task_window.winfo_exists():
+        if self.addtask_window is None or not self.addtask_window.winfo_exists():
             self.add_button.config(state=tk.DISABLED)  # Disable the button
-            self.task_window = AddTaskWindow(self)  # Pass self to allow callback
+            self.addtask_window = AddTaskWindow(self)  # Pass self to allow callback
         else:
-            self.task_window.deiconify()
-            self.task_window.lift()
+            self.addtask_window.deiconify()
+            self.addtask_window.lift()
 
 
     
@@ -691,8 +708,13 @@ class App:
     def open_EditTaskWindow(self):
         task_id = self.ti_entry.get()
         if task_id:
-            self.task_window = EditTaskWindow(task_id = task_id)
-            self.task_window.grab_set()
+            if self.edittask_window is None or not self.edit_task_window.winfo_exists():
+                self.update_button.config(state=tk.DISABLED)  # Disable the button
+                self.edittask_window = EditTaskWindow(task_id = task_id, main_app=self)
+                self.edittask_window.grab_set()
+            else:
+                self.edittask_window.deiconify()
+                self.edittask_window.lift()
         else:
             messagebox.showwarning("Selection Required", "Please select a task to complete.")
 

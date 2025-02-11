@@ -12,9 +12,14 @@ del_btn_color = "#e99e56"
 background_color = "#A9A9A9"
 
 class EditTaskWindow(tk.Tk):
-    def __init__(self, task_id):
+    def __init__(self, task_id, main_app):
         super().__init__()
         self.task_id = task_id
+        self.main_app = main_app
+        self.main_app = main_app
+        self.main_app.edittask_window = self
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
         # Define path
         self.path = pathlib.Path(__file__).parent
         self.path = str(self.path).replace("ui", '') + 'task_list.db'
@@ -81,22 +86,28 @@ class EditTaskWindow(tk.Tk):
 
     def cancel_action(self):
         # Implement the cancel action (e.g., close the window)
-        self.destroy()
+        self.on_close()
 
     def confirm_action(self):
-        # Implement the confirm action (e.g., save the task data)
-        conn = sqlite3.connect(self.path)
-        c = conn.cursor()
+        confirm = messagebox.askyesno("Confirm Edit", "Are you sure you want to edit this task?")
+        if confirm:
+            # Implement the confirm action (e.g., save the task data)
+            conn = sqlite3.connect(self.path)
+            c = conn.cursor()
 
-        c.execute("""UPDATE TaskList SET task_name = ?, task_time = ?, task_weight = ?, task_start_date = ?, task_end_date = ?, task_description = ?, task_weight_type = ?, task_tags = ? WHERE task_id = ?
-                  """, (self.task_name_entry.get(), self.task_time_entry.get(), self.value_combo.get(),
-                        self.start_date_entry.get(), self.end_date_var.get(), self.desc_text_entry.get("1.0", "end-1c"),
-                        self.type_combo.get(), self.task_tags_entry.get(), self.task_id))
-        
-        conn.commit()
-        conn.close()
-        messagebox.showinfo("Success", "Task updated!")
-        self.destroy()
+            c.execute("""UPDATE TaskList SET task_name = ?, task_time = ?, task_weight = ?, task_start_date = ?, task_end_date = ?, task_description = ?, task_weight_type = ?, task_tags = ? WHERE task_id = ?
+                    """, (self.task_name_entry.get(), self.task_time_entry.get(), self.value_combo.get(),
+                            self.start_date_entry.get(), self.end_date_var.get(), self.desc_text_entry.get("1.0", "end-1c"),
+                            self.type_combo.get(), self.task_tags_entry.get(), self.task_id))
+            
+            conn.commit()
+            conn.close()
+
+            self.on_close()
+        else:
+            self.lift()
+            self.focus_force()
+            return
 
     def delete_action(self):
         pass
@@ -267,3 +278,8 @@ class EditTaskWindow(tk.Tk):
         self.timer_var = tk.StringVar()
         self.task_time_entry = ttk.Entry(timer_frame, style='Input.TEntry', textvariable=self.timer_var)
         self.task_time_entry.pack(fill='x')
+
+    def on_close(self):
+        self.main_app.edittask_window = None  # Reset when closed
+        self.main_app.update_button.config(state=tk.NORMAL)
+        self.destroy()
