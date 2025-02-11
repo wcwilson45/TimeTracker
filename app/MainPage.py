@@ -354,7 +354,8 @@ class App:
 
         #Change color when a item is selected
         style.map("Treeview",
-        background = [('selected', "347083")])
+        background = [('selected', "#4169E1")], 
+        foreground=[('selected', '#000000')])
 
         #Top Button Frame
         top_btn_frame = LabelFrame(self.full_page, text = "TaskList")
