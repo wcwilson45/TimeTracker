@@ -62,8 +62,10 @@ class EditTaskWindow(tk.Tk):
     def insert_task(self):
         self.task_name_entry.insert(0, self.edit_task[0])
         self.task_time_entry.insert(0, self.edit_task[1])
+        self.value_combo.set(self.edit_task[2])
         self.start_date_entry.insert(0, self.edit_task[4])
         self.end_date_entry.insert(0, self.edit_task[5])
+        self.type_combo.set(self.edit_task[7])
         self.desc_text_entry.insert("1.0", self.edit_task[6])
         self.task_tags_entry.insert(0, self.edit_task[8])
 
