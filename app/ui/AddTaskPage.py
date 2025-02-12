@@ -200,6 +200,9 @@ class AddTaskWindow(tk.Tk):
             conn.commit()
             conn.close()
 
+            if hasattr(self.main_app, 'query_database'):
+                self.main_app.query_database()
+
             self.on_close()
 
         else:

@@ -736,7 +736,8 @@ class App:
                 task_name=task_name,
                 task_time=task_time,
                 task_weight=task_weight,
-                task_id=task_id
+                task_id=task_id,
+                refresh_callback=self.query_database
             )
             self.task_window.grab_set()
         else:

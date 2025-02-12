@@ -11,13 +11,14 @@ from .CommitHistoryPage import CommitHistoryWindow
 
 
 class CompletedTasksWindow(tk.Tk):
-    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None):
+    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, refresh_callback=None):
         super().__init__()
 
         self.task_name = task_name
         self.task_weight = task_weight
         self.task_time = task_time
         self.task_id = task_id
+        self.refresh_callback = refresh_callback
 
         # Font Tuples for Use on pages
         self.fonts = {
@@ -139,6 +140,9 @@ class CompletedTasksWindow(tk.Tk):
 
                 conn.commit()
                 messagebox.showinfo("Success", "Task completed successfully!")
+
+                if self.refresh_callback:
+                    self.refresh_callback()
                 self.destroy()
 
             except sqlite3.Error as e:
