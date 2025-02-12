@@ -174,16 +174,27 @@ class AddTaskWindow(tk.Tk):
             conn = sqlite3.connect(self.path)
             c = conn.cursor()
 
+            # Get the max task_id from both TaskList and CompletedTasks tables
             c.execute("SELECT MAX(task_id) FROM TaskList")
-            last_id = c.fetchone()[0]
-            task_id = (last_id + 1) if last_id else 1
+            max_tasklist_id = c.fetchone()[0]
+            max_tasklist_id = max_tasklist_id if max_tasklist_id is not None else 0  # Default to 0 if None
 
+            c.execute("SELECT MAX(task_id) FROM CompletedTasks")
+            max_completed_id = c.fetchone()[0]
+            max_completed_id = max_completed_id if max_completed_id is not None else 0  # Default to 0 if None
 
+            # Find the next task_id (1 + max of both task lists)
+            task_id = max(max_tasklist_id, max_completed_id) + 1
 
-            # Insert data
-            c.execute(
-            "INSERT INTO TaskList VALUES(:task_name, :task_time, :task_weight, :task_id, :task_start_date, :task_end_date, :task_description, :task_weight_type, :task_tags)",
-            {
+            # Set the AUTOINCREMENT counter if necessary
+            if task_id > 1:
+                c.execute("UPDATE sqlite_sequence SET seq = ? WHERE name = 'TaskList'", (task_id - 1,))
+
+            # Insert data into TaskList
+            c.execute("""
+                INSERT INTO TaskList (task_name, task_time, task_weight, task_id, task_start_date, task_end_date, task_description, task_weight_type, task_tags)
+                VALUES (:task_name, :task_time, :task_weight, :task_id, :task_start_date, :task_end_date, :task_description, :task_weight_type, :task_tags)
+            """, {
                 "task_name": task_name,
                 "task_time": task_time,
                 "task_weight": complexity_value,
@@ -193,13 +204,20 @@ class AddTaskWindow(tk.Tk):
                 "task_description": description,
                 "task_weight_type": complexity_type,
                 "task_tags": tags
-            }
-        )
+            })
 
-
+            # Commit the changes and close the connection
             conn.commit()
+
+            # Commit changes and optionally, update sqlite_sequence for TaskList if using AUTOINCREMENT
+            conn.commit()
+
+            # Optionally, update sqlite_sequence for TaskList if using AUTOINCREMENT
+            c.execute("UPDATE sqlite_sequence SET seq = ? WHERE name = 'TaskList'", (task_id,))
+
             conn.close()
 
+            # Refresh the data and close the form
             if hasattr(self.main_app, 'query_database'):
                 self.main_app.query_database()
 

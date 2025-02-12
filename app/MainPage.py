@@ -130,9 +130,9 @@ for task in completed_data:
               }
               )
 """
+
 #Commit Changes
 conn.commit()
-
 conn.close()
 
 
