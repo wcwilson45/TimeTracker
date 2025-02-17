@@ -1,3 +1,4 @@
+
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
@@ -746,7 +747,7 @@ class App:
             self.update_timer_boxes(timer_text)
             
             # Update the time in the database for current task
-            conn = sqlite3.connect('task_list.db')
+            conn = sqlite3.connect(path)
             c = conn.cursor()
             
             try:
@@ -774,7 +775,7 @@ class App:
         
         if not self.timer_running:
             # Get existing time from database
-            conn = sqlite3.connect('task_list.db')
+            conn = sqlite3.connect(path)
             c = conn.cursor()
             
             try:
@@ -810,7 +811,7 @@ class App:
             final_time = self.format_time(self.total_seconds)
             
             # Update database with final time
-            conn = sqlite3.connect('task_list.db')
+            conn = sqlite3.connect(path)
             c = conn.cursor()
             
             try:
