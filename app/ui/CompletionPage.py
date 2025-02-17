@@ -1,3 +1,4 @@
+
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
@@ -8,6 +9,11 @@ from datetime import datetime
 from tkinter import messagebox
 import sqlite3
 from .CommitHistoryPage import CommitHistoryWindow
+import pathlib
+
+global path 
+path = pathlib.Path(__file__).parent
+path = str(path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list.db'
 
 
 class CompletedTasksWindow(tk.Tk):
@@ -123,7 +129,7 @@ class CompletedTasksWindow(tk.Tk):
 
     def complete_task(self):
         if self.task_id:
-            conn = sqlite3.connect('task_list.db')
+            conn = sqlite3.connect(path)
             c = conn.cursor()
 
             try:
