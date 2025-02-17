@@ -22,22 +22,47 @@ class AddTaskWindow(tk.Tk):
 
         # Define path
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("ui", '') + 'task_list.db'
+        self.path = str(self.path).replace("AddTaskPage.py", '') + '\\Databases' + '\\task_list.db'
+
+        self.tags_path = pathlib.Path(__file__).parent
+        self.tags_path = str(self.tags_path).replace('AddTaskPage.py','') + '\\Databases' + '\\tags.db'
+
+        # Create or Connect to the database
+        conn = sqlite3.connect(self.tags_path)
+
+        # Create a cursor instance
+        c = conn.cursor()
+
+        c.execute("SELECT tag_name FROM tags")  # Fetch tag_names from tag database
+        tags = c.fetchall()
+        global values
+        values = []
+
+        # Add data to the list
+        for tag in tags:
+            values.append(tag[0])
+
+        # Commit changes
+        conn.commit()
+
+        # Close connection to the database
+        conn.close()
+
 
         self.grab_set()
 
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Set the main window properties
-        self.geometry("700x250")
+        self.geometry("390x370")
         self.title("Add Task")
         self.configure(bg=background_color)
 
         # Create fonts
         self.fonts = {
             'header': tkfont.Font(family="SF Pro Display", size=24, weight="bold"),
-            'subheader': tkfont.Font(family="SF Pro Display", size=8, weight="bold"),
-            'body': tkfont.Font(family="SF Pro Text", size=10)
+            'subheader': tkfont.Font(family="SF Pro Display", size=12, weight="bold"),
+            'body': tkfont.Font(family="SF Pro Text", size=12)
         }
 
         # Complexity options
@@ -48,101 +73,140 @@ class AddTaskWindow(tk.Tk):
         # Style configurations
         self.style = ttk.Style(self)
         self.style.theme_use("alt")
-        self.style.configure('MainFrame.TFrame', background=background_color)  # Light Blue for frames
+        self.style.configure('MainFrame.TFrame', background=background_color) 
         self.style.configure('Input.TEntry', background='d3d3d3', fieldbackground='#d3d3d3', font=("SF Pro Text", 10))
-        self.style.configure('TLabel', background=background_color, font=("SF Pro Text", 8))  # Light Blue for labels
+        self.style.configure('TLabel', background=background_color, font=("SF Pro Text", 8)) 
 
         # Main container
         main_frame = ttk.Frame(self, style='MainFrame.TFrame')
-        main_frame.pack(fill='both', expand=True, padx=10, pady=5)
+        main_frame.grid(row=0, column=0, padx=10, pady=5, sticky='nsew')
 
         # Header frame
         header_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
-        header_frame.pack(fill='x', pady=(0, 6))
+        header_frame.grid(row=0, column=0, columnspan=2, pady=(0, 6), sticky='ew')
 
         # Task Name
-        label = ttk.Label(header_frame, text="Task Name", font=self.fonts['header'], style='TLabel')
-        label.pack(side='left', padx=(0, 10))
+        label = ttk.Label(header_frame, text="Task Name:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=0, column=0, padx=(0, 10), sticky='w')
         self.task_name_entry = ttk.Entry(header_frame, style='Input.TEntry', width=40)
-        self.task_name_entry.pack(side='left', fill='x', expand=True)
+        self.task_name_entry.grid(row=0, column=1, sticky='ew')
 
         # Content container
         content_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
-        content_frame.pack(fill='both', expand=True)
+        content_frame.grid(row=1, column=0, columnspan=2, sticky='nsew')
 
         # Left column
         left_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
-        left_frame.pack(side='left', fill='both', expand=True, padx=(0, 8))
+        left_frame.grid(row=0, column=0, padx=(0, 8), sticky='nsew')
 
         # Description
         label = ttk.Label(left_frame, text="Description:", font=self.fonts['subheader'], style='TLabel')
-        label.pack(anchor='w')
+        label.grid(row=0, column=0, sticky='w')
 
         desc_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        desc_frame.pack(fill='x', pady=(3, 6))
+        desc_frame.grid(row=1, column=0, pady=(3, 6), sticky='nsew')
 
         desc_scrollbar = ttk.Scrollbar(desc_frame, orient='vertical')
-        desc_scrollbar.pack(side='right', fill='y')
+        desc_scrollbar.grid(row=0, column=1, sticky='ns')
 
         self.desc_text = tk.Text(
             desc_frame, height=7, width=30, bg='#d3d3d3', relief="solid", bd=1, font=("SF Pro Text", 10),
             yscrollcommand=desc_scrollbar.set
         )
-        self.desc_text.pack(side='left', fill='both', expand=True)
+        self.desc_text.grid(row=0, column=0, sticky='nsew')
         desc_scrollbar.config(command=self.desc_text.yview)
 
         button_width = 9
 
         # Button frame
         button_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        button_frame.pack(fill='x', pady=(3, 6))
+        button_frame.grid(row=7, column=0, pady=(8, 6), sticky='ew')
 
-        cancel_btn = tk.Button(button_frame, text="Cancel", command=self.cancel_action, bg=org_btn_color, width=button_width)
-        cancel_btn.pack(side='left', padx=(0, 8))
+        cancel_btn = tk.Button(button_frame, font=("SF Pro Text", 10),text="Cancel", command=self.cancel_action, bg=org_btn_color)
+        cancel_btn.grid(row=0, column=1)
 
-        confirm_btn = tk.Button(button_frame, text="Confirm", command=self.confirm_action, bg=green_btn_color, width=button_width)
-        confirm_btn.pack(side='left')
+        confirm_btn = tk.Button(button_frame, text="Confirm", font=("SF Pro Text", 10),command=self.confirm_action, bg=green_btn_color)
+        confirm_btn.grid(row=0, column=0, padx=(0,6))
+
 
 
         # Right column
         right_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
-        right_frame.pack(side='left', fill='both', expand=True)
+        right_frame.grid(row=0, column=1, sticky='nsew')
 
         # Tags
         label = ttk.Label(right_frame, text="Tags:", font=self.fonts['subheader'], style='TLabel')
-        label.pack(anchor='w')
-        self.tag_entry = ttk.Entry(right_frame, style='Input.TEntry')
-        self.tag_entry.pack(fill='x', pady=(3, 6))
+        label.grid(row=0, column=0, sticky='w')
+        
+        # Create the tag text frame
+        tag_frame = ttk.Frame(right_frame)
+        tag_frame.grid(row=1, column=0, pady=(3, 6), sticky='w')
+
+        # Add a scrollbar for tag_text
+        tag_scrollbar = ttk.Scrollbar(tag_frame, orient='vertical')
+        tag_scrollbar.grid(row=0, column=1, sticky='ns')
+
+        # Create the Text widget for tags
+        self.tag_text = tk.Text(tag_frame, height=7, width=12, bg='#d3d3d3', relief="solid", bd=1, font=("SF Pro Text", 10),
+                                yscrollcommand=tag_scrollbar.set)  # Link scrollbar to the Text widget
+        self.tag_text.grid(row=0, column=0)
+
+        # Configure the scrollbar to control tag_text
+        tag_scrollbar.config(command=self.tag_text.yview)
+        
+
+        # New frame specifically for Listbox and Scrollbar
+        listbox_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
+        listbox_frame.grid(row=2, column=0, pady=(3, 6), sticky='w')
+
+        # Add a vertical scrollbar for the Listbox
+        list_scrollbar = ttk.Scrollbar(listbox_frame, orient='vertical')
+        list_scrollbar.grid(row=0, column=1, sticky='ns')  # Scrollbar placed next to the Listbox
+
+        # Create the Listbox and link it to the scrollbar
+        self.tag_listbox = tk.Listbox(listbox_frame, selectmode="multiple", exportselection=0, width=14, bg="#d3d3d3", relief='solid', yscrollcommand=tag_scrollbar.set)
+        self.tag_listbox.grid(row=0, column=0, pady=(1, 6), sticky='w')
+
+        # Configure the scrollbar to control the Listbox
+        list_scrollbar.config(command=self.tag_listbox.yview)
+
+        # Bind the Listbox selection to update the tag_text
+        self.tag_listbox.bind("<<ListboxSelect>>", lambda _: self.update_tag_entry())
+
+        # Adds the tags loaded from the tags table into the listbox
+        for value in values:
+            self.tag_listbox.insert(tk.END, value)
 
         # Time Complexity
-        label = ttk.Label(right_frame, text="Time Complexity:", font=self.fonts['subheader'], style='TLabel')
-        label.pack(anchor='w')
+        label = ttk.Label(left_frame, text="Time Complexity:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=3, column=0, sticky='w')
 
         #Autofill today's date button
         autofill_date_btn = tk.Button(button_frame, text="Autofill date", command=self.autofill_date,
                                 bg="#E39ff6", fg="#000000", font=("SF Pro Text", 10), activebackground="#800080", activeforeground="#000000", width=button_width)
-        autofill_date_btn.pack(side='right')
+        autofill_date_btn.grid(row=0, column=2, padx=(10, 0))
 
-        complexity_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
-        complexity_frame.pack(fill='x', pady=(3, 6))
+        complexity_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
+        complexity_frame.grid(row=4, column=0, pady=(3, 6), sticky='ew')
 
-        self.type_combo = ttk.Combobox(complexity_frame, values=self.complexity_types, state='readonly')
-        self.type_combo.pack(fill='x', pady=(0, 3))
+
+        self.type_combo = ttk.Combobox(complexity_frame, values=self.complexity_types, style='TCombobox', state='readonly')
+        self.type_combo.grid(row=0, column=0, sticky='ew', pady=(0, 3))
         self.type_combo.set("Select Type")
 
         self.value_combo = ttk.Combobox(complexity_frame, state='readonly')
-        self.value_combo.pack(fill='x')
+        self.value_combo.grid(row=1, column=0, sticky='ew')
         self.value_combo.set("Select Value")
 
         self.type_combo.bind('<<ComboboxSelected>>', self.update_values)
 
-        # Date
-        label = ttk.Label(right_frame, text="Start Date (MM-DD-YYYY):", font=self.fonts['subheader'], style='TLabel')
-        label.pack(anchor='w')
+        # Date Completed
+        label = ttk.Label(left_frame, text="Start Date (MM-DD-YYYY):", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=5, column=0, sticky='w')
 
         self.date_var = tk.StringVar()
-        self.date_entry = ttk.Entry(right_frame, textvariable=self.date_var, style='Input.TEntry')
-        self.date_entry.pack(fill='x')
+        self.date_entry = ttk.Entry(left_frame, textvariable=self.date_var,style='Input.TEntry')
+        self.date_entry.grid(row=6, column=0, sticky='ew')
 
     def update_values(self, event=None):
         selected_type = self.type_combo.get()
@@ -156,76 +220,91 @@ class AddTaskWindow(tk.Tk):
 
     def cancel_action(self):
         self.on_close()
+
+    def update_tag_entry(self):
+        # Get selected values from the Listbox widget
+        selected_values = [self.tag_listbox.get(idx) for idx in self.tag_listbox.curselection()]
+
+        # Update with the selected values
+        self.tag_text.delete(1.0, "end")  # Clear the Text widget
+        self.tag_text.insert("1.0", "\n".join(selected_values))  # Insert the selected tags
+
         
 
     def confirm_action(self):
-        confirm = messagebox.askyesno("Confirm Add", "Are you sure you want to add this task?")
         task_name = self.task_name_entry.get()
         description = self.desc_text.get("1.0", tk.END).strip()
-        tags = self.tag_entry.get()
+        tags = self.tag_text.get("1.0", tk.END).strip()
         complexity_type = self.type_combo.get()
         complexity_value = self.value_combo.get()
         start_date = self.date_var.get()
         task_time = "00:00:00" 
         end_date = "01-02-2025"
 
+        # Store required fields in a dictionary or list
+        required_fields = {
+            "Task Name": task_name,
+            "Description": description,
+            "Tags": tags,
+            "Start Date": start_date,
+            "Complexity Type": complexity_type,
+            "Complexity Value": complexity_value
+        }
+
+        # Check if any required field is empty and show a warning if so
+        missing_fields = [field for field, value in required_fields.items() if not value or value == "Select Value" or value == "Select Type"]
+        
+        if missing_fields:
+            missing_fields_str = ", ".join(missing_fields)
+            messagebox.showwarning("Warning", f"Please fill in the following required fields: {missing_fields_str}")
+            
+            return  # Stop further action if any field is missing
+        
+        res = tags.split('\n') # Splits the string to check tags
+        print(res)
+
+        if not all(tag in values for tag in res): #Checks to see if tags are in the accepted tags
+          
+            messagebox.showwarning("Warning", f"The Tags you have selected are invaild")
+
+            return  # Stop further action if any field is missing
+        else:
+            
+            confirm = messagebox.askyesno("Confirm Add", "Are you sure you want to add this task?") #Askes if sure to add task
+            
+        #Adds task
         if confirm:
+
             # Connect to the database
             conn = sqlite3.connect(self.path)
             c = conn.cursor()
 
-            # Get the max task_id from both TaskList and CompletedTasks tables
             c.execute("SELECT MAX(task_id) FROM TaskList")
-            max_tasklist_id = c.fetchone()[0]
-            max_tasklist_id = max_tasklist_id if max_tasklist_id is not None else 0  # Default to 0 if None
+            last_id = c.fetchone()[0]
+            task_id = (last_id + 1) if last_id else 1
 
-            c.execute("SELECT MAX(task_id) FROM CompletedTasks")
-            max_completed_id = c.fetchone()[0]
-            max_completed_id = max_completed_id if max_completed_id is not None else 0  # Default to 0 if None
+            # Insert data
+            c.execute(
+                "INSERT INTO TaskList VALUES(:task_name, :task_time, :task_weight, :task_id, :task_start_date, :task_end_date, :task_description, :task_weight_type, :task_tags)",
+                {
+                    "task_name": task_name,
+                    "task_time": task_time,
+                    "task_weight": complexity_value,
+                    "task_id": task_id,
+                    "task_start_date": start_date,
+                    "task_end_date": end_date,
+                    "task_description": description,
+                    "task_weight_type": complexity_type,
+                    "task_tags": tags
+                }
+            )
 
-            # Find the next task_id (1 + max of both task lists)
-            task_id = max(max_tasklist_id, max_completed_id) + 1
-
-            # Set the AUTOINCREMENT counter if necessary
-            if task_id > 1:
-                c.execute("UPDATE sqlite_sequence SET seq = ? WHERE name = 'TaskList'", (task_id - 1,))
-
-            # Insert data into TaskList
-            c.execute("""
-                INSERT INTO TaskList (task_name, task_time, task_weight, task_id, task_start_date, task_end_date, task_description, task_weight_type, task_tags)
-                VALUES (:task_name, :task_time, :task_weight, :task_id, :task_start_date, :task_end_date, :task_description, :task_weight_type, :task_tags)
-            """, {
-                "task_name": task_name,
-                "task_time": task_time,
-                "task_weight": complexity_value,
-                "task_id": task_id,
-                "task_start_date": start_date,
-                "task_end_date": end_date,
-                "task_description": description,
-                "task_weight_type": complexity_type,
-                "task_tags": tags
-            })
-
-            # Commit the changes and close the connection
             conn.commit()
-
-            # Commit changes and optionally, update sqlite_sequence for TaskList if using AUTOINCREMENT
-            conn.commit()
-
-            # Optionally, update sqlite_sequence for TaskList if using AUTOINCREMENT
-            c.execute("UPDATE sqlite_sequence SET seq = ? WHERE name = 'TaskList'", (task_id,))
-
             conn.close()
 
-            # Refresh the data and close the form
-            if hasattr(self.main_app, 'query_database'):
-                self.main_app.query_database()
-
-            self.on_close()
-
+            self.destroy()
+           
         else:
-            self.lift()
-            self.focus_force()
             return
 
     def autofill_date(self):

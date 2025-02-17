@@ -6,6 +6,7 @@ import tkinter.font as tkfont
 import sqlite3
 import csv
 from tkinter import messagebox
+import pathlib
 
 background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
@@ -16,9 +17,13 @@ class TagsDB(tk.Frame):
         super().__init__(parent)
         #DATABASE SECTION ############################################
 
+        self.path = pathlib.Path(__file__).parent
+        self.path = str(self.path).replace("TagsDB.py", '') + '\\Databases' + '\\tags.db'
+        
+
         # Create or Connect to database
         
-        conn = sqlite3.connect("tags.db")
+        conn = sqlite3.connect(self.path)
 
         # Create a cursor instnace
         c = conn.cursor()
@@ -39,7 +44,7 @@ class TagsDB(tk.Frame):
 
         def query_database():
             # Create or Connect to the database
-            conn = sqlite3.connect('tags.db')
+            conn = sqlite3.connect(self.path)
 
             # Create a cursor instance
             c = conn.cursor()
@@ -142,25 +147,27 @@ class TagsDB(tk.Frame):
         data_frame = tk.Frame(self,background=background_color)
         data_frame.grid(row=2, column=0, sticky="w")
 
-     
+        separator = ttk.Separator(data_frame, orient='horizontal')
+        separator.grid(row=0, column=0,padx=0,pady=10,sticky='ew')
+
         # ID Label
         id_label = ttk.Label(data_frame, text="ID: ", font=("SF Pro Text", 10, "bold"), background=background_color)
-        id_label.grid(row=0, column=0, pady=1, sticky="w")
+        id_label.grid(row=2, column=0, pady=1, sticky="w")
 
         # Change the ID entry to a Label to hold the ID (non-editable)
         id_display = ttk.Label(data_frame, font=("SF Pro Text", 10, "bold"), background=background_color)
-        id_display.grid(row=0, column=0, padx=20, pady=3, sticky="w")
+        id_display.grid(row=2, column=0, padx=20, pady=3, sticky="w")
 
         # Tag Name Label & Entry
         n_label = ttk.Label(data_frame, text="Tag Name", font=("SF Pro Text", 10, "bold"),background=background_color)
         n_label.grid(row=3, column=0, padx=1, pady=5, sticky="w")
-        n_entry = tk.Entry(data_frame, font=("SF Pro Text", 10), bg="#d3d3d3")
+        n_entry = tk.Entry(data_frame, font=("SF Pro Text", 10), bg="#d3d3d3",width=86)
         n_entry.grid(row=4, column=0, padx=1, pady=1, sticky="w")
 
         # Description Label & Textbox
         desc_label = Label(data_frame, text="Description", font=("SF Pro Text", 10, "bold"),background=background_color)
         desc_label.grid(row=5, column=0, padx=1, pady=5, sticky="w")
-        desc_text = Text(data_frame, font=("SF Pro Text", 12), height=5, width=40, background="#d3d3d3")
+        desc_text = Text(data_frame, font=("SF Pro Text", 12), height=5, width=56, background="#d3d3d3")
         desc_text.grid(row=6, column=0, padx=1, pady=1, sticky="w")
 
         # START OF FUNCTION SECTION ##############################################
@@ -201,7 +208,7 @@ class TagsDB(tk.Frame):
 
             if tag_id:  # Ensure that the ID exists
                 # Connecting to the database and creating a cursor
-                conn = sqlite3.connect('tags.db')
+                conn = sqlite3.connect(self.path)
                 c = conn.cursor()
 
                 # Delete the tag from the database using a parameterized query
@@ -228,7 +235,7 @@ class TagsDB(tk.Frame):
                     my_tree.delete(tag)
 
                 # Create a database or connect to one that exists
-                conn = sqlite3.connect('tags.db')
+                conn = sqlite3.connect(self.path)
 
                 # Create a cursor instance
                 c = conn.cursor()
@@ -264,7 +271,7 @@ class TagsDB(tk.Frame):
         # Add Tag to db
         def add_Tag():
             #Create db connection
-            conn = sqlite3.connect('tags.db')
+            conn = sqlite3.connect(self.path)
 
             # Create cursor
             c = conn.cursor()
@@ -299,7 +306,7 @@ class TagsDB(tk.Frame):
             my_tree.item(selected, text="", values=(id_display.cget("text"), n_entry.get(), desc_text.get("1.0", "end-1c")))
 
             # Update the database
-            conn = sqlite3.connect('tags.db')
+            conn = sqlite3.connect(self.path)
             c = conn.cursor()
 
             c.execute("""UPDATE tags SET
@@ -328,7 +335,7 @@ class TagsDB(tk.Frame):
             lookup = search_entry.get()
 
             # Create or Connect to the database
-            conn = sqlite3.connect('tags.db')
+            conn = sqlite3.connect(self.path)
 
             # Create a cursor instance
             c = conn.cursor()
@@ -390,7 +397,7 @@ class TagsDB(tk.Frame):
                             data = data[1:]
             
             # Connect to the SQLite database
-            conn = sqlite3.connect('tags.db')
+            conn = sqlite3.connect(self.path)
             c = conn.cursor()
 
             # Insert data into the table
@@ -405,7 +412,7 @@ class TagsDB(tk.Frame):
 
         def export_Tags():
             # Connect to the database
-            conn = sqlite3.connect('tags.db')
+            conn = sqlite3.connect(self.path)
             c = conn.cursor()
 
             # Fetch all tags
@@ -479,8 +486,8 @@ class TagsDB(tk.Frame):
                             activebackground="#A8F0A8", activeforeground="#000000")
         update_btn.grid(row=0, column=1, pady=2, padx=3, sticky="ew")
 
-        # Clear Task Button
-        clc_btn = tk.Button(button_frame, text="Clear Task", command=clear_Tag,
+        # Clear Tag Button
+        clc_btn = tk.Button(button_frame, text="Clear Tag", command=clear_Tag,
                             bg=green_btn_color, fg="#000000", font=("SF Pro Text", 10),
                             activebackground="#A8F0A8", activeforeground="#000000")
         clc_btn.grid(row=0, column=2, pady=2, padx=3, sticky="ew")
