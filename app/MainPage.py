@@ -192,10 +192,12 @@ class App:
 
 
     def setup_smalloverlay_page(self):
+        # Button not flat
+        # Entry box grey
         self.smalloverlay_page.configure(bg=background_color)
-        self.to_task_name = Entry(self.smalloverlay_page, width = 35)
+        self.to_task_name = ttk.Entry(self.smalloverlay_page, width = 35)
         self.to_task_name.grid(row = 0, column = 0,sticky = W)
-
+        self.to_task_name.configure({"background" : "grey"})
         # Time label and box
         Label(self.smalloverlay_page, text="Time: ",
             font=self.fonts['Body_Tuple'],
@@ -208,13 +210,13 @@ class App:
         # Timer control buttons
         self.small_overlay_start_button = tk.Button(self.smalloverlay_page, 
                                                 text="Start",
-                                                relief="flat", 
+                                                # relief="flat",
                                                 background="#77DD77",
                                                 command=self.start_timer)
         self.small_overlay_start_button.grid(row=2, column=0, sticky=W, padx=0, pady=5)
         self.small_overlay_stop_button = tk.Button(self.smalloverlay_page, 
                                                 text="Stop",
-                                                relief="flat", 
+                                                # relief="flat",
                                                 background="#FF7276",
                                                 command=self.stop_timer)
         self.small_overlay_stop_button.grid(row=2, column=0, sticky=W, padx=45, pady=5)
