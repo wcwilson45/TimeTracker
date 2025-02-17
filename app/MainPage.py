@@ -6,6 +6,7 @@ import tkinter as tk
 import tkinter.font as tkfont
 import sqlite3
 from datetime import datetime
+import pathlib
 from ui import (
     CompletedTasksWindow,
     EditTaskWindow,
@@ -29,8 +30,13 @@ scroll_trough_color = "#E0E0E0"
 main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
 
+global path 
+path = pathlib.Path(__file__).parent
+path = str(path).replace("MainPage.py", '') + '\\ui' + '\\Databases' + '\\task_list.db'
+      
+
 #Create a database or connect to an existing database
-conn = sqlite3.connect('task_list.db')
+conn = sqlite3.connect(path)
 
 #Create a cursor instance
 c = conn.cursor()
@@ -184,7 +190,7 @@ class App:
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  
             self.page_title.config(text="Tags Database", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("530x600")  
+            self.root.geometry("530x610")  
 
 
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
@@ -240,7 +246,7 @@ class App:
     def setup_full_page(self):
         self.full_page.configure(background= background_color)
         style = ttk.Style()
-        style.theme_use('clam')
+        style.theme_use('alt')
         style.configure("Treeview",
         background = "black",
         foreground = "black",
@@ -482,7 +488,7 @@ class App:
     def select_current_task(self):
         task_id = self.ti_entry.get()
 
-        conn = sqlite3.connect('task_list.db')
+        conn = sqlite3.connect(path)
         c = conn.cursor()
 
         try:
@@ -524,7 +530,7 @@ class App:
         self.set_current_task()
 
     def set_current_task(self):
-        conn = sqlite3.connect('task_list.db')
+        conn = sqlite3.connect(path)
         c = conn.cursor()
 
         c.execute("SELECT * FROM CurrentTask")
@@ -588,7 +594,7 @@ class App:
             self.task_list.delete(record)
 
     #Create a database or connect to an existing database
-        conn = sqlite3.connect('task_list.db')
+        conn = sqlite3.connect(path)
 
         #Create a cursor instance
         c = conn.cursor()
@@ -629,7 +635,7 @@ class App:
             for record in self.task_list.get_children():
                 self.task_list.delete(record)
 
-                conn = sqlite3.connect('task_list.db')
+                conn = sqlite3.connect(path)
                 c = conn.cursor()
 
                 c.execute("DROP TABLE TaskList")
@@ -642,7 +648,7 @@ class App:
 
     def create_tasklist_again(self):
         # Create a database or connect to one that exists
-        conn = sqlite3.connect('task_list.db')
+        conn = sqlite3.connect(path)
 
         # Create a cursor instance
         c = conn.cursor()
