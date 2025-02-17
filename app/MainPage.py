@@ -16,12 +16,8 @@ from ui import (
     CompletedTasksList
 )
 
-
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
-#We need to create a table for each distinct treeview as well as the current task.
-#Switching current task will just involve moving the current task to the task_list,
-#  and the task_list item to the current task.
 
 #Global Variables
 background_color = "#A9A9A9"
@@ -33,26 +29,6 @@ scroll_trough_color = "#E0E0E0"
 main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
 
-
-"""data = [
-            ["Collect money", "00:14:35", "1.1", "1", "12-01-10", "12-02-01", "Description for Collect Money Task", "Fibonacci"],
-            ["Print money", "00:14:35", "2.1", "2", "12-01-10", "12-02-02", "Description for Print Money Task", "Fibonacci"],
-            ["Do things", "00:14:35", "3.1", "3", "12-01-10", "12-02-03", "Description for Do Things Task", "Fibonacci"],
-            ["Stuff", "00:14:35", "4.1", "4", "12-01-10", "12-02-04", "Description for Stuff Task", "Fibonacci"],
-            ["Explain", "00:14:35", "5.1", "5", "12-01-10", "12-02-05", "Description for Explain Task", "Fibonacci"],
-            ["Data", "00:14:35", "5", "6.1", "12-01-10", "12-02-06", "Description for Data Task", "Fibonacci"],
-            ["Print paper", "00:30:21", "7.1", "7", "12-01-10", "12-02-07", "Description for Print Paper Task", "Fibonacci"]
-        ]
-"""
-"""
-completed_data = [
-    ["Write Documentation", "01:30:00", "5", "101", "2024-01-28 15:30:00", "01:45:23"],
-    ["Debug Login", "02:00:00", "7", "102", "2024-01-27 14:20:00", "02:15:45"],
-    ["Team Meeting", "01:00:00", "3", "103", "2024-01-27 10:00:00", "00:55:30"],
-    ["Code Review", "00:45:00", "4", "104", "2024-01-26 16:45:00", "00:50:15"],
-    ["Test Features", "03:00:00", "8", "105", "2024-01-26 11:30:00", "03:30:00"]
-]
-"""
 #Create a database or connect to an existing database
 conn = sqlite3.connect('task_list.db')
 
@@ -72,7 +48,7 @@ c.execute("""CREATE TABLE if not exists TaskList (
           task_tags text
           )
 """)
-
+#Table for Current Task
 c.execute("""CREATE TABLE if not exists CurrentTask(
           task_name text,
           task_time text,
@@ -96,46 +72,10 @@ c.execute("""CREATE TABLE if not exists CompletedTasks (
           PRIMARY KEY (task_id)
 )""")
 
-#Table for Tags
-
-#Add dummy data to database
-
-"""for task in data:
-    c.execute(INSERT INTO TaskList (task_name, task_time, task_weight, task_id, task_start_date, task_end_date, task_description, task_weight_type)
-              VALUES (:task_name, :task_time, :task_weight, :task_id, :task_start_date, :task_end_date, :task_description, :task_weight_type),
-              {
-               "task_name": task[0],
-               "task_time": task[1],
-               "task_weight": task[2],
-               "task_id": task[3],
-               "task_start_date": task[4],
-               "task_end_date": task[5],
-               "task_description": task[6],
-               "task_weight_type": task[7]
-              }
-              )
-"""
-"""
-# Add completed tasks dummy data
-for task in completed_data:
-    c.execute(INSERT OR REPLACE INTO CompletedTasks VALUES 
-              (:task_name, :task_time, :task_weight, :task_id, :completion_date, :total_duration),
-              {
-                  "task_name": task[0],
-                  "task_time": task[1],
-                  "task_weight": task[2],
-                  "task_id": task[3],
-                  "completion_date": task[4],
-                  "total_duration": task[5]
-              }
-              )
-"""
 
 #Commit Changes
 conn.commit()
 conn.close()
-
-
 
 class App:
     def __init__(self, root):
@@ -175,11 +115,6 @@ class App:
       self.page_title = ttk.Label(self.menu_frame, text="NAVSEA Time Tracker", font=self.fonts['Body_Tuple'], background= background_color)
       self.page_title.pack(side="left", padx=10)
 
-      #get_current_time()
-      current_task_time = 0
-      self.time_box_full = current_task_time
-      self.time_box_overlay = current_task_time
-
       #Create pages
       self.full_page = tk.Frame(self.main_container)
       self.completedtasks_page = CompletedTasksList(self.main_container, self)
@@ -198,9 +133,10 @@ class App:
       self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
       self.popup_menu.configure(bg= background_color)
 
+      self.setup_smalloverlay_page()
       self.setup_full_page()
       self.completedtasks_page.pack_forget()
-      self.setup_smalloverlay_page()
+      
 
       #Query the database for all information inside
       self.query_database()
@@ -256,30 +192,38 @@ class App:
 
 
     def setup_smalloverlay_page(self):
-      self.smalloverlay_page.configure(bg = background_color)
-      Label(self.smalloverlay_page, text = "Task Name:", 
-             font = self.fonts['Body_Tuple'],
-             background= background_color
-       ).grid(row = 0, column= 0, sticky = W, pady = 2)
+        self.smalloverlay_page.configure(bg=background_color)
 
-      Label(self.smalloverlay_page, text = "Time: ",
-             font=self.fonts['Body_Tuple'],
-             background= background_color
-             ).grid(row = 1, column = 0, sticky = W, pady = 2)
-      
-      self.time_box_overlay = Text(self.smalloverlay_page, height = 1, width = 10,
-                    font = self.fonts['Body_Tuple'],
-                    background = grey_button_color)
-      self.time_box_overlay.grid(row = 1, column = 0, padx = 50, pady = 5, sticky = E)
-      #Set the timer text to the current time
-      self.time_box_overlay.insert("1.0", "00:00:00")
-      #Make the time box Read-Only
-      self.time_box_overlay.config(state = DISABLED)
-      self.small_overlay_start_button = tk.Button(self.smalloverlay_page, text="Start",relief = "flat", background="#77DD77", command=self.start_timer)
-      self.small_overlay_start_button.grid(row=2, column=0, sticky=W,padx = 0, pady=5)
+        self.to_task_name = Entry(self.smalloverlay_page, width = 35)
+        self.to_task_name.grid(row = 0, column = 0,sticky = W)
+        self.to_task_name.configure(state = DISABLED)
 
-      self.small_overlay_stop_button = tk.Button(self.smalloverlay_page, text="Stop",relief = "flat", background="#FF7276", command=self.stop_timer)
-      self.small_overlay_stop_button.grid(row=2, column=0, sticky=W,padx = 45, pady=5)
+        # Time label and box
+        Label(self.smalloverlay_page, text="Time: ",
+            font=self.fonts['Body_Tuple'],
+            background=background_color
+        ).grid(row=1, column=0, sticky=W, pady=2)
+        
+        self.time_box_overlay = Text(self.smalloverlay_page, height=1, width=10,
+                                    font=self.fonts['Body_Tuple'],
+                                    background=grey_button_color)
+        self.time_box_overlay.grid(row=1, column=0, padx=50, pady=5, sticky=E)
+
+        # Timer control buttons
+        self.small_overlay_start_button = tk.Button(self.smalloverlay_page, 
+                                                text="Start",
+                                                relief="flat", 
+                                                background="#77DD77",
+                                                command=self.start_timer)
+        self.small_overlay_start_button.grid(row=2, column=0, sticky=W, padx=0, pady=5)
+
+        self.small_overlay_stop_button = tk.Button(self.smalloverlay_page, 
+                                                text="Stop",
+                                                relief="flat", 
+                                                background="#FF7276",
+                                                command=self.stop_timer)
+        self.small_overlay_stop_button.grid(row=2, column=0, sticky=W, padx=45, pady=5)
+        self.small_overlay_stop_button.config(state=DISABLED)
 
 
    
@@ -349,6 +293,28 @@ class App:
 
         #Insert Current Task Description
         description_scroll.config(command = self.description_box.yview)
+
+        # Add timer-related instance variables
+        self.timer_running = False
+        self.hours = 0
+        self.minutes = 0
+        self.seconds = 0
+        self.total_seconds = 0
+        
+        # Create time box in the current task frame
+        self.time_box_full = Text(self.currenttask_frame, height=1, width=10,
+                                font=self.fonts['Body_Tuple'],
+                                background=grey_button_color)
+        self.time_box_full.grid(row=2, column=1, sticky=W)
+        self.time_box_full.config(state=DISABLED)
+        
+        # Add timer control buttons
+        self.full_page_start_button = tk.Button(self.currenttask_frame,text="Start", background="#77DD77", command=self.start_timer)
+        self.full_page_start_button.grid(row=2, column=1, sticky=W, padx=100)
+        
+        self.full_page_stop_button = tk.Button(self.currenttask_frame,text="Stop",background="#FF7276",command=self.stop_timer)
+        self.full_page_stop_button.grid(row=2, column=1, sticky=W, padx = 140)
+        self.full_page_stop_button.config(state=DISABLED)
 
 
 
@@ -575,19 +541,32 @@ class App:
             #Enable entry boxes to change information
             self.task_name_entry.configure(state = NORMAL,foreground= "black")
             self.current_id_entry.configure(state = NORMAL,foreground= "black")
+            self.time_box_full.configure(state = NORMAL,foreground= "black")
+            self.time_box_overlay.configure(state = NORMAL, foreground= "black")
             self.description_box.configure(state = NORMAL,foreground= "black")
+            self.to_task_name.configure(state = NORMAL, foreground= "black")
 
             #Switch out entry boxes for all information
             self.task_name_entry.delete(0, END)
             self.current_id_entry.delete(0, END)
             self.task_name_entry.insert(0 , cur_task[0])
             self.current_id_entry.insert(0, cur_task[3])
+            self.time_box_full.delete("1.0", END)
+            self.time_box_full.insert("1.0", cur_task[1])
+            self.time_box_overlay.delete("1.0", END)
+            self.time_box_overlay.insert("1.0", cur_task[1])
             self.description_box.delete("1.0", END)
             self.description_box.insert("1.0", cur_task[6])  # Assuming description is at index 6
+            self.to_task_name.delete(0, END)
+            self.to_task_name.insert(0, cur_task[0])
+
             #Disable entry boxes                             
             self.task_name_entry.configure(state = DISABLED)
             self.current_id_entry.configure(state = DISABLED)
             self.description_box.configure(state = DISABLED)
+            self.time_box_full.configure(state = DISABLED)
+            self.time_box_overlay.configure(state = DISABLED)
+            self.to_task_name.configure(state = DISABLED)
             
         else:
             self.task_name_entry.configure(state = NORMAL,foreground= "black")
@@ -598,6 +577,8 @@ class App:
             self.task_name_entry.configure(state = DISABLED)
             self.current_id_entry.configure(state = DISABLED)
             self.description_box.configure(state = DISABLED)
+            self.time_box_full.configure(state = DISABLED)
+            self.time_box_overlay.configure(state = DISABLED)
 
 
         self.query_database()
@@ -743,53 +724,128 @@ class App:
         else:
             messagebox.showwarning("Selection Required", "Please select a task to complete.")
 
+    def format_time(self, total_seconds):
+        """Convert total seconds to HH:MM:SS format"""
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
     
     def update_timer(self):
-        """Update the timer and display in both timer boxes."""
+        """Update the timer display and database"""
         if self.timer_running:
-            self.seconds += 1
-            if self.seconds == 60:
-                self.seconds = 0
-                self.minutes += 1
-            if self.minutes == 60:
-                self.minutes = 0
-                self.hours += 1
-
-            # Format time as HH:MM:SS
-            timer_text = f"{self.hours:02}:{self.minutes:02}:{self.seconds:02}"
-
+            self.total_seconds += 1
+            timer_text = self.format_time(self.total_seconds)
+            
             # Update both timer displays
             self.update_timer_boxes(timer_text)
-
+            
+            # Update the time in the database for current task
+            conn = sqlite3.connect('task_list.db')
+            c = conn.cursor()
+            
+            try:
+                c.execute("""
+                    UPDATE CurrentTask 
+                    SET task_time = ? 
+                    WHERE task_id = ?
+                """, (timer_text, self.current_id_entry.get()))
+                conn.commit()
+            except sqlite3.Error as e:
+                print(f"Database error: {e}")
+            finally:
+                conn.close()
+            
             # Schedule the next update
             self.root.after(1000, self.update_timer)
 
     def start_timer(self):
-        """Start the timer."""
-        if not self.timer_running:  # Prevent multiple instances of the timer
+        """Start the timer for current task"""
+        # Check if there is a current task
+        if not self.current_id_entry.get() or self.current_id_entry.get() == "No Current Task":
+            messagebox.showwarning("No Task Selected", 
+                                "Please select a task before starting the timer.")
+            return
+        
+        if not self.timer_running:
+            # Get existing time from database
+            conn = sqlite3.connect('task_list.db')
+            c = conn.cursor()
+            
+            try:
+                c.execute("SELECT task_time FROM CurrentTask WHERE task_id = ?", 
+                        (self.current_id_entry.get(),))
+                current_time = c.fetchone()[0]
+                
+                # Convert HH:MM:SS to total seconds
+                if current_time:
+                    h, m, s = map(int, current_time.split(':'))
+                    self.total_seconds = h * 3600 + m * 60 + s
+                else:
+                    self.total_seconds = 0
+                    
+            except sqlite3.Error as e:
+                print(f"Database error: {e}")
+                self.total_seconds = 0
+            finally:
+                conn.close()
+            
             self.timer_running = True
             self.update_timer()
-
-            # Disable Start button and enable Stop button
+            
+            # Update button states
             self.disable_buttons(start_disabled=True)
 
     def stop_timer(self):
-        """Stop the timer."""
+        """Stop the timer and save current time"""
         if self.timer_running:
             self.timer_running = False
-
-            # Enable Start button and disable Stop button
+            
+            # Get final time
+            final_time = self.format_time(self.total_seconds)
+            
+            # Update database with final time
+            conn = sqlite3.connect('task_list.db')
+            c = conn.cursor()
+            
+            try:
+                c.execute("""
+                    UPDATE CurrentTask 
+                    SET task_time = ? 
+                    WHERE task_id = ?
+                """, (final_time, self.current_id_entry.get()))
+                conn.commit()
+                
+                # Show time logged message
+                messagebox.showinfo("Time Logged", 
+                                f"Time logged for current task: {final_time}")
+                
+            except sqlite3.Error as e:
+                print(f"Database error: {e}")
+                messagebox.showerror("Error", 
+                                "Failed to save time to database. Please try again.")
+            finally:
+                conn.close()
+            
+            # Reset timer variables
+            self.total_seconds = 0
+            
+            # Update button states
             self.disable_buttons(start_disabled=False)
 
     def disable_buttons(self, start_disabled):
-        """Enable or disable Start and Stop buttons."""
+        """Enable/disable timer control buttons"""
+        start_state = DISABLED if start_disabled else NORMAL
+        stop_state = NORMAL if start_disabled else DISABLED
+        
         # Full page buttons
-        self.full_page_start_button.config(state=DISABLED if start_disabled else NORMAL)
-        self.full_page_stop_button.config(state=NORMAL if start_disabled else DISABLED)
-
-        # Small Overlay buttons
-        self.small_overlay_start_button.config(state=DISABLED if start_disabled else NORMAL)
-        self.small_overlay_stop_button.config(state=NORMAL if start_disabled else DISABLED)
+        self.full_page_start_button.config(state=start_state)
+        self.full_page_stop_button.config(state=stop_state)
+        
+        # Small overlay buttons
+        self.small_overlay_start_button.config(state=start_state)
+        self.small_overlay_stop_button.config(state=stop_state)
 
 if __name__ == "__main__":
     root = tk.Tk()
