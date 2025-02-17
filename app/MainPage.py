@@ -193,22 +193,18 @@ class App:
 
     def setup_smalloverlay_page(self):
         self.smalloverlay_page.configure(bg=background_color)
-
         self.to_task_name = Entry(self.smalloverlay_page, width = 35)
         self.to_task_name.grid(row = 0, column = 0,sticky = W)
-        self.to_task_name.configure(state = DISABLED)
 
         # Time label and box
         Label(self.smalloverlay_page, text="Time: ",
             font=self.fonts['Body_Tuple'],
             background=background_color
         ).grid(row=1, column=0, sticky=W, pady=2)
-        
         self.time_box_overlay = Text(self.smalloverlay_page, height=1, width=10,
                                     font=self.fonts['Body_Tuple'],
                                     background=grey_button_color)
         self.time_box_overlay.grid(row=1, column=0, padx=50, pady=5, sticky=E)
-
         # Timer control buttons
         self.small_overlay_start_button = tk.Button(self.smalloverlay_page, 
                                                 text="Start",
@@ -216,7 +212,6 @@ class App:
                                                 background="#77DD77",
                                                 command=self.start_timer)
         self.small_overlay_start_button.grid(row=2, column=0, sticky=W, padx=0, pady=5)
-
         self.small_overlay_stop_button = tk.Button(self.smalloverlay_page, 
                                                 text="Stop",
                                                 relief="flat", 
@@ -224,8 +219,6 @@ class App:
                                                 command=self.stop_timer)
         self.small_overlay_stop_button.grid(row=2, column=0, sticky=W, padx=45, pady=5)
         self.small_overlay_stop_button.config(state=DISABLED)
-
-
    
     def update_timer_boxes(self, timer_text):
       """Update the timer display in both timer boxes."""
@@ -539,12 +532,7 @@ class App:
 
         if cur_task:  # Prevent error if CurrentTask is empty
             #Enable entry boxes to change information
-            self.task_name_entry.configure(state = NORMAL,foreground= "black")
-            self.current_id_entry.configure(state = NORMAL,foreground= "black")
-            self.time_box_full.configure(state = NORMAL,foreground= "black")
-            self.time_box_overlay.configure(state = NORMAL, foreground= "black")
-            self.description_box.configure(state = NORMAL,foreground= "black")
-            self.to_task_name.configure(state = NORMAL, foreground= "black")
+            self.enable_boxes()
 
             #Switch out entry boxes for all information
             self.task_name_entry.delete(0, END)
@@ -561,29 +549,37 @@ class App:
             self.to_task_name.insert(0, cur_task[0])
 
             #Disable entry boxes                             
-            self.task_name_entry.configure(state = DISABLED)
-            self.current_id_entry.configure(state = DISABLED)
-            self.description_box.configure(state = DISABLED)
-            self.time_box_full.configure(state = DISABLED)
-            self.time_box_overlay.configure(state = DISABLED)
-            self.to_task_name.configure(state = DISABLED)
+            self.disable_boxes()
             
         else:
-            self.task_name_entry.configure(state = NORMAL,foreground= "black")
-            self.current_id_entry.configure(state = NORMAL,foreground= "black")
-            self.description_box.configure(state = NORMAL,foreground= "black")
+            self.enable_boxes()
             self.task_name_entry.insert(0 , "No Current Task")
             self.description_box.delete("1.0", "end")
-            self.task_name_entry.configure(state = DISABLED)
-            self.current_id_entry.configure(state = DISABLED)
-            self.description_box.configure(state = DISABLED)
-            self.time_box_full.configure(state = DISABLED)
-            self.time_box_overlay.configure(state = DISABLED)
+            self.to_task_name.insert(0, "No Current Task")
+            self.disable_boxes()
 
 
         self.query_database()
 
         conn.close()
+
+    
+    def disable_boxes(self):
+        self.task_name_entry.configure(state = DISABLED)
+        self.current_id_entry.configure(state = DISABLED)
+        self.description_box.configure(state = DISABLED)
+        self.time_box_full.configure(state = DISABLED)
+        self.time_box_overlay.configure(state = DISABLED)
+        self.to_task_name.configure(state = DISABLED)
+    
+    def enable_boxes(self):
+        self.task_name_entry.configure(state = NORMAL,foreground= "black")
+        self.current_id_entry.configure(state = NORMAL,foreground= "black")
+        self.time_box_full.configure(state = NORMAL,foreground= "black")
+        self.time_box_overlay.configure(state = NORMAL, foreground= "black")
+        self.description_box.configure(state = NORMAL,foreground= "black")
+        self.to_task_name.configure(state = NORMAL, foreground= "black")
+
       
 
         
