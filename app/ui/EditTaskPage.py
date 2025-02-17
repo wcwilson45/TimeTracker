@@ -1,3 +1,4 @@
+
 from tkinter import *
 from tkinter.ttk import *
 import tkinter as tk
@@ -22,7 +23,7 @@ class EditTaskWindow(tk.Tk):
 
         # Define path
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("ui", '') + 'task_list.db'
+        self.path = str(self.path).replace("EditTaskPage.py", '') + '\\Databases' + '\\task_list.db'
         self.configure_ui()
         self.load_task()
 
