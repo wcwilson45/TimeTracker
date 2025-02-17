@@ -6,6 +6,11 @@ import tkinter.font as tkfont
 import sqlite3
 import csv
 from tkinter import messagebox
+import pathlib
+
+global path 
+path = pathlib.Path(__file__).parent
+path = str(path).replace("CompletedTasksList.py", '') + '\\Databases' + '\\task_list.db'
 
 background_color = "#A9A9A9"
 grey_button_color = "#d3d3d3"
@@ -101,7 +106,7 @@ class CompletedTasksList(tk.Frame):
         for item in self.completed_list.get_children():
             self.completed_list.delete(item)
 
-        conn = sqlite3.connect('task_list.db')
+        conn = sqlite3.connect(path)
         c = conn.cursor()
 
         try:
