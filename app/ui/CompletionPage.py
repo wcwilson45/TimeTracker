@@ -17,13 +17,14 @@ path = str(path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list
 
 
 class CompletedTasksWindow(tk.Tk):
-    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, refresh_callback=None):
+    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, task_description=None, refresh_callback=None):
         super().__init__()
 
         self.task_name = task_name
         self.task_weight = task_weight
         self.task_time = task_time
         self.task_id = task_id
+        self.task_description = task_description
         self.refresh_callback = refresh_callback
 
         # Font Tuples for Use on pages
@@ -218,7 +219,7 @@ class CompletedTasksWindow(tk.Tk):
             text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
             scrollbar.config(command=text.yview)
-            text.insert("1.0", placeholder)
+            text.insert("1.0", self.task_description if self.task_description else placeholder)
 
     def create_tag(self, text):
         tag_label = tk.Label(

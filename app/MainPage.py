@@ -852,12 +852,14 @@ class App:
             task_time = values[1]
             task_weight = values[2]
             task_id = values[3]
+            task_description = values[6]
 
             self.task_window = CompletedTasksWindow(
                 task_name=task_name,
                 task_time=task_time,
                 task_weight=task_weight,
                 task_id=task_id,
+                task_description = task_description,
                 refresh_callback=self.query_database
             )
             self.task_window.grab_set()
