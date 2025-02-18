@@ -152,6 +152,10 @@ class App:
         confirm = messagebox.askyesno("Confirm Exit", "Are you sure you want to exit the program?")
 
         if confirm:
+            if self.addtask_window:
+                self.addtask_window.destroy()
+            if self.edittask_window:
+                self.edittask_window.destroy()
             root.destroy()
         else:
             self.root.lift()
@@ -596,10 +600,6 @@ class App:
         #Add data to screen
         global count
         count = 0
-
-        for record in tasks:
-            print(record)
-            #Adding the dummy data. Will become void?
         for record in tasks:
             if count % 2 == 0:
                 self.task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[1],record[2],record[3],record[4], record[5],record[6],record[7]), tags = ('evenrow', ""))
@@ -803,7 +803,6 @@ class App:
             # Update database with final time
             conn = sqlite3.connect(path)
             c = conn.cursor()
-            
             try:
                 c.execute("""
                     UPDATE CurrentTask 
