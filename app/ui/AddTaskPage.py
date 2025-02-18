@@ -296,9 +296,11 @@ class AddTaskWindow(tk.Tk):
             task_id = max(max_tasklist_id, max_completed_id)
             task_id = max(task_id, current_task_id) + 1
 
+            list_place = task_id
+
             # Insert data
             c.execute(
-                "INSERT INTO TaskList VALUES(:task_name, :task_time, :task_weight, :task_id, :task_start_date, :task_end_date, :task_description, :task_weight_type, :task_tags)",
+                "INSERT INTO TaskList VALUES(:task_name, :task_time, :task_weight, :task_id, :task_start_date, :task_end_date, :task_description, :task_weight_type, :task_tags, :list_place)",
                 {
                     "task_name": task_name,
                     "task_time": task_time,
@@ -308,7 +310,8 @@ class AddTaskWindow(tk.Tk):
                     "task_end_date": end_date,
                     "task_description": description,
                     "task_weight_type": complexity_type,
-                    "task_tags": tags
+                    "task_tags": tags,
+                    "list_place": list_place
                 }
             )
 
