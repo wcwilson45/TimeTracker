@@ -152,11 +152,7 @@ class App:
         confirm = messagebox.askyesno("Confirm Exit", "Are you sure you want to exit the program?")
 
         if confirm:
-            if self.addtask_window:
-                self.addtask_window.destroy()
-            if self.edittask_window:
-                self.edittask_window.destroy()
-            self.root.destroy()
+            root.destroy()
         else:
             self.root.lift()
             self.root.focus_force()
@@ -521,10 +517,8 @@ class App:
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (current_task[3], current_task[0], current_task[1], current_task[2], current_task[4], current_task[5], current_task[6], current_task[7], current_task[8]))
             conn.commit()
-            print("Task swapped successfully!")
 
         except sqlite3.Error as e:
-            print("Database error:", e)
             conn.rollback()
 
         finally:
@@ -562,6 +556,8 @@ class App:
             
         else:
             self.enable_boxes()
+            self.task_name_entry.delete(0, END)
+            self.to_task_name.delete(0, END)
             self.task_name_entry.insert(0 , "No Current Task")
             self.description_box.delete("1.0", "end")
             self.to_task_name.insert(0, "No Current Task")
