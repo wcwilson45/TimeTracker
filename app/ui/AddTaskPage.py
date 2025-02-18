@@ -1,3 +1,4 @@
+
 from tkinter import *
 from tkinter.ttk import *
 import tkinter as tk
@@ -237,7 +238,7 @@ class AddTaskWindow(tk.Tk):
         tags = self.tag_text.get("1.0", tk.END).strip()
         complexity_type = self.type_combo.get()
         complexity_value = self.value_combo.get()
-        start_date = self.date_var.get()
+        start_date = self.date_entry.get()
         task_time = "00:00:00" 
         end_date = "01-02-2025"
 
@@ -299,8 +300,12 @@ class AddTaskWindow(tk.Tk):
                 }
             )
 
+
             conn.commit()
             conn.close()
+            
+            if hasattr(self.main_app, 'query_database'):
+                self.main_app.query_database()
 
             self.destroy()
            
