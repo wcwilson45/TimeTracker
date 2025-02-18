@@ -52,7 +52,8 @@ c.execute("""CREATE TABLE if not exists TaskList (
           task_end_date text,
           task_description text,
           task_weight_type text,
-          task_tags text
+          task_tags text, 
+          list_place integer
           )
 """)
 #Table for Current Task
@@ -446,14 +447,123 @@ class App:
 
     #Move a task up in the task list
     def move_up(self):
-        rows = self.task_list.selection()
-        for row in rows:
-            self.task_list.move(row, self.task_list.parent(row), self.task_list.index(row)-1)
+        """Move selected task up in the list and update database order"""
+        selected = self.task_list.selection()
+        if not selected:
+            return
+            
+        # Get current index in treeview
+        current_index = self.task_list.index(selected[0])
+        if current_index == 0:  # Already at top
+            return
+            
+        # Connect to database
+        conn = sqlite3.connect(path)
+        c = conn.cursor()
+        
+        try:
+            # Get current task's ID and list_place
+            task_id = self.task_list.item(selected[0])['values'][3]
+            
+            # Get all tasks ordered by list_place
+            c.execute("SELECT task_id, list_place FROM TaskList ORDER BY list_place")
+            tasks = c.fetchall()
+            
+            # Find current task and task above it
+            for i, (tid, place) in enumerate(tasks):
+                if tid == int(task_id):
+                    if i > 0:  # Not already at top
+                        # Swap list_place values with task above
+                        current_place = place
+                        above_task_id, above_place = tasks[i-1]
+                        
+                        # Update both tasks' positions
+                        c.execute("""
+                            UPDATE TaskList 
+                            SET list_place = ? 
+                            WHERE task_id = ?
+                        """, (above_place, task_id))
+                        
+                        c.execute("""
+                            UPDATE TaskList 
+                            SET list_place = ? 
+                            WHERE task_id = ?
+                        """, (current_place, above_task_id))
+                        
+                        conn.commit()
+                        
+                        # Update treeview
+                        self.task_list.move(selected[0], '', current_index - 1)
+                    break
+                    
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+            
+        # Refresh the display to show correct alternating colors
+        self.query_database()
     
     def move_down(self):
-        rows = self.task_list.selection()
-        for row in reversed(rows):
-            self.task_list.move(row, self.task_list.parent(row), self.task_list.index(row)+1)
+        """Move selected task down in the list and update database order"""
+        selected = self.task_list.selection()
+        if not selected:
+            return
+            
+        # Get current index and total items in treeview
+        current_index = self.task_list.index(selected[0])
+        last_index = len(self.task_list.get_children()) - 1
+        if current_index == last_index:  # Already at bottom
+            return
+            
+        # Connect to database
+        conn = sqlite3.connect(path)
+        c = conn.cursor()
+        
+        try:
+            # Get current task's ID
+            task_id = self.task_list.item(selected[0])['values'][3]
+            
+            # Get all tasks ordered by list_place
+            c.execute("SELECT task_id, list_place FROM TaskList ORDER BY list_place")
+            tasks = c.fetchall()
+            
+            # Find current task and task below it
+            for i, (tid, place) in enumerate(tasks):
+                if tid == int(task_id):
+                    if i < len(tasks) - 1:  # Not already at bottom
+                        # Swap list_place values with task below
+                        current_place = place
+                        below_task_id, below_place = tasks[i+1]
+                        
+                        # Update both tasks' positions
+                        c.execute("""
+                            UPDATE TaskList 
+                            SET list_place = ? 
+                            WHERE task_id = ?
+                        """, (below_place, task_id))
+                        
+                        c.execute("""
+                            UPDATE TaskList 
+                            SET list_place = ? 
+                            WHERE task_id = ?
+                        """, (current_place, below_task_id))
+                        
+                        conn.commit()
+                        
+                        # Update treeview
+                        self.task_list.move(selected[0], '', current_index + 1)
+                    break
+                    
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+            
+        # Refresh the display to show correct alternating colors
+        self.query_database()
 
 
     def select_record(self, e):
@@ -587,31 +697,66 @@ class App:
 
         
     def query_database(self):
+        """Modified query_database to respect list_place order"""
+        # Clear current display
         for record in self.task_list.get_children():
             self.task_list.delete(record)
 
-    #Create a database or connect to an existing database
         conn = sqlite3.connect(path)
-
-        #Create a cursor instance
         c = conn.cursor()
-        c.execute("SELECT rowid,* FROM TaskList")
-        tasks = c.fetchall()
-        #Add data to screen
-        global count
-        count = 0
-        for record in tasks:
-            if count % 2 == 0:
-                self.task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[1],record[2],record[3],record[4], record[5],record[6],record[7]), tags = ('evenrow', ""))
-            else:
-                self.task_list.insert(parent = '', index = 'end', iid = count, text = '', values = (record[1],record[2],record[3],record[4], record[5],record[6],record[7]), tags = ('oddrow', ""))
-                #Increment count
-            count += 1
         
-        #Commit Changes
-        conn.commit()
-
-        conn.close()
+        try:
+            # First, ensure all tasks have a list_place value
+            c.execute("SELECT task_id FROM TaskList WHERE list_place IS NULL")
+            null_place_tasks = c.fetchall()
+            
+            if null_place_tasks:
+                # Get highest existing list_place
+                c.execute("SELECT COALESCE(MAX(list_place), 0) FROM TaskList")
+                max_place = c.fetchone()[0]
+                
+                # Assign sequential list_place values to tasks without them
+                for i, (task_id,) in enumerate(null_place_tasks):
+                    c.execute("""
+                        UPDATE TaskList 
+                        SET list_place = ? 
+                        WHERE task_id = ?
+                    """, (max_place + i + 1, task_id))
+                
+                conn.commit()
+            
+            # Query tasks ordered by list_place
+            c.execute("""
+                SELECT rowid, * FROM TaskList 
+                ORDER BY list_place
+            """)
+            tasks = c.fetchall()
+            
+            # Add data to screen
+            for count, record in enumerate(tasks):
+                tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
+                self.task_list.insert(
+                    parent='',
+                    index='end',
+                    iid=count,
+                    text='',
+                    values=(
+                        record[1],   # task_name
+                        record[2],   # task_time
+                        record[3],   # task_weight
+                        record[4],   # task_id
+                        record[5],   # start_date
+                        record[6],   # end_date
+                        record[7]    # description
+                    ),
+                    tags=tags
+                )
+                
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            messagebox.showerror("Database Error", "Failed to load tasks from database")
+        finally:
+            conn.close()
        
     #def insert_task(self, task_id):
 
