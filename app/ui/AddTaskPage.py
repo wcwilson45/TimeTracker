@@ -1,4 +1,5 @@
 
+
 from tkinter import *
 from tkinter.ttk import *
 import tkinter as tk
@@ -281,8 +282,20 @@ class AddTaskWindow(tk.Tk):
             c = conn.cursor()
 
             c.execute("SELECT MAX(task_id) FROM TaskList")
-            last_id = c.fetchone()[0]
-            task_id = (last_id + 1) if last_id else 1
+            max_tasklist_id = c.fetchone()[0]
+            max_tasklist_id = max_tasklist_id if max_tasklist_id is not None else 0  # Default to 0 if None
+
+            c.execute("SELECT MAX(task_id) FROM CompletedTasks")
+            max_completed_id = c.fetchone()[0]
+            max_completed_id = max_completed_id if max_completed_id is not None else 0  # Default to 0 if None
+
+            c.execute("SELECT MAX(task_id) FROM CurrentTask")
+            current_task_id = c.fetchone()[0]
+            current_task_id = current_task_id if current_task_id is not None else 0  # Default to 0 if None
+
+            # Find the next task_id (1 + max of both task lists)
+            task_id = max(max_tasklist_id, max_completed_id)
+            task_id = max(task_id, current_task_id) + 1
 
             # Insert data
             c.execute(
