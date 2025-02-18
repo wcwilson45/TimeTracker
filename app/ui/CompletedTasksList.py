@@ -7,6 +7,8 @@ import sqlite3
 import csv
 from tkinter import messagebox
 import pathlib
+import os
+from datetime import datetime
 
 global path 
 path = pathlib.Path(__file__).parent
@@ -87,19 +89,89 @@ class CompletedTasksList(tk.Frame):
         bottom_frame = tk.Frame(self, bg=background_color)
         bottom_frame.pack(fill='x', side='bottom', pady=5, padx=10)
 
-        delete_all_button = tk.Button(bottom_frame, text="Delete All", bg=del_btn_color)
+        delete_all_button = tk.Button(bottom_frame, text="Delete All", bg=del_btn_color, command=self.delete_all_tasks)
         delete_all_button.pack(side='right')
 
-        delete_button = tk.Button(bottom_frame, text="Delete", bg=del_btn_color)
+        delete_button = tk.Button(bottom_frame, text="Delete", bg=del_btn_color, command=self.delete_selected_task)
         delete_button.pack(side='right', padx=(0, 5))
 
-        export_button = tk.Button(bottom_frame, text="Export", bg = main_btn_color)
-        export_button.pack(side = "left")
+        export_button = tk.Button(bottom_frame, text="Export", bg=main_btn_color, command=self.export_tasks)
+        export_button.pack(side="left")
 
-        rld_button = tk.Button(bottom_frame, text = "Reload List",bg = main_btn_color, command = self.load_completed_tasks)
-        rld_button.pack(side = "left", padx = 6)
+        rld_button = tk.Button(bottom_frame, text="Reload List", bg=main_btn_color, command=self.load_completed_tasks)
+        rld_button.pack(side="left", padx=6)
 
         self.load_completed_tasks()
+
+    def delete_selected_task(self):
+        """Delete the selected task from the completed tasks list"""
+        selected_items = self.completed_list.selection()
+        
+        if not selected_items:
+            messagebox.showwarning("Selection Required", "Please select a task to delete.")
+            return
+
+        # Get the task details for confirmation
+        task_name = self.completed_list.item(selected_items[0])['values'][0]
+        task_id = self.completed_list.item(selected_items[0])['values'][3]
+
+        # Confirm deletion
+        if not messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete the task '{task_name}'?"):
+            return
+
+        # Delete from database
+        conn = sqlite3.connect(path)
+        c = conn.cursor()
+
+        try:
+            c.execute("DELETE FROM CompletedTasks WHERE task_id = ?", (task_id,))
+            conn.commit()
+            
+            # Remove from treeview
+            self.completed_list.delete(selected_items[0])
+            
+            # Recolor rows
+            for i, item in enumerate(self.completed_list.get_children()):
+                self.completed_list.item(item, tags=('evenrow' if i % 2 == 0 else 'oddrow'))
+            
+            messagebox.showinfo("Success", "Task deleted successfully!")
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"Error deleting task: {str(e)}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def delete_all_tasks(self):
+        """Delete all tasks from the completed tasks list"""
+        if not self.completed_list.get_children():
+            messagebox.showinfo("No Tasks", "There are no completed tasks to delete.")
+            return
+
+        # Confirm deletion
+        if not messagebox.askyesno("Confirm Delete All", 
+                                  "Are you sure you want to delete ALL completed tasks? This cannot be undone."):
+            return
+
+        # Delete from database
+        conn = sqlite3.connect(path)
+        c = conn.cursor()
+
+        try:
+            c.execute("DELETE FROM CompletedTasks")
+            conn.commit()
+            
+            # Clear treeview
+            for item in self.completed_list.get_children():
+                self.completed_list.delete(item)
+            
+            messagebox.showinfo("Success", "All completed tasks deleted successfully!")
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"Error deleting tasks: {str(e)}")
+            conn.rollback()
+        finally:
+            conn.close()
 
     def load_completed_tasks(self):
         """Loads completed tasks from SQLite database into Treeview."""
@@ -148,3 +220,38 @@ class CompletedTasksList(tk.Frame):
 
         except Exception as e:
             messagebox.showerror("Sorting Error", f"An error occurred while sorting: {str(e)}")
+
+    def export_tasks(self):
+        """Export completed tasks to CSV file"""
+        # Check if there are tasks to export
+        if not self.completed_list.get_children():
+            messagebox.showinfo("No Tasks", "There are no completed tasks to export.")
+            return
+
+        try:
+            # Create Completed Tasks directory if it doesn't exist
+            export_dir = pathlib.Path(__file__).parent / "Completed Tasks"
+            export_dir.mkdir(exist_ok=True)
+
+            # Create filename with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = export_dir / f"completed_tasks_{timestamp}.csv"
+
+            # Get all tasks from the treeview
+            tasks = []
+            headers = self.completed_list['columns']
+            tasks.append(headers)  # Add headers as first row
+
+            for item in self.completed_list.get_children():
+                values = self.completed_list.item(item)['values']
+                tasks.append(values)
+
+            # Write to CSV
+            with open(filename, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerows(tasks)
+
+            messagebox.showinfo("Success", f"Tasks exported successfully to:\n{filename}")
+
+        except Exception as e:
+            messagebox.showerror("Export Error", f"Error exporting tasks: {str(e)}")
