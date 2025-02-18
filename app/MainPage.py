@@ -250,6 +250,7 @@ class App:
     def setup_full_page(self):
         self.full_page.configure(background= background_color)
         style = ttk.Style()
+        style.configure('TLabel', background="#dcdcdc")
         style.theme_use('alt')
         style.configure("Treeview",
         background = "black",
@@ -263,13 +264,18 @@ class App:
         self.currenttask_frame.pack(pady=0, side = TOP, fill = 'x')
 
         # Set Labels for Name, ID, Time, and Description
-        ttk.Label(self.currenttask_frame, text=f"Task Name:", font=self.fonts['Body_Tuple']).grid(row=0, column=0, sticky=W, pady=2)
+        ttk.Label(self.currenttask_frame, text=f"Task Name:", font=self.fonts['Body_Tuple'], style='TLabel').grid(row=0, column=0, sticky=W, pady=2)
         self.task_name_label = ttk.Label(self.currenttask_frame, text="No Current Task", font=self.fonts['Body_Tuple'])
         self.task_name_label.grid(row=0, column=1, sticky=W)
 
-        ttk.Label(self.currenttask_frame, text=f"Task ID:", font=self.fonts['Body_Tuple']).grid(row=1, column=0, sticky=W, pady=2)
-        self.task_id_label = ttk.Label(self.currenttask_frame, text="-", font=self.fonts['Body_Tuple'])
-        self.task_id_label.grid(row=1, column=1, sticky=W)
+        # Create a frame for Task ID and Timer elements
+        task_id_timer_frame = tk.Frame(self.currenttask_frame, bg=background_color)
+        task_id_timer_frame.grid(row=1, column=0, pady=5, sticky=W)
+
+        # Task ID Label and Task ID Display inside the frame
+        ttk.Label(task_id_timer_frame, text="Task ID:", font=self.fonts['Body_Tuple']).grid(row=0, column=0, sticky=W, padx=0)
+        self.task_id_label = ttk.Label(task_id_timer_frame, text="-", font=self.fonts['Body_Tuple'])
+        self.task_id_label.grid(row=0, column=1, sticky=W)
 
         Label(self.currenttask_frame, text="Time:", font=self.fonts['Body_Tuple']).grid(row=2, column=0, sticky=W, pady=2)
         
