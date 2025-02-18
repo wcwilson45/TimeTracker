@@ -17,13 +17,14 @@ path = str(path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list
 
 
 class CompletedTasksWindow(tk.Tk):
-    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, refresh_callback=None):
+    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, task_description=None, refresh_callback=None):
         super().__init__()
 
         self.task_name = task_name
         self.task_weight = task_weight
         self.task_time = task_time
         self.task_id = task_id
+        self.task_description = task_description
         self.refresh_callback = refresh_callback
 
         # Font Tuples for Use on pages
@@ -109,11 +110,11 @@ class CompletedTasksWindow(tk.Tk):
             command=self.open_commit_history_page,
             bg='#e99e56',
             fg='black',
-            relief='flat',
+            # relief='flat',
             padx=10,
             pady=5
         )
-        self.cancel_btn.pack(side=tk.LEFT, padx=1)
+        self.cancel_btn.pack(side=tk.RIGHT, padx=1)
 
         self.complete_btn = tk.Button(
             self.button_frame,
@@ -121,11 +122,10 @@ class CompletedTasksWindow(tk.Tk):
             command=self.complete_task,
             bg='#b2fba5',
             fg='black',
-            relief='flat',
             padx=10,
             pady=5
         )
-        self.complete_btn.pack(side=tk.LEFT)
+        self.complete_btn.pack(side=tk.RIGHT)
 
     def complete_task(self):
         if self.task_id:
@@ -177,7 +177,7 @@ class CompletedTasksWindow(tk.Tk):
 
             tree = ttk.Treeview(tree_frame, columns=("Date",), show="headings", height=7)
             tree.heading("Date", text="Date", anchor="center")
-            tree.column("Date", anchor="center", width=150)
+            tree.column("Date", anchor="center", width=120)
 
             scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
             tree.configure(yscrollcommand=scrollbar.set)
@@ -219,7 +219,7 @@ class CompletedTasksWindow(tk.Tk):
             text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
             scrollbar.config(command=text.yview)
-            text.insert("1.0", placeholder)
+            text.insert("1.0", self.task_description if self.task_description else placeholder)
 
     def create_tag(self, text):
         tag_label = tk.Label(

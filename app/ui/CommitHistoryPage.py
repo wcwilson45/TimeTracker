@@ -60,7 +60,7 @@ class CommitHistoryWindow(tk.Tk):
             bg="#F08080",  # Button background color
             fg="#000000",  # Button text color
             font=("SF Pro Text", 10),  # Button font
-            relief="flat",  # No border around the button
+            # relief="flat",  # No border around the button
             activebackground="#F49797",  # Background color when the button is active (clicked)
             activeforeground="#000000"  # Text color when the button is active
         )

@@ -263,7 +263,6 @@ class AddTaskWindow(tk.Tk):
             return  # Stop further action if any field is missing
         
         res = tags.split('\n') # Splits the string to check tags
-        print(res)
 
         if not all(tag in values for tag in res): #Checks to see if tags are in the accepted tags
           

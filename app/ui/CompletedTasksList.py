@@ -98,8 +98,8 @@ class CompletedTasksList(tk.Frame):
         export_button = tk.Button(bottom_frame, text="Export", bg=main_btn_color, command=self.export_tasks)
         export_button.pack(side="left")
 
-        rld_button = tk.Button(bottom_frame, text="Reload List", bg=main_btn_color, command=self.load_completed_tasks)
-        rld_button.pack(side="left", padx=6)
+        undo_button = tk.Button(bottom_frame, text="Undo Commit", bg=main_btn_color, command=self.undo_task_completion)
+        undo_button.pack(side="left", padx=6)
 
         self.load_completed_tasks()
 
@@ -173,6 +173,64 @@ class CompletedTasksList(tk.Frame):
         finally:
             conn.close()
 
+    def undo_task_completion(self):
+        """Move selected task from CompletedTasks back to TaskList"""
+        selected_items = self.completed_list.selection()
+        
+        if not selected_items:
+            messagebox.showwarning("Selection Required", "Please select a task to undo.")
+            return
+
+        # Get the task details
+        values = self.completed_list.item(selected_items[0])['values']
+        task_name = values[0]
+        task_time = values[1]
+        task_weight = values[2]
+        task_id = values[3]
+
+        # Confirm undo
+        if not messagebox.askyesno("Confirm Undo", f"Move '{task_name}' back to tasks list?"):
+            return
+
+        conn = sqlite3.connect(path)
+        c = conn.cursor()
+
+        try:
+            # Begin transaction
+            c.execute("BEGIN")
+
+            # Insert back into TaskList
+            c.execute("""
+                INSERT INTO TaskList 
+                (task_name, task_time, task_weight, task_id) 
+                VALUES (?, ?, ?, ?)
+            """, (task_name, task_time, task_weight, task_id))
+
+            # Remove from CompletedTasks
+            c.execute("DELETE FROM CompletedTasks WHERE task_id = ?", (task_id,))
+
+            # Commit transaction
+            conn.commit()
+
+            # Remove from treeview
+            self.completed_list.delete(selected_items[0])
+
+            # Recolor remaining rows
+            for i, item in enumerate(self.completed_list.get_children()):
+                self.completed_list.item(item, tags=('evenrow' if i % 2 == 0 else 'oddrow'))
+
+            # Refresh main page task list if controller exists
+            if self.controller and hasattr(self.controller, 'query_database'):
+                self.controller.query_database()
+
+            messagebox.showinfo("Success", "Task moved back to tasks list successfully!")
+
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"Error undoing task completion: {str(e)}")
+            conn.rollback()
+        finally:
+            conn.close()
+
     def load_completed_tasks(self):
         """Loads completed tasks from SQLite database into Treeview."""
         for item in self.completed_list.get_children():
@@ -193,33 +251,6 @@ class CompletedTasksList(tk.Frame):
             messagebox.showerror("Database Error", f"Error loading completed tasks: {str(e)}")
         finally:
             conn.close()
-
-    def sort_completed_tasks(self, col):
-        """Sort completed tasks by column."""
-        try:
-            # Retrieve all items from Treeview
-            items = [(self.completed_list.set(k, col), k) for k in self.completed_list.get_children("")]
-
-            # Convert to appropriate type (for numeric columns)
-            if col in ["Task Time", "Task Weight", "Task ID", "Total Duration"]:
-                items.sort(key=lambda x: float(x[0]) if x[0] else 0, reverse=self.current_sort_reverse)
-            elif col in ["Completion Date"]:
-                items.sort(key=lambda x: x[0] if x[0] else "", reverse=self.current_sort_reverse)
-            else:
-                items.sort(reverse=self.current_sort_reverse)
-
-            # Rearrange items in sorted order
-            for index, (_, k) in enumerate(items):
-                self.completed_list.move(k, "", index)
-
-                # Reapply row colors
-                self.completed_list.item(k, tags=('evenrow' if index % 2 == 0 else 'oddrow'))
-
-            # Toggle sort direction for next click
-            self.current_sort_reverse = not self.current_sort_reverse
-
-        except Exception as e:
-            messagebox.showerror("Sorting Error", f"An error occurred while sorting: {str(e)}")
 
     def export_tasks(self):
         """Export completed tasks to CSV file"""
@@ -255,3 +286,30 @@ class CompletedTasksList(tk.Frame):
 
         except Exception as e:
             messagebox.showerror("Export Error", f"Error exporting tasks: {str(e)}")
+
+    def sort_completed_tasks(self, col):
+        """Sort completed tasks by column."""
+        try:
+            # Retrieve all items from Treeview
+            items = [(self.completed_list.set(k, col), k) for k in self.completed_list.get_children("")]
+
+            # Convert to appropriate type (for numeric columns)
+            if col in ["Task Time", "Task Weight", "Task ID", "Total Duration"]:
+                items.sort(key=lambda x: float(x[0]) if x[0] else 0, reverse=self.current_sort_reverse)
+            elif col in ["Completion Date"]:
+                items.sort(key=lambda x: x[0] if x[0] else "", reverse=self.current_sort_reverse)
+            else:
+                items.sort(reverse=self.current_sort_reverse)
+
+            # Rearrange items in sorted order
+            for index, (_, k) in enumerate(items):
+                self.completed_list.move(k, "", index)
+
+                # Reapply row colors
+                self.completed_list.item(k, tags=('evenrow' if index % 2 == 0 else 'oddrow'))
+
+            # Toggle sort direction for next click
+            self.current_sort_reverse = not self.current_sort_reverse
+
+        except Exception as e:
+            messagebox.showerror("Sorting Error", f"An error occurred while sorting: {str(e)}")
