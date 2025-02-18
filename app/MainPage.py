@@ -332,19 +332,13 @@ class App:
         #Buttons for Underneath Description Box + Above TaskList
 
         moveup_button = tk.Button(top_btn_frame, text = "Move Up",bg = main_btn_color, command = self.move_up)
-        moveup_button.grid(row = 0, column = 1, padx = 4, pady =6)
+        moveup_button.grid(row = 0, column = 0, padx = 4, pady =6)
 
         movedown_button = tk.Button(top_btn_frame, text = "Move Down",bg = main_btn_color, command = self.move_down)
-        movedown_button.grid(row = 0, column = 2, padx = 4, pady = 6)
-
-
-        reload_button = tk.Button(top_btn_frame, text = "Reload TaskList",bg = main_btn_color, command = self.query_database)
-        reload_button.grid(row = 0, column = 0, padx = 4, pady = 6)
+        movedown_button.grid(row = 0, column = 1, padx = 4, pady = 6)
 
         complete_task_btn = tk.Button(top_btn_frame, text = "Complete Task", bg = main_btn_color, command = self.open_CompletionPage)
-        complete_task_btn.grid(row = 0, column = 3, padx = 4, pady = 6)
-
-
+        complete_task_btn.grid(row = 0, column = 2, padx = 4, pady = 6)
 
         #Create scrollbar
         tasklist_scroll = Scrollbar(tasklist_frame)
