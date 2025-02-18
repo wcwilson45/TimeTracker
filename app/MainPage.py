@@ -257,25 +257,20 @@ class App:
         fieldbackground = grey_button_color,
         bd = "black")
 
-
-
         #Current Task Frame
         self.currenttask_frame = LabelFrame(self.full_page, text = f"Current Task" )
         self.currenttask_frame.pack(pady=0, side = TOP, fill = 'x')
 
-        #Set Labels for Name, Time, and Description
-        self.display_task_name = ttk.Label(self.currenttask_frame, text = f"Task Name:",
-               font=self.fonts['Body_Tuple']).grid(row=0, column=0, sticky=W,pady=2)
-        self.task_name_entry = Entry(self.currenttask_frame, width = 50)
-        self.task_name_entry.grid(row = 0 , column = 1)
-        self.display_task_id =ttk.Label(self.currenttask_frame, text = f"Task ID:",
-              font = self.fonts['Body_Tuple']).grid(row = 1, column = 0, sticky = W, pady = 2)
-        self.current_id_entry = Entry(self.currenttask_frame, width = 10)
-        self.current_id_entry.grid(row = 1, column = 1, sticky = W)
+        # Set Labels for Name, ID, Time, and Description
+        ttk.Label(self.currenttask_frame, text=f"Task Name:", font=self.fonts['Body_Tuple']).grid(row=0, column=0, sticky=W, pady=2)
+        self.task_name_label = ttk.Label(self.currenttask_frame, text="No Current Task", font=self.fonts['Body_Tuple'])
+        self.task_name_label.grid(row=0, column=1, sticky=W)
 
-        
-        Label(self.currenttask_frame, text = "Time: ",
-               font=self.fonts['Body_Tuple']).grid(row=2, column=0, sticky=W,pady=2)
+        ttk.Label(self.currenttask_frame, text=f"Task ID:", font=self.fonts['Body_Tuple']).grid(row=1, column=0, sticky=W, pady=2)
+        self.task_id_label = ttk.Label(self.currenttask_frame, text="-", font=self.fonts['Body_Tuple'])
+        self.task_id_label.grid(row=1, column=1, sticky=W)
+
+        Label(self.currenttask_frame, text="Time:", font=self.fonts['Body_Tuple']).grid(row=2, column=0, sticky=W, pady=2)
         
         #Set Description Frame and Box inside the Frame
         description_frame = tk.Frame(self.full_page, bg = background_color)
@@ -527,57 +522,41 @@ class App:
     def set_current_task(self):
         conn = sqlite3.connect(path)
         c = conn.cursor()
-
+        
         c.execute("SELECT * FROM CurrentTask")
         cur_task = c.fetchone()
 
-        if cur_task:  # Prevent error if CurrentTask is empty
-            #Enable entry boxes to change information
+        if cur_task:
             self.enable_boxes()
-
-            #Switch out entry boxes for all information
-            self.task_name_entry.delete(0, END)
-            self.current_id_entry.delete(0, END)
-            self.task_name_entry.insert(0 , cur_task[0])
-            self.current_id_entry.insert(0, cur_task[3])
+            self.task_name_label.config(text=cur_task[0])  # Assuming Task Name is at index 0
+            self.task_id_label.config(text=cur_task[3])  # Assuming Task ID is at index 3
+            self.time_box_full.config(state=NORMAL)
             self.time_box_full.delete("1.0", END)
-            self.time_box_full.insert("1.0", cur_task[1])
-            self.time_box_overlay.delete("1.0", END)
-            self.time_box_overlay.insert("1.0", cur_task[1])
+            self.time_box_full.insert("1.0", cur_task[1])  # Assuming Task Time is at index 1
+            self.time_box_full.config(state=DISABLED)
             self.description_box.delete("1.0", END)
             self.description_box.insert("1.0", cur_task[6])  # Assuming description is at index 6
-            self.to_task_name.delete(0, END)
-            self.to_task_name.insert(0, cur_task[0])
-
-            #Disable entry boxes                             
             self.disable_boxes()
-            
         else:
             self.enable_boxes()
-            self.task_name_entry.delete(0, END)
-            self.to_task_name.delete(0, END)
-            self.task_name_entry.insert(0 , "No Current Task")
+            self.task_name_label.config(text="No Current Task")
+            self.task_id_label.config(text="-")
+            self.time_box_full.config(state=NORMAL)
+            self.time_box_full.delete("1.0", END)
+            self.time_box_full.config(state=DISABLED)
             self.description_box.delete("1.0", "end")
-            self.to_task_name.insert(0, "No Current Task")
             self.disable_boxes()
-
-
+        
         self.query_database()
-
         conn.close()
-
     
     def disable_boxes(self):
-        self.task_name_entry.configure(state = DISABLED)
-        self.current_id_entry.configure(state = DISABLED)
         self.description_box.configure(state = DISABLED)
         self.time_box_full.configure(state = DISABLED)
         self.time_box_overlay.configure(state = DISABLED)
         self.to_task_name.configure(state = DISABLED)
     
     def enable_boxes(self):
-        self.task_name_entry.configure(state = NORMAL,foreground= "black")
-        self.current_id_entry.configure(state = NORMAL,foreground= "black")
         self.time_box_full.configure(state = NORMAL,foreground= "black")
         self.time_box_overlay.configure(state = NORMAL, foreground= "black")
         self.description_box.configure(state = NORMAL,foreground= "black")
@@ -745,7 +724,7 @@ class App:
                     UPDATE CurrentTask 
                     SET task_time = ? 
                     WHERE task_id = ?
-                """, (timer_text, self.current_id_entry.get()))
+                """, (timer_text, self.task_id_label.cget("text")))
                 conn.commit()
             except sqlite3.Error as e:
                 print(f"Database error: {e}")
@@ -758,7 +737,7 @@ class App:
     def start_timer(self):
         """Start the timer for current task"""
         # Check if there is a current task
-        if not self.current_id_entry.get() or self.current_id_entry.get() == "No Current Task":
+        if not self.task_id_label.cget("text") or self.task_id_label.cget("text") == "No Current Task":
             messagebox.showwarning("No Task Selected", 
                                 "Please select a task before starting the timer.")
             return
@@ -770,7 +749,7 @@ class App:
             
             try:
                 c.execute("SELECT task_time FROM CurrentTask WHERE task_id = ?", 
-                        (self.current_id_entry.get(),))
+                        (self.task_id_label.cget("text"),))
                 current_time = c.fetchone()[0]
                 
                 # Convert HH:MM:SS to total seconds
@@ -808,7 +787,7 @@ class App:
                     UPDATE CurrentTask 
                     SET task_time = ? 
                     WHERE task_id = ?
-                """, (final_time, self.current_id_entry.get()))
+                """, (final_time, self.task_id_label.cget("text")))
                 conn.commit()
                 
                 # Show time logged message
