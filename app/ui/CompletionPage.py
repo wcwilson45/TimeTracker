@@ -109,11 +109,11 @@ class CompletedTasksWindow(tk.Tk):
             command=self.open_commit_history_page,
             bg='#e99e56',
             fg='black',
-            relief='flat',
+            # relief='flat',
             padx=10,
             pady=5
         )
-        self.cancel_btn.pack(side=tk.LEFT, padx=1)
+        self.cancel_btn.pack(side=tk.RIGHT, padx=1)
 
         self.complete_btn = tk.Button(
             self.button_frame,
@@ -121,11 +121,10 @@ class CompletedTasksWindow(tk.Tk):
             command=self.complete_task,
             bg='#b2fba5',
             fg='black',
-            relief='flat',
             padx=10,
             pady=5
         )
-        self.complete_btn.pack(side=tk.LEFT)
+        self.complete_btn.pack(side=tk.RIGHT)
 
     def complete_task(self):
         if self.task_id:
@@ -177,7 +176,7 @@ class CompletedTasksWindow(tk.Tk):
 
             tree = ttk.Treeview(tree_frame, columns=("Date",), show="headings", height=7)
             tree.heading("Date", text="Date", anchor="center")
-            tree.column("Date", anchor="center", width=150)
+            tree.column("Date", anchor="center", width=120)
 
             scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
             tree.configure(yscrollcommand=scrollbar.set)
