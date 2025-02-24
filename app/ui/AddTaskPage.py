@@ -235,6 +235,13 @@ class AddTaskWindow(tk.Tk):
 
     def confirm_action(self):
         task_name = self.task_name_entry.get()
+
+        # Check task name length
+        if len(task_name) > 45:
+            messagebox.showwarning("Warning", "Task name cannot exceed 45 characters.")
+            self.task_name_entry.delete(0, tk.END)  # Clear task name field
+            return  # Stop further execution
+        
         description = self.desc_text.get("1.0", tk.END).strip()
         tags = self.tag_text.get("1.0", tk.END).strip()
         complexity_type = self.type_combo.get()
