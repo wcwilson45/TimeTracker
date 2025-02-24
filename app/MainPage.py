@@ -456,124 +456,96 @@ class App:
 
     #Move a task up in the task list
     def move_up(self):
-        """Move selected task up in the list and update database order"""
         selected = self.task_list.selection()
         if not selected:
             return
-            
-        # Get current index in treeview
+
         current_index = self.task_list.index(selected[0])
         if current_index == 0:  # Already at top
             return
-            
-        # Connect to database
+
         conn = sqlite3.connect(path)
         c = conn.cursor()
-        
+
         try:
-            # Get current task's ID and list_place
-            task_id = self.task_list.item(selected[0])['values'][3]
-            
-            # Get all tasks ordered by list_place
+            task_id = self.task_list.item(selected[0])['values'][3]  # Get selected task ID
+
+            # Fetch ordered tasks
             c.execute("SELECT task_id, list_place FROM TaskList ORDER BY list_place")
             tasks = c.fetchall()
-            
-            # Find current task and task above it
+
             for i, (tid, place) in enumerate(tasks):
-                if tid == int(task_id):
-                    if i > 0:  # Not already at top
-                        # Swap list_place values with task above
-                        current_place = place
-                        above_task_id, above_place = tasks[i-1]
-                        
-                        # Update both tasks' positions
-                        c.execute("""
-                            UPDATE TaskList 
-                            SET list_place = ? 
-                            WHERE task_id = ?
-                        """, (above_place, task_id))
-                        
-                        c.execute("""
-                            UPDATE TaskList 
-                            SET list_place = ? 
-                            WHERE task_id = ?
-                        """, (current_place, above_task_id))
-                        
-                        conn.commit()
-                        
-                        # Update treeview
-                        self.task_list.move(selected[0], '', current_index - 1)
+                if tid == int(task_id) and i > 0:  # Ensure it's not already at the top
+                    above_task_id, above_place = tasks[i - 1]
+
+                    # Swap positions in the database
+                    c.execute("UPDATE TaskList SET list_place = ? WHERE task_id = ?", (above_place, task_id))
+                    c.execute("UPDATE TaskList SET list_place = ? WHERE task_id = ?", (place, above_task_id))
+                    conn.commit()
+
+                    # Refresh treeview
+                    self.query_database()
+
+                    # Move selection UP to follow the moved task
+                    new_index = current_index - 1
+                    new_item = self.task_list.get_children()[new_index]
+                    self.task_list.selection_set(new_item)
+                    self.task_list.focus(new_item)
+
                     break
-                    
+
         except sqlite3.Error as e:
             print(f"Database error: {e}")
             conn.rollback()
         finally:
             conn.close()
-            
-        # Refresh the display to show correct alternating colors
-        self.query_database()
+
     
     def move_down(self):
-        """Move selected task down in the list and update database order"""
         selected = self.task_list.selection()
         if not selected:
             return
-            
-        # Get current index and total items in treeview
+
         current_index = self.task_list.index(selected[0])
         last_index = len(self.task_list.get_children()) - 1
         if current_index == last_index:  # Already at bottom
             return
-            
-        # Connect to database
+
         conn = sqlite3.connect(path)
         c = conn.cursor()
-        
+
         try:
-            # Get current task's ID
-            task_id = self.task_list.item(selected[0])['values'][3]
-            
-            # Get all tasks ordered by list_place
+            task_id = self.task_list.item(selected[0])['values'][3]  # Get selected task ID
+
+            # Fetch ordered tasks
             c.execute("SELECT task_id, list_place FROM TaskList ORDER BY list_place")
             tasks = c.fetchall()
-            
-            # Find current task and task below it
+
             for i, (tid, place) in enumerate(tasks):
-                if tid == int(task_id):
-                    if i < len(tasks) - 1:  # Not already at bottom
-                        # Swap list_place values with task below
-                        current_place = place
-                        below_task_id, below_place = tasks[i+1]
-                        
-                        # Update both tasks' positions
-                        c.execute("""
-                            UPDATE TaskList 
-                            SET list_place = ? 
-                            WHERE task_id = ?
-                        """, (below_place, task_id))
-                        
-                        c.execute("""
-                            UPDATE TaskList 
-                            SET list_place = ? 
-                            WHERE task_id = ?
-                        """, (current_place, below_task_id))
-                        
-                        conn.commit()
-                        
-                        # Update treeview
-                        self.task_list.move(selected[0], '', current_index + 1)
+                if tid == int(task_id) and i < len(tasks) - 1:  # Ensure it's not already at the bottom
+                    below_task_id, below_place = tasks[i + 1]
+
+                    # Swap positions in the database
+                    c.execute("UPDATE TaskList SET list_place = ? WHERE task_id = ?", (below_place, task_id))
+                    c.execute("UPDATE TaskList SET list_place = ? WHERE task_id = ?", (place, below_task_id))
+                    conn.commit()
+
+                    # Refresh treeview
+                    self.query_database()
+
+                    # Move selection DOWN to follow the moved task
+                    new_index = current_index + 1
+                    new_item = self.task_list.get_children()[new_index]
+                    self.task_list.selection_set(new_item)
+                    self.task_list.focus(new_item)
+
                     break
-                    
+
         except sqlite3.Error as e:
             print(f"Database error: {e}")
             conn.rollback()
         finally:
             conn.close()
-            
-        # Refresh the display to show correct alternating colors
-        self.query_database()
-
 
     def select_record(self, e):
         #Clear entry boxes
