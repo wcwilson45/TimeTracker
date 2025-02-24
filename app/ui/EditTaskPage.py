@@ -125,8 +125,8 @@ class EditTaskWindow(tk.Tk):
         self.configure(bg=background_color)  # Lighter Blue background
         # Create fonts
         self.fonts = {
-            'header': tkfont.Font(family="SF Pro Display", size=14, weight="bold"),
-            'subheader': tkfont.Font(family="SF Pro Display", size=10, weight="bold"),
+            'header': tkfont.Font(family="SF Pro Text", size=14, weight="bold"),
+            'subheader': tkfont.Font(family="SF Pro Text", size=10, weight="bold"),
             'body': tkfont.Font(family="SF Pro Text", size=10)
         }
         # Complexity options
