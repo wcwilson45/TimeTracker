@@ -8,7 +8,6 @@ import tkinter.font as tkfont
 import sqlite3
 from datetime import datetime
 import pathlib
-import csv
 from ui import (
     CompletedTasksWindow,
     EditTaskWindow,
@@ -21,7 +20,6 @@ from ui import (
 
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
-#IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
 
 #Global Variables
 background_color = "#A9A9A9"
@@ -79,10 +77,6 @@ c.execute("""CREATE TABLE if not exists CompletedTasks (
           task_id integer,
           completion_date text,
           total_duration text,
-          start_date text,
-          task tags text,
-          task_weight_type text,
-          task_description text,
           PRIMARY KEY (task_id)
 )""")
 
@@ -209,10 +203,9 @@ class App:
         # Button not flat
         # Entry box grey
         self.smalloverlay_page.configure(bg=background_color)
-        style = ttk.Style()
-        style.configure('TLabel', background="#dcdcdc")
-        self.so_task_name_label = ttk.Label(self.smalloverlay_page, text="No Current Task", font=self.fonts['Body_Tuple'], background=background_color)
-        self.so_task_name_label.grid(row = 0, column = 0, pady = 2, sticky = W)
+        self.to_task_name = ttk.Entry(self.smalloverlay_page, width = 35)
+        self.to_task_name.grid(row = 0, column = 0,sticky = W)
+        self.to_task_name.configure({"background" : "grey"})
         # Time label and box
         Label(self.smalloverlay_page, text="Time: ",
             font=self.fonts['Body_Tuple'],
@@ -270,21 +263,29 @@ class App:
         self.currenttask_frame = LabelFrame(self.full_page, text = f"Current Task" )
         self.currenttask_frame.pack(pady=0, side = TOP, fill = 'x')
 
-        # Set Labels for Name, ID, Time, and Description
-        ttk.Label(self.currenttask_frame, text=f"Task Name:", font=self.fonts['Body_Tuple'], style='TLabel').grid(row=0, column=0, sticky=W, pady=2)
-        self.task_name_label = ttk.Label(self.currenttask_frame, text="No Current Task", font=self.fonts['Body_Tuple'])
-        self.task_name_label.grid(row=0, column=1, sticky=W)
+        #Task Name row
+        task_name_frame = tk.Frame(self.currenttask_frame, bg="#dcdcdc")
+        task_name_frame.grid(row=0, column=0, sticky=W)
 
-        # Create a frame for Task ID and Timer elements
-        task_id_timer_frame = tk.Frame(self.currenttask_frame, bg=background_color)
-        task_id_timer_frame.grid(row=1, column=0, pady=5, sticky=W)
+        ttk.Label(task_name_frame, text=f"Task Name:", font=self.fonts['Body_Tuple'], style='TLabel').grid(row=0, column=0, sticky=W)
+        self.task_name_label = ttk.Label(task_name_frame, text="No Current Task", font=self.fonts['Description_Tuple'])
+        self.task_name_label.grid(row=0, column=1, sticky=W, padx=(0, 0))
+
+        # Create a frame for Task ID
+        task_id_frame = tk.Frame(self.currenttask_frame, bg="#dcdcdc")
+        task_id_frame.grid(row=1, column=0, pady=5, sticky=W)
 
         # Task ID Label and Task ID Display inside the frame
-        ttk.Label(task_id_timer_frame, text="Task ID:", font=self.fonts['Body_Tuple']).grid(row=0, column=0, sticky=W, padx=0)
-        self.task_id_label = ttk.Label(task_id_timer_frame, text="-", font=self.fonts['Body_Tuple'])
+        ttk.Label(task_id_frame, text="Task ID:", font=self.fonts['Body_Tuple']).grid(row=0, column=0, sticky=W, padx=0)
+        self.task_id_label = ttk.Label(task_id_frame, text="-", font=self.fonts['Description_Tuple'])
         self.task_id_label.grid(row=0, column=1, sticky=W)
 
-        Label(self.currenttask_frame, text="Time:", font=self.fonts['Body_Tuple']).grid(row=2, column=0, sticky=W, pady=2)
+        # Create a frame to hold the time label, box and buttons - all on same row
+        time_controls_frame = tk.Frame(self.currenttask_frame, bg="#dcdcdc")
+        time_controls_frame.grid(row=2, column=0, columnspan=2, sticky=W, pady=2)
+
+        # Time label
+        Label(time_controls_frame, text="Time:", font=self.fonts['Body_Tuple']).pack(side=LEFT)
         
         #Set Description Frame and Box inside the Frame
         description_frame = tk.Frame(self.full_page, bg = background_color)
@@ -312,19 +313,19 @@ class App:
         self.seconds = 0
         self.total_seconds = 0
         
-        # Create time box in the current task frame
-        self.time_box_full = Text(self.currenttask_frame, height=1, width=10,
-                                font=self.fonts['Body_Tuple'],
+        # Create time box right next to the label
+        self.time_box_full = Text(time_controls_frame, height=1, width=10,
+                                font=self.fonts['Description_Tuple'],
                                 background=grey_button_color)
-        self.time_box_full.grid(row=2, column=1, sticky=W)
+        self.time_box_full.pack(side=LEFT, padx=(5, 5))
         self.time_box_full.config(state=DISABLED)
-        
-        # Add timer control buttons
-        self.full_page_start_button = tk.Button(self.currenttask_frame,text="Start", background="#77DD77", command=self.start_timer)
-        self.full_page_start_button.grid(row=2, column=1, sticky=W, padx=100)
-        
-        self.full_page_stop_button = tk.Button(self.currenttask_frame,text="Stop",background="#FF7276",command=self.stop_timer)
-        self.full_page_stop_button.grid(row=2, column=1, sticky=W, padx = 140)
+
+        # Add timer control buttons right next to the time box
+        self.full_page_start_button = tk.Button(time_controls_frame, text="Start", background="#77DD77", command=self.start_timer)
+        self.full_page_start_button.pack(side=LEFT, padx=(0, 5))
+
+        self.full_page_stop_button = tk.Button(time_controls_frame, text="Stop", background="#FF7276", command=self.stop_timer)
+        self.full_page_stop_button.pack(side=LEFT)
         self.full_page_stop_button.config(state=DISABLED)
 
 
@@ -352,9 +353,6 @@ class App:
 
         complete_task_btn = tk.Button(top_btn_frame, text = "Complete Task", bg = main_btn_color, command = self.open_CompletionPage)
         complete_task_btn.grid(row = 0, column = 2, padx = 4, pady = 6)
-
-        import_btn = tk.Button(top_btn_frame, text = "Import", bg = main_btn_color, command = self.import_Tasks)
-        import_btn.grid(row = 0, column= 3, padx = 4, pady = 6)
 
         #Create scrollbar
         tasklist_scroll = Scrollbar(tasklist_frame)
@@ -439,6 +437,9 @@ class App:
 
         self.add_button = tk.Button(button_frame, text = "Add Task",bg = main_btn_color, command = self.open_AddTaskWindow)
         self.add_button.grid(row = 0, column = 1, padx = 6, pady = 10)
+
+        remove_button = tk.Button(button_frame, text = "Remove Task",bg = del_btn_color, command = self.remove_current_task)
+        remove_button.grid(row = 0, column = 3, padx = 6, pady = 10)
 
         remove_all_button = tk.Button(button_frame, text = "Remove All",bg = del_btn_color, command = self.remove_all)
         remove_all_button.grid(row = 0, column = 4, padx = 6, pady = 10)
@@ -652,20 +653,21 @@ class App:
         if cur_task:
             self.enable_boxes()
             self.task_name_label.config(text=cur_task[0])  # Assuming Task Name is at index 0
-            self.so_task_name_label.config(text = cur_task[0])
             self.task_id_label.config(text=cur_task[3])  # Assuming Task ID is at index 3
+            self.time_box_full.config(state=NORMAL)
             self.time_box_full.delete("1.0", END)
             self.time_box_full.insert("1.0", cur_task[1])  # Assuming Task Time is at index 1
+            self.time_box_full.config(state=DISABLED)
             self.description_box.delete("1.0", END)
             self.description_box.insert("1.0", cur_task[6])  # Assuming description is at index 6
             self.disable_boxes()
         else:
             self.enable_boxes()
             self.task_name_label.config(text="No Current Task")
-            self.so_task_name_label.config(text="No Current Task")
             self.task_id_label.config(text="-")
+            self.time_box_full.config(state=NORMAL)
             self.time_box_full.delete("1.0", END)
-            self.time_box_overlay.delete("1.0", END)
+            self.time_box_full.config(state=DISABLED)
             self.description_box.delete("1.0", "end")
             self.disable_boxes()
         
@@ -676,11 +678,13 @@ class App:
         self.description_box.configure(state = DISABLED)
         self.time_box_full.configure(state = DISABLED)
         self.time_box_overlay.configure(state = DISABLED)
+        self.to_task_name.configure(state = DISABLED)
     
     def enable_boxes(self):
         self.time_box_full.configure(state = NORMAL,foreground= "black")
         self.time_box_overlay.configure(state = NORMAL, foreground= "black")
         self.description_box.configure(state = NORMAL,foreground= "black")
+        self.to_task_name.configure(state = NORMAL, foreground= "black")
 
       
 
@@ -766,16 +770,12 @@ class App:
                 c = conn.cursor()
 
                 c.execute("DROP TABLE TaskList")
-                c.execute("DROP TABLE CurrentTask")
-                
 
                 conn.commit()
 
                 conn.close()
 
                 self.create_tasklist_again()
-                self.create_currenttask_again()
-                self.set_current_task()
 
     def create_tasklist_again(self):
         # Create a database or connect to one that exists
@@ -793,36 +793,10 @@ class App:
           task_end_date text,
           task_description text,
           task_weight_type text,
-          task_tags text, 
-          list_place integer
+          task_tags
           )
         """)
         
-        # Commit changes
-        conn.commit()
-
-        # Close our connection
-        conn.close()
-
-    def create_currenttask_again(self):
-        # Create a database or connect to one that exists
-        conn = sqlite3.connect(path)
-
-        # Create a cursor instance
-        c = conn.cursor()
-
-        c.execute("""CREATE TABLE if not exists CurrentTask(
-          task_name text,
-          task_time text,
-          task_weight text,
-          task_id integer,
-          task_start_date text,
-          task_end_date text,
-          task_description text,
-          task_weight_type text,
-          task_tags text)
-            """)
-
         # Commit changes
         conn.commit()
 
@@ -977,6 +951,10 @@ class App:
                 """, (final_time, self.task_id_label.cget("text")))
                 conn.commit()
                 
+                # Show time logged message
+                messagebox.showinfo("Time Logged", 
+                                f"Time logged for current task: {final_time}")
+                
             except sqlite3.Error as e:
                 print(f"Database error: {e}")
                 messagebox.showerror("Error", 
@@ -1002,42 +980,6 @@ class App:
         # Small overlay buttons
         self.small_overlay_start_button.config(state=start_state)
         self.small_overlay_stop_button.config(state=stop_state)
-
-    def import_Tasks(self):
-            global data
-            # Ask user for the file
-            file_path = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
-
-            # If file has been selected cont
-            if file_path:
-                # Open file and read from file
-                with open(file_path, "r", encoding="utf-8-sig") as file:
-                    csv_reader = csv.reader(file)
-                    data = list(csv_reader)
-
-                    # Check if the first row is a header (by comparing column names)
-                    if data:
-                        header = data[0]
-                        expected_header = ["Task Name", "Task Weight", "Start Date", "Description", "Task Weight Type", "Task Tags"]
-
-                        # If the first row matches the header, remove it
-                        if header == expected_header:
-                            data = data[1:]
-            
-            # Connect to the SQLite database
-            conn = sqlite3.connect(path)
-            c = conn.cursor()
-
-            # Insert data into the table
-            c.executemany("""INSERT INTO TaskList (task_name, task_weight, task_start_date,task_description,
-                           task_weight_type, task_tags) VALUES (?, ?, ?, ?, ?, ?)""", data)
-
-            # Commit the changes and close the connection
-            conn.commit()
-            conn.close()
-
-            self.query_database()
-
 
 if __name__ == "__main__":
     root = tk.Tk()
