@@ -25,8 +25,8 @@ class CurrentTask(tk.Toplevel):
         # Configure styles
         self.style = ttk.Style()
         self.style.theme_use('alt')
-        self.style.configure("Info.TLabel", font=("Arial", 10), background='#5DADE2')
-        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#D3D3D3', padding=2, foreground='white')
+        self.style.configure("Info.TLabel", font=("SF Pro Text", 10), background='#5DADE2')
+        self.style.configure("Tag.TLabel", font=("SF Pro Text", 8), background='#D3D3D3', padding=2, foreground='white')
 
         # Main container
         self.main_container = tk.Frame(self, bg='#5DADE2', bd=0)
@@ -40,7 +40,7 @@ class CurrentTask(tk.Toplevel):
         self.header_label = tk.Label(
             self.top_frame,
             text=current_task_name,
-            font=("Arial", 16, "bold"),
+            font=("SF Pro Text", 16, "bold"),
             bg='#5DADE2',
             bd=0
         )
@@ -66,7 +66,7 @@ class CurrentTask(tk.Toplevel):
         # Tags
         self.tags_frame = tk.Frame(self.right_panel, bg='#5DADE2', bd=0)
         self.tags_frame.pack(fill=tk.X, pady=(25, 5))
-        tk.Label(self.tags_frame, text="Tags:", font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
+        tk.Label(self.tags_frame, text="Tags:", font=("SF Pro Text", 10), bg='#5DADE2').pack(anchor=tk.W)
 
         # Create tag labels
         self.create_tag("Blue")
@@ -114,15 +114,15 @@ class CurrentTask(tk.Toplevel):
         frame = tk.Frame(self.right_panel, bg='#5DADE2', bd=0)
         frame.pack(fill=tk.X, pady=(0, 5))
 
-        tk.Label(frame, text=label_text, font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
-        tk.Label(frame, text=value_text, font=("Arial", 10), bg='#5DADE2').pack(anchor=tk.W)
+        tk.Label(frame, text=label_text, font=("SF Pro Text", 10), bg='#5DADE2').pack(anchor=tk.W)
+        tk.Label(frame, text=value_text, font=("SF Pro Text", 10), bg='#5DADE2').pack(anchor=tk.W)
 
 
     def create_tag(self, text):
         tag_label = tk.Label(
             self.tags_frame,
             text=text,
-            font=("Arial", 8),
+            font=("SF Pro Text", 8),
             bg='#5DADE2',
             fg='black',
             padx=5,
