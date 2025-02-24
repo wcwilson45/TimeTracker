@@ -41,8 +41,8 @@ class CompletedTasksWindow(tk.Tk):
         # Configure styles
         self.style = ttk.Style()
         self.style.theme_use('alt')
-        self.style.configure("Info.TLabel", font=("Arial", 10), background='#A9A9A9')
-        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#A9A9A9', padding=2, foreground='black')
+        self.style.configure("Info.TLabel", font=("SF Pro Text", 10), background='#A9A9A9')
+        self.style.configure("Tag.TLabel", font=("SF Pro Text", 8), background='#A9A9A9', padding=2, foreground='black')
 
         # Main container
         self.main_container = tk.Frame(self, bg='#A9A9A9', bd=0)
@@ -56,7 +56,7 @@ class CompletedTasksWindow(tk.Tk):
         self.header_label = tk.Label(
             self.top_frame,
             text=self.task_name if self.task_name else "No Task Selected",
-            font=("Arial", 16, "bold"),
+            font=("SF Pro Text", 16, "bold"),
             bg='#A9A9A9',
             bd=0
         )
@@ -86,7 +86,7 @@ class CompletedTasksWindow(tk.Tk):
         # Tags
         self.tags_frame = tk.Frame(self.right_panel, bg='#A9A9A9', bd=0)
         self.tags_frame.pack(fill=tk.X, pady=(25, 5))
-        tk.Label(self.tags_frame, text="Tags:", font=("Arial", 10), bg='#A9A9A9').pack(anchor=tk.W)
+        tk.Label(self.tags_frame, text="Tags:", font=("SF Pro Text", 10), bg='#A9A9A9').pack(anchor=tk.W)
 
         # Create tag labels
         self.create_tag("Blue")
@@ -166,7 +166,7 @@ class CompletedTasksWindow(tk.Tk):
         header_frame = tk.Frame(frame, bg='#A9A9A9')
         header_frame.pack(fill=tk.X, anchor=tk.W)
 
-        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#A9A9A9').pack(side=tk.LEFT, padx=5, pady=2)
+        tk.Label(header_frame, text=title, font=("SF Pro Text", 10), bg='#A9A9A9').pack(side=tk.LEFT, padx=5, pady=2)
 
         if title == "Commit History:":
             container_frame = tk.Frame(frame, bg='#A9A9A9', bd=1, relief='solid')
@@ -225,7 +225,7 @@ class CompletedTasksWindow(tk.Tk):
         tag_label = tk.Label(
             self.tags_frame,
             text=text,
-            font=("Arial", 8),
+            font=("SF Pro Text", 8),
             bg='#d3d3d3',
             fg='black',
             padx=5,
@@ -237,8 +237,8 @@ class CompletedTasksWindow(tk.Tk):
         frame = tk.Frame(self.right_panel, bg='#A9A9A9', bd=0)
         frame.pack(fill=tk.X, pady=(0, 5))
 
-        tk.Label(frame, text=label_text, font=("Arial", 10), bg='#A9A9A9').pack(anchor=tk.W)
-        tk.Label(frame, text=value_text, font=("Arial", 10), bg='#A9A9A9').pack(anchor=tk.W)
+        tk.Label(frame, text=label_text, font=("SF Pro Text", 10), bg='#A9A9A9').pack(anchor=tk.W)
+        tk.Label(frame, text=value_text, font=("SF Pro Text", 10), bg='#A9A9A9').pack(anchor=tk.W)
 
     def open_commit_history_page(self):
         self.task_window = CommitHistoryWindow()
