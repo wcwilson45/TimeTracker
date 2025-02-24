@@ -602,6 +602,10 @@ class App:
     
 
     def select_current_task(self):
+        # Stop the currently running timer and save time
+        if self.timer_running:
+            self.stop_timer()
+
         task_id = self.ti_entry.get()
 
         conn = sqlite3.connect(path)
