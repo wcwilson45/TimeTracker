@@ -1,3 +1,4 @@
+
 from tkinter import *
 from tkinter.ttk import *
 import tkinter as tk
@@ -6,6 +7,7 @@ import tkinter.font as tkfont
 import pathlib
 import sqlite3
 from datetime import date
+from .TaskHistory import TaskHistoryDB
 
 main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
@@ -16,20 +18,18 @@ class EditTaskWindow(tk.Tk):
         super().__init__()
         self.task_id = task_id
         self.main_app = main_app
-        self.main_app = main_app
+        self.history_db = TaskHistoryDB()
         self.main_app.edittask_window = self
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Define path
         self.path = pathlib.Path(__file__).parent
         self.path = str(self.path).replace("EditTaskPage.py", '') + '\\Databases' + '\\task_list.db'
-        #self.configure_ui()
-        self.load_task()
 
         self.tags_path = pathlib.Path(__file__).parent
         self.tags_path = str(self.tags_path).replace('AddTaskPage.py','') + '\\Databases' + '\\tags.db'
 
-        # Create or Connect to the database
+         # Create or Connect to the database
         conn = sqlite3.connect(self.tags_path)
 
         # Create a cursor instance
@@ -50,6 +50,11 @@ class EditTaskWindow(tk.Tk):
         # Close connection to the database
         conn.close()
 
+        self.configure_ui()
+        self.load_task()
+
+
+
         conn = sqlite3.connect(self.path)
         c = conn.cursor()
 
@@ -58,7 +63,139 @@ class EditTaskWindow(tk.Tk):
 
         conn.close()
 
-        # Set the main window geometry and title
+        print(self.edit_task)
+        if self.edit_task:
+            self.task_name_var = edit_task[0]
+            self.task_time_var = edit_task[1]
+            self.task_weight_var = edit_task[2]
+            self.task_start_date_var = edit_task[4]
+            self.task_end_date_var = edit_task[5]
+            self.task_desc_var = edit_task[6]
+            self.task_weight_type_var = edit_task[7]
+            self.task_tags_var = edit_task[8]
+
+        else:
+            messagebox.showerror("Error", "Task not found!")
+            self.destroy()
+
+        self.insert_task()
+
+
+
+
+    def load_task(self):
+        conn = sqlite3.connect(self.path)
+        c = conn.cursor()
+        c.execute("SELECT * FROM TaskList WHERE task_id = ?", (int(self.task_id),))
+        self.edit_task = c.fetchone()
+        conn.close()
+
+
+    def insert_task(self):
+        self.task_name_entry.insert(0, self.edit_task[0])
+        self.task_time_entry.insert(0, self.edit_task[1])
+        self.value_combo.set(self.edit_task[2])
+        self.start_date_entry.insert(0, self.edit_task[4])
+        self.end_date_entry.insert(0, self.edit_task[5])
+        self.type_combo.set(self.edit_task[7])
+        self.desc_text_entry.insert("1.0", self.edit_task[6])
+        self.task_tags_entry.insert("1.0", self.edit_task[8])
+
+    def update_values(self, event=None):
+        selected_type = self.type_combo.get()
+        if selected_type == "T-Shirt Size":
+            self.value_combo['values'] = self.tshirt_sizes
+        elif selected_type == "Fibonacci":
+            self.value_combo['values'] = self.fibonacci
+        else:
+            self.value_combo['values'] = []
+        self.value_combo.set("Select Value")
+    
+    def update_tag_entry(self):
+        # Get selected values from the Listbox widget
+        selected_values = [self.tag_listbox.get(idx) for idx in self.tag_listbox.curselection()]
+
+        # Update with the selected values
+        self.task_tags_entry.delete(1.0, "end")  # Clear the Text widget
+        self.task_tags_entry.insert("1.0", "\n".join(selected_values))  # Insert the selected tags
+
+    def cancel_action(self):
+        # Implement the cancel action (e.g., close the window)
+        self.on_close()
+
+    def confirm_action(self):
+        confirm = messagebox.askyesno("Confirm Edit", "Are you sure you want to edit this task?")
+        if confirm:
+            # Get old values before update
+            conn = sqlite3.connect(self.path)
+            c = conn.cursor()
+            c.execute("SELECT task_name, task_time, task_weight, task_start_date, task_end_date, task_description, task_weight_type, task_tags FROM TaskList WHERE task_id = ?", (self.task_id,))
+            old_values = c.fetchone()
+            
+            # Get new values
+            new_values = {
+                'task_name': self.task_name_entry.get(),
+                'task_time': self.task_time_entry.get(),
+                'task_weight': self.value_combo.get(),
+                'task_start_date': self.start_date_entry.get(),
+                'task_end_date': self.end_date_var.get(),
+                'task_description': self.desc_text_entry.get("1.0", "end-1c"),
+                'task_weight_type': self.type_combo.get(),
+                'task_tags': self.task_tags_entry.get("1.0","end-1c")
+            }
+
+            # Record changes for each field that has changed
+            field_map = {
+                0: 'task_name',
+                1: 'task_time',
+                2: 'task_weight',
+                3: 'task_start_date',
+                4: 'task_end_date',
+                5: 'task_description',
+                6: 'task_weight_type',
+                7: 'task_tags'
+            }
+
+            for i, (old, new) in enumerate(zip(old_values, new_values.values())):
+                if old != new:
+                    self.history_db.record_change(
+                        self.task_id,
+                        field_map[i],
+                        str(old),
+                        str(new)
+                    )
+
+            # Perform the update
+            c.execute("""UPDATE TaskList SET 
+                task_name = ?, 
+                task_time = ?, 
+                task_weight = ?, 
+                task_start_date = ?, 
+                task_end_date = ?, 
+                task_description = ?, 
+                task_weight_type = ?, 
+                task_tags = ? 
+                WHERE task_id = ?""",
+                (new_values['task_name'], new_values['task_time'], new_values['task_weight'],
+                new_values['task_start_date'], new_values['task_end_date'], new_values['task_description'],
+                new_values['task_weight_type'], new_values['task_tags'], self.task_id))
+            
+            conn.commit()
+            conn.close()
+
+            if hasattr(self.main_app, 'query_database'):
+                self.main_app.query_database()
+
+            self.destroy()
+            self.on_close()
+
+    def delete_action(self):
+        pass
+
+
+    #Configure the ui
+    def configure_ui(self):
+         # Set the main window geometry and title
         self.geometry("450x550")  # Increased height to accommodate additional fields
         self.title("Edit Task")
         self.configure(bg=background_color)  # Lighter Blue background
@@ -255,94 +392,6 @@ class EditTaskWindow(tk.Tk):
         for value in values:
             self.tag_listbox.insert(tk.END, value)
 
-
-        print(self.edit_task)
-        if self.edit_task:
-            self.task_name_var = edit_task[0]
-            self.task_time_var = edit_task[1]
-            self.task_weight_var = edit_task[2]
-            self.task_start_date_var = edit_task[4]
-            self.task_end_date_var = edit_task[5]
-            self.task_desc_var = edit_task[6]
-            self.task_weight_type_var = edit_task[7]
-            self.task_tags_var = edit_task[8]
-
-        else:
-            messagebox.showerror("Error", "Task not found!")
-            self.destroy()
-
-        self.insert_task()
-
-    
-
-    def load_task(self):
-        conn = sqlite3.connect(self.path)
-        c = conn.cursor()
-        c.execute("SELECT * FROM TaskList WHERE task_id = ?", (int(self.task_id),))
-        self.edit_task = c.fetchone()
-        conn.close()
-
-    def insert_task(self):
-        self.task_name_entry.insert(0, self.edit_task[0])
-        self.task_time_entry.insert(0, self.edit_task[1])
-        self.value_combo.set(self.edit_task[2])
-        self.start_date_entry.insert(0, self.edit_task[4])
-        self.end_date_entry.insert(0, self.edit_task[5])
-        self.type_combo.set(self.edit_task[7])
-        self.desc_text_entry.insert("1.0", self.edit_task[6])
-        self.task_tags_entry.insert("1.0", self.edit_task[8])
-
-    def update_values(self, event=None):
-        selected_type = self.type_combo.get()
-        if selected_type == "T-Shirt Size":
-            self.value_combo['values'] = self.tshirt_sizes
-        elif selected_type == "Fibonacci":
-            self.value_combo['values'] = self.fibonacci
-        else:
-            self.value_combo['values'] = []
-        self.value_combo.set("Select Value")
-
-    def update_tag_entry(self):
-        # Get selected values from the Listbox widget
-        selected_values = [self.tag_listbox.get(idx) for idx in self.tag_listbox.curselection()]
-
-        # Update with the selected values
-        self.task_tags_entry.delete(1.0, "end")  # Clear the Text widget
-        self.task_tags_entry.insert("1.0", "\n".join(selected_values))  # Insert the selected tags
-
-
-    def cancel_action(self):
-        # Implement the cancel action (e.g., close the window)
-        self.on_close()
-
-    def confirm_action(self):
-        confirm = messagebox.askyesno("Confirm Edit", "Are you sure you want to edit this task?")
-        if confirm:
-            # Implement the confirm action (e.g., save the task data)
-            conn = sqlite3.connect(self.path)
-            c = conn.cursor()
-
-            c.execute("""UPDATE TaskList SET task_name = ?, task_time = ?, task_weight = ?, task_start_date = ?, task_end_date = ?, task_description = ?, task_weight_type = ?, task_tags = ? WHERE task_id = ?""", 
-                        (self.task_name_entry.get(), self.task_time_entry.get(), self.value_combo.get(), 
-                         self.start_date_entry.get(), self.end_date_var.get(), self.desc_text_entry.get("1.0", "end-1c"), 
-                         self.type_combo.get(), self.task_tags_entry.get("1.0","end-1c"), self.task_id))
-            
-            conn.commit()
-            conn.close()
-
-            if hasattr(self.main_app, 'query_database'):
-                self.main_app.query_database()
-
-            self.on_close()
-        else:
-            self.lift()
-            self.focus_force()
-            return
-
-    def delete_action(self):
-        pass
-
-    
     def on_close(self):
         self.main_app.edittask_window = None  # Reset when closed
         self.main_app.update_button.config(state=tk.NORMAL)
