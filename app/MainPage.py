@@ -8,6 +8,7 @@ import tkinter.font as tkfont
 import sqlite3
 from datetime import datetime
 import pathlib
+import csv
 from ui import (
     CompletedTasksWindow,
     EditTaskWindow,
@@ -20,6 +21,7 @@ from ui import (
 
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
+#IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
 
 #Global Variables
 background_color = "#A9A9A9"
@@ -77,6 +79,10 @@ c.execute("""CREATE TABLE if not exists CompletedTasks (
           task_id integer,
           completion_date text,
           total_duration text,
+          start_date text,
+          task tags text,
+          task_weight_type text,
+          task_description text,
           PRIMARY KEY (task_id)
 )""")
 
@@ -203,16 +209,17 @@ class App:
         # Button not flat
         # Entry box grey
         self.smalloverlay_page.configure(bg=background_color)
-        self.to_task_name = ttk.Entry(self.smalloverlay_page, width = 35)
-        self.to_task_name.grid(row = 0, column = 0,sticky = W)
-        self.to_task_name.configure({"background" : "grey"})
+        style = ttk.Style()
+        style.configure('TLabel', background="#dcdcdc")
+        self.so_task_name_label = ttk.Label(self.smalloverlay_page, text="No Current Task", font=self.fonts['Description_Tuple'], background=background_color)
+        self.so_task_name_label.grid(row = 0, column = 0, pady = 2, sticky = W)
         # Time label and box
         Label(self.smalloverlay_page, text="Time: ",
-            font=self.fonts['Body_Tuple'],
+            font=self.fonts['Description_Tuple'],
             background=background_color
         ).grid(row=1, column=0, sticky=W, pady=2)
         self.time_box_overlay = Text(self.smalloverlay_page, height=1, width=10,
-                                    font=self.fonts['Body_Tuple'],
+                                    font=self.fonts['Description_Tuple'],
                                     background=grey_button_color)
         self.time_box_overlay.grid(row=1, column=0, padx=50, pady=5, sticky=E)
         # Timer control buttons
@@ -286,7 +293,7 @@ class App:
 
         # Time label
         Label(time_controls_frame, text="Time:", font=self.fonts['Body_Tuple']).pack(side=LEFT)
-        
+
         #Set Description Frame and Box inside the Frame
         description_frame = tk.Frame(self.full_page, bg = background_color)
         description_frame.pack(pady = 5, fill = "x")
@@ -319,7 +326,7 @@ class App:
                                 background=grey_button_color)
         self.time_box_full.pack(side=LEFT, padx=(5, 5))
         self.time_box_full.config(state=DISABLED)
-
+        
         # Add timer control buttons right next to the time box
         self.full_page_start_button = tk.Button(time_controls_frame, text="Start", background="#77DD77", command=self.start_timer)
         self.full_page_start_button.pack(side=LEFT, padx=(0, 5))
@@ -353,6 +360,15 @@ class App:
 
         complete_task_btn = tk.Button(top_btn_frame, text = "Complete Task", bg = main_btn_color, command = self.open_CompletionPage)
         complete_task_btn.grid(row = 0, column = 2, padx = 4, pady = 6)
+
+        import_btn = tk.Button(top_btn_frame, text = "Import", bg = main_btn_color, command = self.import_Tasks)
+        import_btn.grid(row = 0, column= 3, padx = 4, pady = 6)
+
+        Label(top_btn_frame, text = "Search:").grid(row = 0, column = 4)
+
+        self.search_entry = tk.Entry(top_btn_frame, bg="#d3d3d3", width = 15)
+        self.search_entry.grid(row = 0, column= 5, padx = 4, pady= 6)
+        self.search_entry.bind("<KeyRelease>", self.search_Task)
 
         #Create scrollbar
         tasklist_scroll = Scrollbar(tasklist_frame)
@@ -438,9 +454,6 @@ class App:
         self.add_button = tk.Button(button_frame, text = "Add Task",bg = main_btn_color, command = self.open_AddTaskWindow)
         self.add_button.grid(row = 0, column = 1, padx = 6, pady = 10)
 
-        remove_button = tk.Button(button_frame, text = "Remove Task",bg = del_btn_color, command = self.remove_current_task)
-        remove_button.grid(row = 0, column = 3, padx = 6, pady = 10)
-
         remove_all_button = tk.Button(button_frame, text = "Remove All",bg = del_btn_color, command = self.remove_all)
         remove_all_button.grid(row = 0, column = 4, padx = 6, pady = 10)
 
@@ -499,7 +512,12 @@ class App:
             conn.rollback()
         finally:
             conn.close()
-
+            
+        # Refresh the display to show correct alternating colors
+        self.query_database()
+        
+        # Reselect the moved item after refresh
+        self.reselect_task_by_id(task_id)
     
     def move_down(self):
         selected = self.task_list.selection()
@@ -546,6 +564,28 @@ class App:
             conn.rollback()
         finally:
             conn.close()
+            
+        # Refresh the display to show correct alternating colors
+        self.query_database()
+        
+        # Reselect the moved item after refresh
+        self.reselect_task_by_id(task_id)
+
+    # Add this new helper method to reselect a task by its ID
+    def reselect_task_by_id(self, task_id):
+        """Reselect a task in the treeview by its task_id"""
+        # Look through all items in the treeview to find matching task_id
+        for item_id in self.task_list.get_children():
+            item_values = self.task_list.item(item_id, 'values')
+            if item_values and str(item_values[3]) == str(task_id):
+                # Select the found item
+                self.task_list.selection_set(item_id)
+                # Make sure the item is visible
+                self.task_list.see(item_id)
+                # Optionally focus on the item
+                self.task_list.focus(item_id)
+                break
+
 
     def select_record(self, e):
         #Clear entry boxes
@@ -574,10 +614,16 @@ class App:
     
 
     def select_current_task(self):
-        # Stop the currently running timer and save time
+        """Move selected task to current task and return previous current task to task list"""
+        # Check if there's actually a task selected
+        if not self.ti_entry.get():
+            messagebox.showwarning("No Task Selected", "Please select a task from the list first.")
+            return
+
+        # Stop the timer if it's running
         if self.timer_running:
             self.stop_timer()
-
+            
         task_id = self.ti_entry.get()
 
         conn = sqlite3.connect(path)
@@ -593,31 +639,45 @@ class App:
             selected_task = c.fetchone()
 
             if selected_task:
+                # If there was a previous current task, move it back to TaskList
+                if current_task:
+                    # Only move current task back if it's different from the selected task
+                    if str(current_task[3]) != str(task_id):
+                        c.execute("""
+                            INSERT INTO TaskList (task_id, task_name, task_time, task_weight, task_start_date, 
+                            task_end_date, task_description, task_weight_type, task_tags) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (current_task[3], current_task[0], current_task[1], current_task[2], 
+                            current_task[4], current_task[5], current_task[6], current_task[7], 
+                            current_task[8]))
+                    
                 # Remove old current task and insert new one
                 c.execute("DELETE FROM CurrentTask")
                 c.execute("""
-                    INSERT INTO CurrentTask (task_id, task_name, task_time, task_weight, task_start_date, task_end_date, task_description, task_weight_type, task_tags) 
+                    INSERT INTO CurrentTask (task_id, task_name, task_time, task_weight, task_start_date, 
+                    task_end_date, task_description, task_weight_type, task_tags) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (selected_task[3], selected_task[0], selected_task[1], selected_task[2], selected_task[4], selected_task[5], selected_task[6], selected_task[7], selected_task[8]))
+                """, (selected_task[3], selected_task[0], selected_task[1], selected_task[2], 
+                    selected_task[4], selected_task[5], selected_task[6], selected_task[7], 
+                    selected_task[8]))
 
                 # Remove the selected task from TaskList
                 c.execute("DELETE FROM TaskList WHERE task_id = ?", (task_id,))
-
-            # If there was a previous current task, move it back to TaskList
-            if current_task:
-                c.execute("""
-                    INSERT INTO TaskList (task_id, task_name, task_time, task_weight, task_start_date, task_end_date, task_description, task_weight_type, task_tags) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (current_task[3], current_task[0], current_task[1], current_task[2], current_task[4], current_task[5], current_task[6], current_task[7], current_task[8]))
-            conn.commit()
+                
+                conn.commit()
+            else:
+                messagebox.showwarning("Task Not Found", "The selected task could not be found in the database.")
 
         except sqlite3.Error as e:
+            print(f"Database error: {e}")
             conn.rollback()
+            messagebox.showerror("Database Error", f"An error occurred: {e}")
 
         finally:
             conn.close()
 
         self.set_current_task()
+        self.query_database()
 
     def set_current_task(self):
         conn = sqlite3.connect(path)
@@ -629,21 +689,20 @@ class App:
         if cur_task:
             self.enable_boxes()
             self.task_name_label.config(text=cur_task[0])  # Assuming Task Name is at index 0
+            self.so_task_name_label.config(text = cur_task[0])
             self.task_id_label.config(text=cur_task[3])  # Assuming Task ID is at index 3
-            self.time_box_full.config(state=NORMAL)
             self.time_box_full.delete("1.0", END)
             self.time_box_full.insert("1.0", cur_task[1])  # Assuming Task Time is at index 1
-            self.time_box_full.config(state=DISABLED)
             self.description_box.delete("1.0", END)
             self.description_box.insert("1.0", cur_task[6])  # Assuming description is at index 6
             self.disable_boxes()
         else:
             self.enable_boxes()
             self.task_name_label.config(text="No Current Task")
+            self.so_task_name_label.config(text="No Current Task")
             self.task_id_label.config(text="-")
-            self.time_box_full.config(state=NORMAL)
             self.time_box_full.delete("1.0", END)
-            self.time_box_full.config(state=DISABLED)
+            self.time_box_overlay.delete("1.0", END)
             self.description_box.delete("1.0", "end")
             self.disable_boxes()
         
@@ -654,13 +713,11 @@ class App:
         self.description_box.configure(state = DISABLED)
         self.time_box_full.configure(state = DISABLED)
         self.time_box_overlay.configure(state = DISABLED)
-        self.to_task_name.configure(state = DISABLED)
     
     def enable_boxes(self):
         self.time_box_full.configure(state = NORMAL,foreground= "black")
         self.time_box_overlay.configure(state = NORMAL, foreground= "black")
         self.description_box.configure(state = NORMAL,foreground= "black")
-        self.to_task_name.configure(state = NORMAL, foreground= "black")
 
       
 
@@ -726,17 +783,9 @@ class App:
             messagebox.showerror("Database Error", "Failed to load tasks from database")
         finally:
             conn.close()
-       
-    #def insert_task(self, task_id):
-
-    
-
-    def remove_current_task(self):
-        x = self.task_list.selection()[0]
-        self.task_list.delete(x)
 
     def remove_all(self):
-        response = messagebox.askyesno("Are you sure you want to delete everything from the tasklist? This is irreversible.")
+        response = messagebox.askyesno("Are you sure you want to delete everything?              ")
 
         if response == 1:
             for record in self.task_list.get_children():
@@ -746,13 +795,46 @@ class App:
                 c = conn.cursor()
 
                 c.execute("DROP TABLE TaskList")
+                c.execute("DROP TABLE CurrentTask")
+                c.execute("DROP TABLE task_history")
+                
+                
 
                 conn.commit()
 
                 conn.close()
 
                 self.create_tasklist_again()
+                self.create_currenttask_again()
+                self.create_task_history_again()
+                #self.create_completed_tasks_again()
+                self.set_current_task()
 
+    """def create_completed_tasks_again():
+        # Create a database or connect to one that exists
+        conn = sqlite3.connect(path)
+
+        # Create a cursor instance
+        c = conn.cursor()
+        c.execute(CREATE TABLE if not exists CompletedTasks (
+          task_name text,
+          task_time text,
+          task_weight text,
+          task_id integer,
+          completion_date text,
+          total_duration text,
+          start_date text,
+          task tags text,
+          task_weight_type text,
+          task_description text,
+          PRIMARY KEY (task_id)
+            ))
+        # Commit changes
+        conn.commit()
+
+        # Close our connection
+        conn.close()
+        """
     def create_tasklist_again(self):
         # Create a database or connect to one that exists
         conn = sqlite3.connect(path)
@@ -769,7 +851,8 @@ class App:
           task_end_date text,
           task_description text,
           task_weight_type text,
-          task_tags
+          task_tags text, 
+          list_place integer
           )
         """)
         
@@ -777,6 +860,49 @@ class App:
         conn.commit()
 
         # Close our connection
+        conn.close()
+
+    def create_currenttask_again(self):
+        # Create a database or connect to one that exists
+        conn = sqlite3.connect(path)
+
+        # Create a cursor instance
+        c = conn.cursor()
+
+        c.execute("""CREATE TABLE if not exists CurrentTask(
+          task_name text,
+          task_time text,
+          task_weight text,
+          task_id integer,
+          task_start_date text,
+          task_end_date text,
+          task_description text,
+          task_weight_type text,
+          task_tags text)
+            """)
+
+        # Commit changes
+        conn.commit()
+
+        # Close our connection
+        conn.close()
+
+    def create_task_history_again(self):
+        # Create the history table
+        conn = sqlite3.connect(path)
+        c = conn.cursor()
+        
+        c.execute("""CREATE TABLE IF NOT EXISTS task_history (
+            history_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id INTEGER,
+            change_date TEXT,
+            field_changed TEXT,
+            old_value TEXT,
+            new_value TEXT,
+            FOREIGN KEY (task_id) REFERENCES TaskList(task_id)
+        )""")
+        
+        conn.commit()
         conn.close()
        
     def open_AddTaskWindow(self):
@@ -927,10 +1053,6 @@ class App:
                 """, (final_time, self.task_id_label.cget("text")))
                 conn.commit()
                 
-                # Show time logged message
-                messagebox.showinfo("Time Logged", 
-                                f"Time logged for current task: {final_time}")
-                
             except sqlite3.Error as e:
                 print(f"Database error: {e}")
                 messagebox.showerror("Error", 
@@ -956,6 +1078,114 @@ class App:
         # Small overlay buttons
         self.small_overlay_start_button.config(state=start_state)
         self.small_overlay_stop_button.config(state=stop_state)
+
+    def import_Tasks(self):
+            global data
+            # Ask user for the file
+            file_path = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+
+            # If file has been selected cont
+            if file_path:
+                # Open file and read from file
+                with open(file_path, "r", encoding="utf-8-sig") as file:
+                    csv_reader = csv.reader(file)
+                    data = list(csv_reader)
+
+                    # Check if the first row is a header (by comparing column names)
+                    if data:
+                        header = data[0]
+                        expected_header = ["Task Name", "Task Weight", "Start Date", "Description", "Task Weight Type", "Task Tags"]
+
+                        # If the first row matches the header, remove it
+                        if header == expected_header:
+                            data = data[1:]
+            
+            # Connect to the SQLite database
+            conn = sqlite3.connect(path)
+            c = conn.cursor()
+
+            # Insert data into the table
+            c.executemany("""INSERT INTO TaskList (task_name, task_weight, task_start_date,task_description,
+                           task_weight_type, task_tags) VALUES (?, ?, ?, ?, ?, ?)""", data)
+
+            # Commit the changes and close the connection
+            conn.commit()
+            conn.close()
+
+            self.query_database()
+
+    def search_Task(self, event):
+
+            #Getting the name they entered
+            lookup = self.search_entry.get()
+
+            # Create or Connect to the database
+            conn = sqlite3.connect(path)
+
+            # Create a cursor instance
+            c = conn.cursor()
+
+            # Clear the Treeview
+            for task in self.task_list.get_children():
+                self.task_list.delete(task)
+
+            if lookup == "":
+
+                c.execute("""
+                SELECT rowid, * FROM TaskList 
+                ORDER BY list_place
+            """)
+            tasks = c.fetchall()
+            for count, record in enumerate(tasks):
+                tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
+                self.task_list.insert(
+                    parent='',
+                    index='end',
+                    iid=count,
+                    text='',
+                    values=(
+                        record[1],   # task_name
+                        record[2],   # task_time
+                        record[3],   # task_weight
+                        record[4],   # task_id
+                        record[5],   # start_date
+                        record[6],   # end_date
+                        record[7]    # description
+                    ),
+                    tags=tags
+                )
+            else:
+                c.execute("SELECT * FROM TaskList WHERE task_name like ? OR task_tags LIKE ?", (f"%{lookup}%", f"%{lookup}%")) 
+                
+                tasks = c.fetchall()
+            
+
+                # Add data to screen
+                for count, record in enumerate(tasks):
+                    tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
+                    self.task_list.insert(
+                        parent='',
+                        index='end',
+                        iid=count,
+                        text='',
+                        values=(
+                            record[0],   # task_name
+                            record[1],   # task_time
+                            record[2],   # task_weight
+                            record[3],   # task_id
+                            record[4],   # start_date
+                            record[5],   # end_date
+                            record[6]    # description
+                        ),
+                        tags=tags
+                    )
+
+            # Commit changes
+            conn.commit()
+
+            # Close connection to the database
+            conn.close()
+
 
 if __name__ == "__main__":
     root = tk.Tk()

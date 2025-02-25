@@ -240,6 +240,8 @@ class AddTaskWindow(tk.Tk):
         if len(task_name) > 45:
             messagebox.showwarning("Warning", "Task name cannot exceed 45 characters.")
             self.task_name_entry.delete(0, tk.END)  # Clear task name field
+            self.lift()
+            self.focus_force()
             return  # Stop further execution
         
         description = self.desc_text.get("1.0", tk.END).strip()
@@ -266,6 +268,8 @@ class AddTaskWindow(tk.Tk):
         if missing_fields:
             missing_fields_str = ", ".join(missing_fields)
             messagebox.showwarning("Warning", f"Please fill in the following required fields: {missing_fields_str}")
+            self.lift()
+            self.focus_force()
             
             return  # Stop further action if any field is missing
         
