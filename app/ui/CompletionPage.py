@@ -1,4 +1,5 @@
 
+
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
@@ -8,7 +9,7 @@ import tkinter.font as tkfont
 from datetime import datetime
 from tkinter import messagebox
 import sqlite3
-from .CommitHistoryPage import CommitHistoryWindow
+from .TaskHistory import CommitHistoryWindow, TaskHistoryDB
 import pathlib
 
 global path 
@@ -19,7 +20,7 @@ path = str(path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list
 class CompletedTasksWindow(tk.Tk):
     def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, task_description=None, refresh_callback=None):
         super().__init__()
-
+        self.history_db = TaskHistoryDB()
         self.task_name = task_name
         self.task_weight = task_weight
         self.task_time = task_time
@@ -41,8 +42,8 @@ class CompletedTasksWindow(tk.Tk):
         # Configure styles
         self.style = ttk.Style()
         self.style.theme_use('alt')
-        self.style.configure("Info.TLabel", font=("SF Pro Text", 10), background='#A9A9A9')
-        self.style.configure("Tag.TLabel", font=("SF Pro Text", 8), background='#A9A9A9', padding=2, foreground='black')
+        self.style.configure("Info.TLabel", font=("Arial", 10), background='#A9A9A9')
+        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#A9A9A9', padding=2, foreground='black')
 
         # Main container
         self.main_container = tk.Frame(self, bg='#A9A9A9', bd=0)
@@ -56,7 +57,7 @@ class CompletedTasksWindow(tk.Tk):
         self.header_label = tk.Label(
             self.top_frame,
             text=self.task_name if self.task_name else "No Task Selected",
-            font=("SF Pro Text", 16, "bold"),
+            font=("Arial", 16, "bold"),
             bg='#A9A9A9',
             bd=0
         )
@@ -86,7 +87,7 @@ class CompletedTasksWindow(tk.Tk):
         # Tags
         self.tags_frame = tk.Frame(self.right_panel, bg='#A9A9A9', bd=0)
         self.tags_frame.pack(fill=tk.X, pady=(25, 5))
-        tk.Label(self.tags_frame, text="Tags:", font=("SF Pro Text", 10), bg='#A9A9A9').pack(anchor=tk.W)
+        tk.Label(self.tags_frame, text="Tags:", font=("Arial", 10), bg='#A9A9A9').pack(anchor=tk.W)
 
         # Create tag labels
         self.create_tag("Blue")
@@ -133,6 +134,18 @@ class CompletedTasksWindow(tk.Tk):
             c = conn.cursor()
 
             try:
+                # Get current task state before completion
+                c.execute("SELECT * FROM TaskList WHERE task_id = ?", (self.task_id,))
+                old_task = c.fetchone()
+
+                # Record completion as a history event
+                self.history_db.record_change(
+                    self.task_id,
+                    "status",
+                    "in_progress",
+                    "completed"
+                )
+
                 # Insert into CompletedTasks
                 completion_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 c.execute("""INSERT INTO CompletedTasks 
@@ -166,66 +179,49 @@ class CompletedTasksWindow(tk.Tk):
         header_frame = tk.Frame(frame, bg='#A9A9A9')
         header_frame.pack(fill=tk.X, anchor=tk.W)
 
-        tk.Label(header_frame, text=title, font=("SF Pro Text", 10), bg='#A9A9A9').pack(side=tk.LEFT, padx=5, pady=2)
+        tk.Label(header_frame, text=title, font=("Arial", 10), bg='#A9A9A9').pack(side=tk.LEFT, padx=5, pady=2)
 
         if title == "Commit History:":
-            container_frame = tk.Frame(frame, bg='#A9A9A9', bd=1, relief='solid')
-            container_frame.pack(fill=tk.X, anchor=tk.W, padx=5, pady=(0, 2))
+                container_frame = tk.Frame(frame, bg='#A9A9A9', bd=1, relief='solid')
+                container_frame.pack(fill=tk.X, anchor=tk.W, padx=5, pady=(0, 2))
 
-            tree_frame = tk.Frame(container_frame, bg='#A9A9A9')
-            tree_frame.pack(fill=tk.BOTH, expand=True)
+                # Get task history
+                history = self.history_db.get_task_history(self.task_id) if self.task_id else []
 
-            tree = ttk.Treeview(tree_frame, columns=("Date",), show="headings", height=7)
-            tree.heading("Date", text="Date", anchor="center")
-            tree.column("Date", anchor="center", width=120)
+                tree = ttk.Treeview(container_frame, columns=("Date", "Change"), show="headings", height=7)
+                tree.heading("Date", text="Date", anchor="center")
+                tree.heading("Change", text="Change", anchor="center")
+                tree.column("Date", anchor="center", width=120)
+                tree.column("Change", anchor="center", width=180)
 
-            scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
-            tree.configure(yscrollcommand=scrollbar.set)
+                scrollbar = ttk.Scrollbar(container_frame, orient="vertical", command=tree.yview)
+                tree.configure(yscrollcommand=scrollbar.set)
 
-            tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+                tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+                scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-            dates = ["12/4/24", "12/6/24", "12/8/24", "12/10/24", "10/8/24", "11/2/24",
-                     "10/8/24", "11/2/24", "10/8/24", "11/2/24", "10/8/24"]
-            for i, date in enumerate(dates):
-                tag = "oddrow" if i % 2 == 0 else "evenrow"
-                tree.insert("", "end", values=(date,), tags=(tag,))
+                # Populate history
+                for change_date, field, old_val, new_val in history:
+                    tree.insert("", "end", values=(change_date, f"Changed {field}"), 
+                            tags=(change_date, field, old_val, new_val))
 
-            tree.tag_configure("oddrow", background="#A9A9A9")
-            tree.tag_configure("evenrow", background="#d3d3d3")
-            tree.tag_configure('selected', background='#b3b3b3')
+                def on_history_select(event):
+                    selected = tree.selection()
+                    if selected:
+                        item = tree.item(selected[0])
+                        date, field, old_val, new_val = item["tags"]
+                        self.open_commit_history_page()
 
-            def on_commit_click(event):
-                try:
-                    selected_item = tree.selection()[0]
-                    for item in tree.get_children():
-                        tree.item(item, tags=(tree.item(item)['tags'][0],))
-                    tree.item(selected_item, tags=('selected',))
-                    self.open_commit_history_page()
-                except IndexError:
-                    pass
-
-            tree.bind("<Button-1>", on_commit_click)
-
-        else:
-            container_frame = tk.Frame(frame, bg='#A9A9A9', bd=1, relief='solid')
-            container_frame.pack(fill=tk.X, anchor=tk.W, padx=5, pady=(0, 2))
-
-            scrollbar = tk.Scrollbar(container_frame, orient="vertical")
-            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-            text = tk.Text(container_frame, height=height, wrap=tk.WORD, bg='#d3d3d3', bd=0,
-                           yscrollcommand=scrollbar.set)
-            text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-            scrollbar.config(command=text.yview)
-            text.insert("1.0", self.task_description if self.task_description else placeholder)
+                tree.bind("<Double-1>", on_history_select)
+                tree.tag_configure('oddrow', background="#A9A9A9")
+                tree.tag_configure('evenrow', background="#d3d3d3")
+                tree.tag_configure('selected', background='#b3b3b3')
 
     def create_tag(self, text):
         tag_label = tk.Label(
             self.tags_frame,
             text=text,
-            font=("SF Pro Text", 8),
+            font=("Arial", 8),
             bg='#d3d3d3',
             fg='black',
             padx=5,
@@ -237,12 +233,16 @@ class CompletedTasksWindow(tk.Tk):
         frame = tk.Frame(self.right_panel, bg='#A9A9A9', bd=0)
         frame.pack(fill=tk.X, pady=(0, 5))
 
-        tk.Label(frame, text=label_text, font=("SF Pro Text", 10), bg='#A9A9A9').pack(anchor=tk.W)
-        tk.Label(frame, text=value_text, font=("SF Pro Text", 10), bg='#A9A9A9').pack(anchor=tk.W)
+        tk.Label(frame, text=label_text, font=("Arial", 10), bg='#A9A9A9').pack(anchor=tk.W)
+        tk.Label(frame, text=value_text, font=("Arial", 10), bg='#A9A9A9').pack(anchor=tk.W)
 
     def open_commit_history_page(self):
-        self.task_window = CommitHistoryWindow()
-        self.task_window.grab_set()
+        """Modified to use new CommitHistoryWindow"""
+        if hasattr(self, 'task_id') and self.task_id:
+            history_window = CommitHistoryWindow(self.task_id)
+            history_window.grab_set()
+        else:
+            messagebox.showwarning("No Task Selected", "Please select a task to view its history.")
 
 if __name__ == "__main__":
     root = tk.Tk()
