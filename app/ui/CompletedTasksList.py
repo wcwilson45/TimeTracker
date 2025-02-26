@@ -187,24 +187,59 @@ class CompletedTasksList(tk.Frame):
         task_time = values[1]
         task_weight = values[2]
         task_id = values[3]
-
-        # Confirm undo
-        if not messagebox.askyesno("Confirm Undo", f"Move '{task_name}' back to tasks list?"):
-            return
-
+        completion_date = values[4]
+        total_duration = values[5]
+        
+        # Depending on your CompletedTasks table structure, retrieve necessary fields
+        # we need to query the database to get full task information
         conn = sqlite3.connect(path)
         c = conn.cursor()
-
+        
         try:
+            # Get complete task info from CompletedTasks
+            c.execute("SELECT * FROM CompletedTasks WHERE task_id = ?", (task_id,))
+            task_data = c.fetchone()
+            
+            if not task_data:
+                messagebox.showerror("Error", "Task data not found in database.")
+                conn.close()
+                return
+                
+            # Check the column count in TaskList to ensure we're sending the right data
+            c.execute("PRAGMA table_info(TaskList)")
+            task_list_columns = c.fetchall()
+            
+            # Confirm undo
+            if not messagebox.askyesno("Confirm Undo", f"Move '{task_name}' back to tasks list?"):
+                conn.close()
+                return
+
             # Begin transaction
             c.execute("BEGIN")
+            
+            # Get the highest list_place value
+            c.execute("SELECT COALESCE(MAX(list_place), 0) FROM TaskList")
+            max_list_place = c.fetchone()[0]
 
-            # Insert back into TaskList
+            # Prepare task data for re-insertion
+            # Note: Column order must match TaskList table schema
             c.execute("""
                 INSERT INTO TaskList 
-                (task_name, task_time, task_weight, task_id) 
-                VALUES (?, ?, ?, ?)
-            """, (task_name, task_time, task_weight, task_id))
+                (task_name, task_time, task_weight, task_id, task_start_date, 
+                task_end_date, task_description, task_weight_type, task_tags, list_place) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                task_data[0],              # task_name
+                task_data[1],              # task_time
+                task_data[2],              # task_weight
+                task_data[3],              # task_id
+                task_data[6] if len(task_data) > 6 else None,  # start_date if available
+                None,                      # end_date
+                task_data[9] if len(task_data) > 9 else None,  # task_description if available
+                task_data[8] if len(task_data) > 8 else None,  # task_weight_type if available
+                task_data[7] if len(task_data) > 7 else None,  # task_tags if available
+                max_list_place + 1         # list_place at the end
+            ))
 
             # Remove from CompletedTasks
             c.execute("DELETE FROM CompletedTasks WHERE task_id = ?", (task_id,))
