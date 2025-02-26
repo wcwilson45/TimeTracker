@@ -1080,37 +1080,90 @@ class App:
         self.small_overlay_stop_button.config(state=stop_state)
 
     def import_Tasks(self):
-            global data
-            # Ask user for the file
-            file_path = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+        global data
+        # Ask user for the file
+        file_path = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
-            # If file has been selected cont
-            if file_path:
-                # Open file and read from file
-                with open(file_path, "r", encoding="utf-8-sig") as file:
-                    csv_reader = csv.reader(file)
-                    data = list(csv_reader)
+        # If file has been selected cont
+        if file_path:
+            # Open file and read from file
+            with open(file_path, "r", encoding="utf-8-sig") as file:
+                csv_reader = csv.reader(file)
+                data = list(csv_reader)
 
-                    # Check if the first row is a header (by comparing column names)
-                    if data:
-                        header = data[0]
-                        expected_header = ["Task Name", "Task Weight", "Start Date", "Description", "Task Weight Type", "Task Tags"]
+                # Check if the first row is a header (by comparing column names)
+                if data:
+                    header = data[0]
+                    expected_header = ["Task Name", "Task Weight", "Start Date", "Description", "Task Weight Type", "Task Tags"]
 
-                        # If the first row matches the header, remove it
-                        if header == expected_header:
-                            data = data[1:]
-            
+                    # If the first row matches the header, remove it
+                    if header == expected_header:
+                        data = data[1:]
+        
             # Connect to the SQLite database
             conn = sqlite3.connect(path)
             c = conn.cursor()
 
-            # Insert data into the table
-            c.executemany("""INSERT INTO TaskList (task_name, task_weight, task_start_date,task_description,
-                           task_weight_type, task_tags) VALUES (?, ?, ?, ?, ?, ?)""", data)
+            # Get existing task names from all three tables: TaskList, CurrentTask, and CompletedTasks
+            c.execute("SELECT task_name FROM TaskList")
+            tasklist_names = {row[0] for row in c.fetchall()}
+            
+            c.execute("SELECT task_name FROM CurrentTask")
+            currenttask_names = {row[0] for row in c.fetchall()}
+            
+            c.execute("SELECT task_name FROM CompletedTasks")
+            completedtasks_names = {row[0] for row in c.fetchall()}
+            
+            # Combine all task names into one set
+            existing_tasks = tasklist_names.union(currenttask_names).union(completedtasks_names)
+
+            # Track statistics for user feedback
+            tasks_imported = 0
+            tasks_skipped = 0
+            skipped_tasks = []
+
+            # Filter out tasks with names that already exist in the database
+            filtered_data = []
+            for task in data:
+                if task[0] not in existing_tasks:  # task[0] is the task name
+                    filtered_data.append(task)
+                    tasks_imported += 1
+                else:
+                    tasks_skipped += 1
+                    skipped_tasks.append(task[0])
+
+            # Insert filtered data into the table
+            if filtered_data:
+                c.executemany("""INSERT INTO TaskList (task_name, task_weight, task_start_date, task_description,
+                            task_weight_type, task_tags) VALUES (?, ?, ?, ?, ?, ?)""", filtered_data)
 
             # Commit the changes and close the connection
             conn.commit()
             conn.close()
+
+            # Provide feedback to the user
+            if tasks_imported > 0 and tasks_skipped > 0:
+                messagebox.showinfo("Import Results", 
+                                f"Successfully imported {tasks_imported} tasks.\n"
+                                f"Skipped {tasks_skipped} tasks with duplicate names found in TaskList, CurrentTask, or CompletedTasks.")
+                
+                # If there are many skipped tasks, offer to show them in a separate dialog
+                if tasks_skipped > 5:
+                    show_details = messagebox.askyesno("Show Details", 
+                                                    "Would you like to see the list of skipped tasks?")
+                    if show_details:
+                        skipped_list = "\n".join(skipped_tasks[:20])
+                        if len(skipped_tasks) > 20:
+                            skipped_list += f"\n... and {len(skipped_tasks) - 20} more"
+                        
+                        messagebox.showinfo("Skipped Tasks", skipped_list)
+            elif tasks_imported > 0:
+                messagebox.showinfo("Import Complete", f"Successfully imported {tasks_imported} tasks.")
+            elif tasks_skipped > 0:
+                messagebox.showwarning("Import Failed", 
+                                    f"All {tasks_skipped} tasks already exist in the database. No new tasks were imported.")
+            else:
+                messagebox.showinfo("Import Notice", "No tasks were found to import.")
 
             self.query_database()
 
