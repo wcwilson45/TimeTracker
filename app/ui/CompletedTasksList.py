@@ -9,6 +9,7 @@ from tkinter import messagebox
 import pathlib
 import os
 from datetime import datetime
+from .TaskHistory import TaskHistoryDB
 
 global path 
 path = pathlib.Path(__file__).parent
@@ -26,39 +27,48 @@ del_btn_color = "#e99e56"
 class CompletedTasksList(tk.Frame):
     def __init__(self, parent, controller=None):
         super().__init__(parent)
-        self.controller = controller  # Reference to main app
-        self.current_sort_reverse = False  # Track sorting direction
+        self.controller = controller
+        self.current_sort_reverse = False
+        self.history_db = TaskHistoryDB()
 
         self.configure(background="#A9A9A9")
 
+        # Create main container
+        self.main_container = tk.Frame(self, bg="#A9A9A9")
+        self.main_container.pack(fill="both", expand=True)
+
+        # Left side - Tasks list
+        self.tasks_frame = tk.Frame(self.main_container, bg="#A9A9A9")
+        self.tasks_frame.pack(side="left", fill="both", expand=True, padx=5, pady=5)
+
+        # Configure Treeview style
         style = ttk.Style()
         style.theme_use('default')
         style.configure("Treeview",
-                        background="#d3d3d3",
-                        foreground="black",
-                        rowheight=25,
-                        fieldbackground="#d3d3d3")
+                    background="#d3d3d3",
+                    foreground="black",
+                    rowheight=25,
+                    fieldbackground="#d3d3d3")
+        style.map("Treeview", background=[('selected', "#347083")])
 
-        style.map("Treeview", background=[('selected', "347083")])
-
-        # Tree view setup
-        completedlist_frame = tk.Frame(self, bg="#A9A9A9")
-        completedlist_frame.pack(pady=5, padx=10)
+        # Create Treeview for completed tasks
+        completedlist_frame = tk.Frame(self.tasks_frame, bg="#A9A9A9")
+        completedlist_frame.pack(fill="both", expand=True)
 
         completedlist_scroll = ttk.Scrollbar(completedlist_frame)
         completedlist_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.completed_list = ttk.Treeview(completedlist_frame,
-                                           yscrollcommand=completedlist_scroll.set,
-                                           selectmode="extended",
-                                           height=13)
-        self.completed_list.pack()
+                                       yscrollcommand=completedlist_scroll.set,
+                                       selectmode="extended",
+                                       height=13)
+        self.completed_list.pack(fill="both", expand=True)
 
         completedlist_scroll.config(command=self.completed_list.yview)
 
-        # Column configuration
-        self.completed_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", "Completion Date",
-                                          "Total Duration")
+        # Configure columns
+        self.completed_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID",
+                                      "Completion Date", "Total Duration")
 
         self.completed_list.column("#0", width=0, stretch=tk.NO)
         self.completed_list.column('Task Name', anchor=tk.W, width=135)
@@ -68,38 +78,61 @@ class CompletedTasksList(tk.Frame):
         self.completed_list.column('Completion Date', anchor=tk.CENTER, width=135)
         self.completed_list.column('Total Duration', anchor=tk.CENTER, width=100)
 
-        self.completed_list.heading("#0", text="", anchor=tk.W)
-        self.completed_list.heading("Task Name", text="Task Name", anchor=tk.W,
-                                    command=lambda: self.sort_completed_tasks("Task Name"))
-        self.completed_list.heading("Task Time", text="Time", anchor=tk.CENTER,
-                                    command=lambda: self.sort_completed_tasks("Task Time"))
-        self.completed_list.heading("Task Weight", text="Weight", anchor=tk.CENTER,
-                                    command=lambda: self.sort_completed_tasks("Task Weight"))
-        self.completed_list.heading("Task ID", text="ID", anchor=tk.CENTER,
-                                    command=lambda: self.sort_completed_tasks("Task ID"))
-        self.completed_list.heading("Completion Date", text="Completed On", anchor=tk.CENTER,
-                                    command=lambda: self.sort_completed_tasks("Completion Date"))
-        self.completed_list.heading("Total Duration", text="Total Time", anchor=tk.CENTER,
-                                    command=lambda: self.sort_completed_tasks("Total Duration"))
+        # Configure headings
+        for col in self.completed_list['columns']:
+            self.completed_list.heading(col, text=col, anchor=tk.CENTER,
+                                    command=lambda c=col: self.sort_completed_tasks(c))
 
         self.completed_list.tag_configure('oddrow', background="white")
         self.completed_list.tag_configure('evenrow', background="#d3d3d3")
 
-        # Button frame
-        bottom_frame = tk.Frame(self, bg=background_color)
-        bottom_frame.pack(fill='x', side='bottom', pady=5, padx=10)
+        # Right side - History view
+        self.history_frame = tk.Frame(self.main_container, bg="#A9A9A9", width=400)
+        self.history_frame.pack(side="right", fill="both", padx=5, pady=5)
+        
+        # History title
+        self.history_title = tk.Label(self.history_frame, 
+                                    text="Task History", 
+                                    font=("SF Pro Display", 14, "bold"),
+                                    bg="#A9A9A9")
+        self.history_title.pack(pady=(0, 5))
 
-        delete_all_button = tk.Button(bottom_frame, text="Delete All", bg=del_btn_color, command=self.delete_all_tasks)
+        # Previous state frame
+        self.prev_frame = ttk.LabelFrame(self.history_frame, text="Previous State")
+        self.prev_frame.pack(fill="both", expand=True, pady=5)
+        
+        self.prev_text = tk.Text(self.prev_frame, height=10, wrap="word", bg="#d3d3d3")
+        self.prev_text.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Changed state frame
+        self.new_frame = ttk.LabelFrame(self.history_frame, text="Changed State")
+        self.new_frame.pack(fill="both", expand=True, pady=5)
+        
+        self.new_text = tk.Text(self.new_frame, height=10, wrap="word", bg="#d3d3d3")
+        self.new_text.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Button frame
+        button_frame = tk.Frame(self.tasks_frame, bg="#A9A9A9")
+        button_frame.pack(fill='x', side='bottom', pady=5)
+
+        delete_all_button = tk.Button(button_frame, text="Delete All",
+                                    bg="#e99e56", command=self.delete_all_tasks)
         delete_all_button.pack(side='right')
 
-        delete_button = tk.Button(bottom_frame, text="Delete", bg=del_btn_color, command=self.delete_selected_task)
-        delete_button.pack(side='right', padx=(0, 5))
+        delete_button = tk.Button(button_frame, text="Delete",
+                                bg="#e99e56", command=self.delete_selected_task)
+        delete_button.pack(side='right', padx=5)
 
-        export_button = tk.Button(bottom_frame, text="Export", bg=main_btn_color, command=self.export_tasks)
+        export_button = tk.Button(button_frame, text="Export",
+                                bg="#b2fba5", command=self.export_tasks)
         export_button.pack(side="left")
 
-        undo_button = tk.Button(bottom_frame, text="Undo Commit", bg=main_btn_color, command=self.undo_task_completion)
+        undo_button = tk.Button(button_frame, text="Undo Commit",
+                            bg="#b2fba5", command=self.undo_task_completion)
         undo_button.pack(side="left", padx=6)
+
+        # Bind selection event
+        self.completed_list.bind('<<TreeviewSelect>>', self.on_task_select)
 
         self.load_completed_tasks()
 
@@ -189,60 +222,62 @@ class CompletedTasksList(tk.Frame):
         task_id = values[3]
         completion_date = values[4]
         total_duration = values[5]
-        
-        # Depending on your CompletedTasks table structure, retrieve necessary fields
-        # we need to query the database to get full task information
+
+        # Confirm undo
+        if not messagebox.askyesno("Confirm Undo", f"Move '{task_name}' back to tasks list?"):
+            return
+
         conn = sqlite3.connect(path)
         c = conn.cursor()
-        
-        try:
-            # Get complete task info from CompletedTasks
-            c.execute("SELECT * FROM CompletedTasks WHERE task_id = ?", (task_id,))
-            task_data = c.fetchone()
-            
-            if not task_data:
-                messagebox.showerror("Error", "Task data not found in database.")
-                conn.close()
-                return
-                
-            # Check the column count in TaskList to ensure we're sending the right data
-            c.execute("PRAGMA table_info(TaskList)")
-            task_list_columns = c.fetchall()
-            
-            # Confirm undo
-            if not messagebox.askyesno("Confirm Undo", f"Move '{task_name}' back to tasks list?"):
-                conn.close()
-                return
 
+        try:
             # Begin transaction
             c.execute("BEGIN")
+
+            # Get additional details from CompletedTasks (if available)
+            c.execute("""
+                SELECT start_date, task_tags, task_weight_type, task_description 
+                FROM CompletedTasks 
+                WHERE task_id = ?
+            """, (task_id,))
             
-            # Get the highest list_place value
+            extra_details = c.fetchone()
+            
+            # Set default values for missing fields
+            start_date = extra_details[0] if extra_details and extra_details[0] else ""
+            task_tags = extra_details[1] if extra_details and extra_details[1] else ""
+            task_weight_type = extra_details[2] if extra_details and extra_details[2] else ""
+            task_description = extra_details[3] if extra_details and extra_details[3] else ""
+            
+            # Default end date (1 month from now)
+            end_date = "01-02-2025"
+
+            # Get highest list_place value
             c.execute("SELECT COALESCE(MAX(list_place), 0) FROM TaskList")
             max_list_place = c.fetchone()[0]
+            list_place = max_list_place + 1 if max_list_place is not None else 1
 
-            # Prepare task data for re-insertion
-            # Note: Column order must match TaskList table schema
+            # Insert back into TaskList with all required fields
             c.execute("""
                 INSERT INTO TaskList 
                 (task_name, task_time, task_weight, task_id, task_start_date, 
                 task_end_date, task_description, task_weight_type, task_tags, list_place) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                task_data[0],              # task_name
-                task_data[1],              # task_time
-                task_data[2],              # task_weight
-                task_data[3],              # task_id
-                task_data[6] if len(task_data) > 6 else None,  # start_date if available
-                None,                      # end_date
-                task_data[9] if len(task_data) > 9 else None,  # task_description if available
-                task_data[8] if len(task_data) > 8 else None,  # task_weight_type if available
-                task_data[7] if len(task_data) > 7 else None,  # task_tags if available
-                max_list_place + 1         # list_place at the end
-            ))
+            """, (task_name, task_time, task_weight, task_id, start_date, 
+                end_date, task_description, task_weight_type, task_tags, list_place))
 
             # Remove from CompletedTasks
             c.execute("DELETE FROM CompletedTasks WHERE task_id = ?", (task_id,))
+
+            # Record this change in task history - pass the existing connection
+            if hasattr(self, 'history_db'):
+                self.history_db.record_change(
+                    task_id,
+                    "status",
+                    "completed",
+                    "in_progress",
+                    existing_conn=conn  # Pass the existing connection
+                )
 
             # Commit transaction
             conn.commit()
@@ -348,3 +383,36 @@ class CompletedTasksList(tk.Frame):
 
         except Exception as e:
             messagebox.showerror("Sorting Error", f"An error occurred while sorting: {str(e)}")
+
+    def on_task_select(self, event):
+        """Handle task selection and show history"""
+        selection = self.completed_list.selection()
+        if not selection:
+            return
+
+        # Get task details
+        task_values = self.completed_list.item(selection[0])['values']
+        task_id = task_values[3]  # Assuming task_id is at index 3
+
+        # Clear existing text
+        self.prev_text.delete(1.0, tk.END)
+        self.new_text.delete(1.0, tk.END)
+
+        # Get task history
+        history = self.history_db.get_task_history(task_id)
+        
+        if history:
+            last_change = history[0]  # Get most recent change
+            change_date, field, old_val, new_val = last_change
+
+            # Update text widgets
+            self.prev_text.insert(tk.END, f"Date: {change_date}\n")
+            self.prev_text.insert(tk.END, f"Field Changed: {field}\n")
+            self.prev_text.insert(tk.END, f"Previous Value: {old_val}")
+
+            self.new_text.insert(tk.END, f"Date: {change_date}\n")
+            self.new_text.insert(tk.END, f"Field Changed: {field}\n")
+            self.new_text.insert(tk.END, f"New Value: {new_val}")
+        else:
+            self.prev_text.insert(tk.END, "No history available")
+            self.new_text.insert(tk.END, "No history available")
