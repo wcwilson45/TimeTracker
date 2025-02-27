@@ -1,4 +1,5 @@
 
+
 from tkinter import *
 from tkinter.ttk import *
 import tkinter as tk
@@ -126,71 +127,110 @@ class EditTaskWindow(tk.Tk):
     def confirm_action(self):
         confirm = messagebox.askyesno("Confirm Edit", "Are you sure you want to edit this task?")
         if confirm:
-            # Get old values before update
+            # Connect to database
             conn = sqlite3.connect(self.path)
             c = conn.cursor()
-            c.execute("SELECT task_name, task_time, task_weight, task_start_date, task_end_date, task_description, task_weight_type, task_tags FROM TaskList WHERE task_id = ?", (self.task_id,))
-            old_values = c.fetchone()
             
-            # Get new values
-            new_values = {
-                'task_name': self.task_name_entry.get(),
-                'task_time': self.task_time_entry.get(),
-                'task_weight': self.value_combo.get(),
-                'task_start_date': self.start_date_entry.get(),
-                'task_end_date': self.end_date_var.get(),
-                'task_description': self.desc_text_entry.get("1.0", "end-1c"),
-                'task_weight_type': self.type_combo.get(),
-                'task_tags': self.task_tags_entry.get("1.0","end-1c")
-            }
+            try:
+                # Begin transaction
+                c.execute("BEGIN")
+                
+                # Get old values before update
+                c.execute("SELECT task_name, task_time, task_weight, task_start_date, task_end_date, task_description, task_weight_type, task_tags FROM TaskList WHERE task_id = ?", (self.task_id,))
+                old_values = c.fetchone()
+                
+                # Get new values
+                new_values = {
+                    'task_name': self.task_name_entry.get(),
+                    'task_time': self.task_time_entry.get(),
+                    'task_weight': self.value_combo.get(),
+                    'task_start_date': self.start_date_entry.get(),
+                    'task_end_date': self.end_date_var.get(),
+                    'task_description': self.desc_text_entry.get("1.0", "end-1c"),
+                    'task_weight_type': self.type_combo.get(),
+                    'task_tags': self.task_tags_entry.get("1.0","end-1c")
+                }
 
-            # Record changes for each field that has changed
-            field_map = {
-                0: 'task_name',
-                1: 'task_time',
-                2: 'task_weight',
-                3: 'task_start_date',
-                4: 'task_end_date',
-                5: 'task_description',
-                6: 'task_weight_type',
-                7: 'task_tags'
-            }
+                # Record changes for each field that has changed
+                field_map = {
+                    0: 'task_name',
+                    1: 'task_time',
+                    2: 'task_weight',
+                    3: 'task_start_date',
+                    4: 'task_end_date',
+                    5: 'task_description',
+                    6: 'task_weight_type',
+                    7: 'task_tags'
+                }
 
-            for i, (old, new) in enumerate(zip(old_values, new_values.values())):
-                if old != new:
-                    self.history_db.record_change(
-                        self.task_id,
-                        field_map[i],
-                        str(old),
-                        str(new)
-                    )
+                for i, (old, new) in enumerate(zip(old_values, new_values.values())):
+                    if old != new:
+                        self.history_db.record_change(
+                            self.task_id,
+                            field_map[i],
+                            str(old),
+                            str(new),
+                            existing_conn=conn  # Pass the existing connection
+                        )
 
-            # Perform the update
-            c.execute("""UPDATE TaskList SET 
-                task_name = ?, 
-                task_time = ?, 
-                task_weight = ?, 
-                task_start_date = ?, 
-                task_end_date = ?, 
-                task_description = ?, 
-                task_weight_type = ?, 
-                task_tags = ? 
-                WHERE task_id = ?""",
-                (new_values['task_name'], new_values['task_time'], new_values['task_weight'],
-                new_values['task_start_date'], new_values['task_end_date'], new_values['task_description'],
-                new_values['task_weight_type'], new_values['task_tags'], self.task_id))
+                # Perform the update
+                c.execute("""UPDATE TaskList SET 
+                    task_name = ?, 
+                    task_time = ?, 
+                    task_weight = ?, 
+                    task_start_date = ?, 
+                    task_end_date = ?, 
+                    task_description = ?, 
+                    task_weight_type = ?, 
+                    task_tags = ? 
+                    WHERE task_id = ?""",
+                    (new_values['task_name'], new_values['task_time'], new_values['task_weight'],
+                    new_values['task_start_date'], new_values['task_end_date'], new_values['task_description'],
+                    new_values['task_weight_type'], new_values['task_tags'], self.task_id))
+                
+                conn.commit()
+
+                if hasattr(self.main_app, 'query_database'):
+                    self.main_app.query_database()
+
+                self.destroy()
+                self.on_close()
             
-            conn.commit()
-            conn.close()
-
-            if hasattr(self.main_app, 'query_database'):
-                self.main_app.query_database()
-
-            self.destroy()
-            self.on_close()
+            except sqlite3.Error as e:
+                messagebox.showerror("Database Error", f"Error editing task: {str(e)}")
+                conn.rollback()
+            finally:
+                conn.close()
 
     def delete_action(self):
-        pass
+        delete = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this task?")
+        if delete:
+            # Connect to database
+            conn = sqlite3.connect(self.path)
+            c = conn.cursor()
+            
+            try:
+                # Execute the correct DELETE statement (without '*')
+                c.execute("DELETE FROM TaskList WHERE task_id = ?", (int(self.task_id),))
+                
+                # Commit changes to database
+                conn.commit()
+                
+                messagebox.showinfo("Success", "Task deleted successfully!")
+                
+                # Refresh the main app's task list
+                if hasattr(self.main_app, 'query_database'):
+                    self.main_app.query_database()
+                
+                # Close the window
+                self.destroy()
+                self.on_close()
+                
+            except sqlite3.Error as e:
+                messagebox.showerror("Database Error", f"Error deleting task: {str(e)}")
+                conn.rollback()
+            finally:
+                conn.close()
 
 
     #Configure the ui
