@@ -56,7 +56,7 @@ class AddTaskWindow(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Set the main window properties
-        self.geometry("390x370")
+        self.geometry("400x390")
         self.title("Add Task")
         self.configure(bg=background_color)
 
@@ -122,7 +122,7 @@ class AddTaskWindow(tk.Tk):
 
         # Button frame
         button_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        button_frame.grid(row=7, column=0, pady=(8, 6), sticky='ew')
+        button_frame.grid(row=7, column=0, pady=(10, 6), sticky='ew')
 
         cancel_btn = tk.Button(button_frame, font=("SF Pro Text", 10),text="Cancel", command=self.cancel_action, bg=org_btn_color)
         cancel_btn.grid(row=0, column=1)
@@ -137,7 +137,7 @@ class AddTaskWindow(tk.Tk):
         right_frame.grid(row=0, column=1, sticky='nsew')
 
         # Tags
-        label = ttk.Label(right_frame, text="Tags:", font=self.fonts['subheader'], style='TLabel')
+        label = ttk.Label(right_frame, text="Task Tags:", font=self.fonts['subheader'], style='TLabel')
         label.grid(row=0, column=0, sticky='w')
         
         # Create the tag text frame
@@ -147,6 +147,7 @@ class AddTaskWindow(tk.Tk):
         # Add a scrollbar for tag_text
         tag_scrollbar = ttk.Scrollbar(tag_frame, orient='vertical')
         tag_scrollbar.grid(row=0, column=1, sticky='ns')
+
 
         # Create the Text widget for tags
         self.tag_text = tk.Text(tag_frame, height=7, width=12, bg='#d3d3d3', relief="solid", bd=1, font=("SF Pro Text", 10),
@@ -159,7 +160,10 @@ class AddTaskWindow(tk.Tk):
 
         # New frame specifically for Listbox and Scrollbar
         listbox_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
-        listbox_frame.grid(row=2, column=0, pady=(0, 6), sticky='w')
+        listbox_frame.grid(row=3, column=0, pady=(3, 6), sticky='w')
+
+        label = ttk.Label(right_frame, text="Choose Tags:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=2, column=0, sticky='w',pady=(3,1))
 
         # Add a vertical scrollbar for the Listbox
         list_scrollbar = ttk.Scrollbar(listbox_frame, orient='vertical')
@@ -167,7 +171,7 @@ class AddTaskWindow(tk.Tk):
 
         # Create the Listbox and link it to the scrollbar
         self.tag_listbox = tk.Listbox(listbox_frame, selectmode="multiple", exportselection=0, width=14,height=8, bg="#d3d3d3", relief='solid', yscrollcommand=tag_scrollbar.set)
-        self.tag_listbox.grid(row=0, column=0, pady=(0, 6), sticky='w')
+        self.tag_listbox.grid(row=0, column=0, pady=(1, 6), sticky='w')
 
         # Configure the scrollbar to control the Listbox
         list_scrollbar.config(command=self.tag_listbox.yview)
