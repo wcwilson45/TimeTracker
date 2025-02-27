@@ -80,7 +80,7 @@ c.execute("""CREATE TABLE if not exists CompletedTasks (
           completion_date text,
           total_duration text,
           start_date text,
-          task tags text,
+          task_tags text,
           task_weight_type text,
           task_description text,
           PRIMARY KEY (task_id)
