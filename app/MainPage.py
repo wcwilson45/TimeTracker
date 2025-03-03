@@ -103,6 +103,9 @@ class App:
 
       self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
+      icon = tk.PhotoImage(file="AppLogo.png")
+      self.root.iconphoto(True, icon)
+
       # Font Tuples for Use on pages
       self.fonts = {
             "Title_Tuple": tkfont.Font(family ="SF Pro Display", size =24, weight ="bold"),
@@ -263,11 +266,10 @@ class App:
         background = "black",
         foreground = "black",
         rowheight = 20,
-        fieldbackground = grey_button_color,
-        bd = "black")
+        fieldbackground = "#dcdcdc")
 
         #Current Task Frame
-        self.currenttask_frame = LabelFrame(self.full_page, text = f"Current Task" )
+        self.currenttask_frame = tk.LabelFrame(self.full_page, text = f"Current Task", bg="#dcdcdc" )
         self.currenttask_frame.pack(pady=0, side = TOP, fill = 'x')
 
         #Task Name row
@@ -307,7 +309,7 @@ class App:
         self.description_box = Text(description_frame, yscrollcommand= description_scroll.set,
                                 height=5,
                                     width=50,border = 1, font=self.fonts['Description_Tuple'],
-                                    background="#d3d3d3")
+                                    background="#dcdcdc")
         self.description_box.grid(row = 1, column = 0)
 
         #Insert Current Task Description
@@ -343,7 +345,7 @@ class App:
         foreground=[('selected', '#000000')])
 
         #Top Button Frame
-        top_btn_frame = LabelFrame(self.full_page, text = "TaskList")
+        top_btn_frame = tk.LabelFrame(self.full_page, text = "TaskList", bg="#dcdcdc")
         top_btn_frame.pack( pady = 5, fill = "x")
 
         #Put the task list inside a frame
@@ -366,7 +368,7 @@ class App:
 
         Label(top_btn_frame, text = "Search:").grid(row = 0, column = 4)
 
-        self.search_entry = tk.Entry(top_btn_frame, bg="#d3d3d3", width = 15)
+        self.search_entry = tk.Entry(top_btn_frame, bg="#dcdcdc", width = 15)
         self.search_entry.grid(row = 0, column= 5, padx = 4, pady= 6)
         self.search_entry.bind("<KeyRelease>", self.search_Task)
 
@@ -404,11 +406,11 @@ class App:
 
         #Configure the different rows for color
         self.task_list.tag_configure('oddrow', background=  "#A9A9A9", foreground= "black")
-        self.task_list.tag_configure('evenrow', background=  grey_button_color, foreground= "black")
+        self.task_list.tag_configure('evenrow', background=  "#dcdcdc", foreground= "black")
 
         #This is the select thing. Will become void after current task table is implemented
         #So Full page will become smaller and when using select button it should put task information at the top.
-        data_frame = LabelFrame(self.full_page, text = "Input")
+        data_frame = tk.LabelFrame(self.full_page, text = "Input", bg="#dcdcdc")
         data_frame.pack(fill = "x", padx = 20)
 
         tn_label = Label(data_frame, text = "Task Name")
@@ -443,7 +445,7 @@ class App:
 
         data_frame.pack_forget()
 
-        button_frame = LabelFrame(self.full_page, text = "Commands")
+        button_frame = tk.LabelFrame(self.full_page, text = "Commands", bg="#dcdcdc")
         button_frame.pack(fill = "x",pady = 10,side = BOTTOM)
 
 
