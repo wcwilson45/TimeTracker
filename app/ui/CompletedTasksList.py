@@ -207,21 +207,21 @@ class CompletedTasksList(tk.Frame):
             conn.close()
 
     def undo_task_completion(self):
-        """Move selected task from CompletedTasks back to TaskList"""
+    
+        #"""Move selected task from CompletedTasks back to TaskList"""
+
         selected_items = self.completed_list.selection()
         
         if not selected_items:
             messagebox.showwarning("Selection Required", "Please select a task to undo.")
             return
 
-        # Get the task details
+        # Get the task details from the selected item
         values = self.completed_list.item(selected_items[0])['values']
         task_name = values[0]
         task_time = values[1]
         task_weight = values[2]
         task_id = values[3]
-        completion_date = values[4]
-        total_duration = values[5]
 
         # Confirm undo
         if not messagebox.askyesno("Confirm Undo", f"Move '{task_name}' back to tasks list?"):
@@ -234,49 +234,67 @@ class CompletedTasksList(tk.Frame):
             # Begin transaction
             c.execute("BEGIN")
 
-            # Get additional details from CompletedTasks (if available)
-            c.execute("""
-                SELECT start_date, task_tags, task_weight_type, task_description 
-                FROM CompletedTasks 
-                WHERE task_id = ?
-            """, (task_id,))
+            # Get ALL columns from CompletedTasks for this task to ensure we have the description
+            c.execute("SELECT * FROM CompletedTasks WHERE task_id = ?", (task_id,))
+            completed_task_data = c.fetchone()
             
-            extra_details = c.fetchone()
+            if not completed_task_data:
+                messagebox.showerror("Error", "Task data not found in database.")
+                conn.rollback()
+                conn.close()
+                return
             
-            # Set default values for missing fields
-            start_date = extra_details[0] if extra_details and extra_details[0] else ""
-            task_tags = extra_details[1] if extra_details and extra_details[1] else ""
-            task_weight_type = extra_details[2] if extra_details and extra_details[2] else ""
-            task_description = extra_details[3] if extra_details and extra_details[3] else ""
-            
-            # Default end date (1 month from now)
-            end_date = "01-02-2025"
-
-            # Get highest list_place value
+            # Get the highest list_place value
             c.execute("SELECT COALESCE(MAX(list_place), 0) FROM TaskList")
             max_list_place = c.fetchone()[0]
-            list_place = max_list_place + 1 if max_list_place is not None else 1
-
-            # Insert back into TaskList with all required fields
+            
+            # Get the structure of the CompletedTasks table to find description column index
+            c.execute("PRAGMA table_info(CompletedTasks)")
+            completed_columns = c.fetchall()
+            description_index = None
+            
+            # Find the index of the task_description column
+            for i, col in enumerate(completed_columns):
+                if col[1] == 'task_description':
+                    description_index = i
+                    break
+            
+            # Prepare data for TaskList based on CompletedTasks columns
+            # Get task description, using a default empty string if not found
+            task_description = ""
+            if description_index is not None and description_index < len(completed_task_data):
+                task_description = completed_task_data[description_index] or ""
+                
+            # Insert the task back to TaskList with all available data including description
             c.execute("""
                 INSERT INTO TaskList 
                 (task_name, task_time, task_weight, task_id, task_start_date, 
                 task_end_date, task_description, task_weight_type, task_tags, list_place) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (task_name, task_time, task_weight, task_id, start_date, 
-                end_date, task_description, task_weight_type, task_tags, list_place))
+            """, (
+                completed_task_data[0],                          # task_name
+                completed_task_data[1],                          # task_time
+                completed_task_data[2],                          # task_weight
+                completed_task_data[3],                          # task_id
+                completed_task_data[6] if len(completed_task_data) > 6 else None,  # start_date if available
+                None,                                            # end_date
+                task_description,                                # task_description with robust handling
+                completed_task_data[8] if len(completed_task_data) > 8 else None,  # task_weight_type if available
+                completed_task_data[7] if len(completed_task_data) > 7 else None,  # task_tags if available
+                max_list_place + 1                               # list_place at the end
+            ))
 
             # Remove from CompletedTasks
             c.execute("DELETE FROM CompletedTasks WHERE task_id = ?", (task_id,))
 
-            # Record this change in task history - pass the existing connection
+            # Record this change in task history
             if hasattr(self, 'history_db'):
                 self.history_db.record_change(
-                    task_id,
+                    task_id, 
                     "status",
                     "completed",
                     "in_progress",
-                    existing_conn=conn  # Pass the existing connection
+                    existing_conn=conn
                 )
 
             # Commit transaction
