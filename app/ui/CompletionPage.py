@@ -139,7 +139,34 @@ class CompletedTasksWindow(tk.Tk):
                 c.execute("SELECT * FROM TaskList WHERE task_id = ?", (self.task_id,))
                 old_task = c.fetchone()
 
-                # Record completion as a history event - using existing connection
+                # Add any missing columns to the CompletedTasks table
+                # Check for required columns and add them if missing
+                required_columns = {
+                    "task_name": "TEXT", 
+                    "task_time": "TEXT", 
+                    "task_weight": "TEXT", 
+                    "task_id": "INTEGER", 
+                    "completion_date": "TEXT", 
+                    "total_duration": "TEXT", 
+                    "start_date": "TEXT", 
+                    "task_tags": "TEXT", 
+                    "task_weight_type": "TEXT", 
+                    "task_description": "TEXT"
+                }
+                
+                # Check existing columns
+                c.execute("PRAGMA table_info(CompletedTasks)")
+                existing_columns = {col[1]: col[2] for col in c.fetchall()}
+                
+                # Add any missing columns
+                for col_name, col_type in required_columns.items():
+                    if col_name not in existing_columns:
+                        try:
+                            c.execute(f"ALTER TABLE CompletedTasks ADD COLUMN {col_name} {col_type}")
+                        except sqlite3.Error as e:
+                            print(f"Error adding column {col_name}: {e}")
+                
+                # Record completion as a history event
                 self.history_db.record_change(
                     self.task_id,
                     "status",
@@ -148,13 +175,18 @@ class CompletedTasksWindow(tk.Tk):
                     existing_conn=conn
                 )
 
-                # Insert into CompletedTasks
+                # Insert into CompletedTasks with all fields
                 completion_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 c.execute("""INSERT INTO CompletedTasks 
-                           (task_name, task_time, task_weight, task_id, completion_date, total_duration)
-                           VALUES (?, ?, ?, ?, ?, ?)""",
-                          (self.task_name, self.task_time, self.task_weight,
-                           self.task_id, completion_time, self.task_time))
+                        (task_name, task_time, task_weight, task_id, completion_date, 
+                        total_duration, start_date, task_tags, task_weight_type, task_description)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        (self.task_name, self.task_time, self.task_weight,
+                        self.task_id, completion_time, self.task_time,
+                        old_task[4] if old_task and len(old_task) > 4 else None,  # start_date
+                        old_task[8] if old_task and len(old_task) > 8 else None,  # task_tags
+                        old_task[7] if old_task and len(old_task) > 7 else None,  # task_weight_type
+                        self.task_description))  # task_description
 
                 # Delete from TaskList
                 c.execute("DELETE FROM TaskList WHERE task_id = ?", (self.task_id,))
