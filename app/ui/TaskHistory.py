@@ -27,9 +27,23 @@ class TaskHistoryDB:
         conn.commit()
         conn.close()
 
-    def record_change(self, task_id, field_changed, old_value, new_value):
-        """Record a change in the task history"""
-        conn = sqlite3.connect(self.path)
+    def record_change(self, task_id, field_changed, old_value, new_value, existing_conn=None):
+        """Record a change in the task history
+        
+        Args:
+            task_id: The ID of the task
+            field_changed: Name of the field that changed
+            old_value: Previous value
+            new_value: New value
+            existing_conn: Optional existing database connection to use
+        """
+        should_close_conn = False
+        if existing_conn:
+            conn = existing_conn
+        else:
+            conn = sqlite3.connect(self.path)
+            should_close_conn = True
+            
         c = conn.cursor()
         
         change_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -40,8 +54,10 @@ class TaskHistoryDB:
             VALUES (?, ?, ?, ?, ?)
         """, (task_id, change_date, field_changed, old_value, new_value))
         
-        conn.commit()
-        conn.close()
+        if should_close_conn:
+            conn.commit()
+            conn.close()
+        # No commit if using existing connection - let the caller handle it
 
     def get_task_history(self, task_id):
         """Get all history records for a task"""

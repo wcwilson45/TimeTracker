@@ -1,4 +1,5 @@
 
+
 from tkinter import *
 from tkinter.ttk import *
 import tkinter as tk
@@ -126,77 +127,116 @@ class EditTaskWindow(tk.Tk):
     def confirm_action(self):
         confirm = messagebox.askyesno("Confirm Edit", "Are you sure you want to edit this task?")
         if confirm:
-            # Get old values before update
+            # Connect to database
             conn = sqlite3.connect(self.path)
             c = conn.cursor()
-            c.execute("SELECT task_name, task_time, task_weight, task_start_date, task_end_date, task_description, task_weight_type, task_tags FROM TaskList WHERE task_id = ?", (self.task_id,))
-            old_values = c.fetchone()
             
-            # Get new values
-            new_values = {
-                'task_name': self.task_name_entry.get(),
-                'task_time': self.task_time_entry.get(),
-                'task_weight': self.value_combo.get(),
-                'task_start_date': self.start_date_entry.get(),
-                'task_end_date': self.end_date_var.get(),
-                'task_description': self.desc_text_entry.get("1.0", "end-1c"),
-                'task_weight_type': self.type_combo.get(),
-                'task_tags': self.task_tags_entry.get("1.0","end-1c")
-            }
+            try:
+                # Begin transaction
+                c.execute("BEGIN")
+                
+                # Get old values before update
+                c.execute("SELECT task_name, task_time, task_weight, task_start_date, task_end_date, task_description, task_weight_type, task_tags FROM TaskList WHERE task_id = ?", (self.task_id,))
+                old_values = c.fetchone()
+                
+                # Get new values
+                new_values = {
+                    'task_name': self.task_name_entry.get(),
+                    'task_time': self.task_time_entry.get(),
+                    'task_weight': self.value_combo.get(),
+                    'task_start_date': self.start_date_entry.get(),
+                    'task_end_date': self.end_date_var.get(),
+                    'task_description': self.desc_text_entry.get("1.0", "end-1c"),
+                    'task_weight_type': self.type_combo.get(),
+                    'task_tags': self.task_tags_entry.get("1.0","end-1c")
+                }
 
-            # Record changes for each field that has changed
-            field_map = {
-                0: 'task_name',
-                1: 'task_time',
-                2: 'task_weight',
-                3: 'task_start_date',
-                4: 'task_end_date',
-                5: 'task_description',
-                6: 'task_weight_type',
-                7: 'task_tags'
-            }
+                # Record changes for each field that has changed
+                field_map = {
+                    0: 'task_name',
+                    1: 'task_time',
+                    2: 'task_weight',
+                    3: 'task_start_date',
+                    4: 'task_end_date',
+                    5: 'task_description',
+                    6: 'task_weight_type',
+                    7: 'task_tags'
+                }
 
-            for i, (old, new) in enumerate(zip(old_values, new_values.values())):
-                if old != new:
-                    self.history_db.record_change(
-                        self.task_id,
-                        field_map[i],
-                        str(old),
-                        str(new)
-                    )
+                for i, (old, new) in enumerate(zip(old_values, new_values.values())):
+                    if old != new:
+                        self.history_db.record_change(
+                            self.task_id,
+                            field_map[i],
+                            str(old),
+                            str(new),
+                            existing_conn=conn  # Pass the existing connection
+                        )
 
-            # Perform the update
-            c.execute("""UPDATE TaskList SET 
-                task_name = ?, 
-                task_time = ?, 
-                task_weight = ?, 
-                task_start_date = ?, 
-                task_end_date = ?, 
-                task_description = ?, 
-                task_weight_type = ?, 
-                task_tags = ? 
-                WHERE task_id = ?""",
-                (new_values['task_name'], new_values['task_time'], new_values['task_weight'],
-                new_values['task_start_date'], new_values['task_end_date'], new_values['task_description'],
-                new_values['task_weight_type'], new_values['task_tags'], self.task_id))
+                # Perform the update
+                c.execute("""UPDATE TaskList SET 
+                    task_name = ?, 
+                    task_time = ?, 
+                    task_weight = ?, 
+                    task_start_date = ?, 
+                    task_end_date = ?, 
+                    task_description = ?, 
+                    task_weight_type = ?, 
+                    task_tags = ? 
+                    WHERE task_id = ?""",
+                    (new_values['task_name'], new_values['task_time'], new_values['task_weight'],
+                    new_values['task_start_date'], new_values['task_end_date'], new_values['task_description'],
+                    new_values['task_weight_type'], new_values['task_tags'], self.task_id))
+                
+                conn.commit()
+
+                if hasattr(self.main_app, 'query_database'):
+                    self.main_app.query_database()
+
+                self.destroy()
+                self.on_close()
             
-            conn.commit()
-            conn.close()
-
-            if hasattr(self.main_app, 'query_database'):
-                self.main_app.query_database()
-
-            self.destroy()
-            self.on_close()
+            except sqlite3.Error as e:
+                messagebox.showerror("Database Error", f"Error editing task: {str(e)}")
+                conn.rollback()
+            finally:
+                conn.close()
 
     def delete_action(self):
-        pass
+        delete = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this task?")
+        if delete:
+            # Connect to database
+            conn = sqlite3.connect(self.path)
+            c = conn.cursor()
+            
+            try:
+                # Execute the correct DELETE statement (without '*')
+                c.execute("DELETE FROM TaskList WHERE task_id = ?", (int(self.task_id),))
+                
+                # Commit changes to database
+                conn.commit()
+                
+                messagebox.showinfo("Success", "Task deleted successfully!")
+                
+                # Refresh the main app's task list
+                if hasattr(self.main_app, 'query_database'):
+                    self.main_app.query_database()
+                
+                # Close the window
+                self.destroy()
+                self.on_close()
+                
+            except sqlite3.Error as e:
+                messagebox.showerror("Database Error", f"Error deleting task: {str(e)}")
+                conn.rollback()
+            finally:
+                conn.close()
 
 
     #Configure the ui
     def configure_ui(self):
          # Set the main window geometry and title
-        self.geometry("450x550")  # Increased height to accommodate additional fields
+        self.geometry("400x430")  # Increased height to accommodate additional fields
         self.title("Edit Task")
         self.configure(bg=background_color)  # Lighter Blue background
         # Create fonts
@@ -225,35 +265,33 @@ class EditTaskWindow(tk.Tk):
 
         # Main container
         main_frame = ttk.Frame(self, style='MainFrame.TFrame')
-        main_frame.grid(row=0, column=0, padx=10, pady=5, sticky='nsew')
+        main_frame.grid(row=0, column=0, padx=10, pady=0, sticky='nsew')
 
-        # Header frame
-        header_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
-        header_frame.grid(row=0, column=0, padx=10, pady=6, sticky='ew')
-
-        # Task Name Label
-        label = ttk.Label(header_frame, text="Edit Task Name:", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=0, column=0, sticky='w')
-
-        # Task Name Entry
-        self.task_name_entry = ttk.Entry(header_frame, style='Input.TEntry', width=40)
-        self.task_name_entry.grid(row=1, column=0, pady=(3, 6), sticky='ew')
-
+        
         # Content container
         content_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
-        content_frame.grid(row=1, column=0, padx=10, pady=6, sticky='nsew')
+        content_frame.grid(row=1, column=0, padx=10, pady=0, sticky='nsew')
 
         # Left column
         left_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
         left_frame.grid(row=0, column=0, padx=(0, 8), sticky='nsew')
 
-        # Description
-        label = ttk.Label(left_frame, text="Edit Description:", font=self.fonts['subheader'], style='TLabel')
+        # Task Name Label
+        label = ttk.Label(left_frame, text="Task Name:", font=self.fonts['subheader'], style='TLabel')
         label.grid(row=0, column=0, sticky='w')
+
+        # Task Name Entry
+        self.task_name_entry = ttk.Entry(left_frame, style='Input.TEntry', width=37)
+        self.task_name_entry.grid(row=1, column=0, pady=(3, 0), sticky='ew')
+
+
+        # Description
+        label = ttk.Label(left_frame, text="Description:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=2, column=0, sticky='w')
 
         # Create a frame for the text and scrollbar
         desc_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        desc_frame.grid(row=1, column=0, pady=(3, 6), sticky='ew')
+        desc_frame.grid(row=3, column=0, pady=(3, 0), sticky='ew')
 
         # Text widget with scrollbar
         self.desc_text_entry = tk.Text(desc_frame, height=7, width=30, bg='#d3d3d3', relief="solid", bd=1,
@@ -268,65 +306,54 @@ class EditTaskWindow(tk.Tk):
         self.desc_text_entry.configure(yscrollcommand=scrollbar.set)
 
         # Time Complexity with nested dropdowns (Moved below Description)
-        label = ttk.Label(left_frame, text="Edit Time Complexity:", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=2, column=0, sticky='w')
+        label = ttk.Label(left_frame, text="Time Complexity:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=4, column=0, sticky='w')
 
         # Complexity type frame
         complexity_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        complexity_frame.grid(row=3, column=0, pady=(3, 6), sticky='ew')
+        complexity_frame.grid(row=5, column=0, pady=(3, 0), sticky='w')
 
         # Type selector
         self.type_combo = ttk.Combobox(complexity_frame, values=self.complexity_types, style='Input.TCombobox', state='readonly')
-        self.type_combo.grid(row=0, column=0, pady=(0, 3), sticky='ew')
+        self.type_combo.grid(row=0, column=0, pady=(3, 0), sticky='w')
         self.type_combo.set("Select Type")
 
         # Value selector
         self.value_combo = ttk.Combobox(complexity_frame, style='Input.TCombobox', state='readonly')
-        self.value_combo.grid(row=1, column=0, sticky='ew')
+        self.value_combo.grid(row=1, column=0, sticky='w')
         self.value_combo.set("Select Value")
 
         # Bind the type selection to update value options
         self.type_combo.bind('<<ComboboxSelected>>', self.update_values)
 
         # Edit Start Date
-        label = ttk.Label(left_frame, text="Edit Start Date (MM-DD-YYYY):", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=4, column=0, sticky='w')
+        label = ttk.Label(left_frame, text="Start Date:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=6, column=0, sticky='w')
 
         # Start Date frame
         start_date_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        start_date_frame.grid(row=5, column=0, pady=(3, 6), sticky='ew')
+        start_date_frame.grid(row=7, column=0, pady=(3, 0), sticky='w')
 
         self.start_date_var = tk.StringVar()
         self.start_date_entry = ttk.Entry(start_date_frame, style='Input.TEntry', textvariable=self.start_date_var)
-        self.start_date_entry.grid(row=0, column=0, sticky='ew')
+        self.start_date_entry.grid(row=0, column=0, sticky='w')
 
         # Edit End Date
-        label = ttk.Label(left_frame, text="Edit End Date (MM-DD-YYYY):", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=6, column=0, sticky='w')
+        label = ttk.Label(left_frame, text="End Date:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=8, column=0, sticky='w')
 
         # End Date frame
         end_date_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        end_date_frame.grid(row=7, column=0, pady=(3, 6), sticky='ew')
+        end_date_frame.grid(row=9, column=0, pady=(2, 0), sticky='w')
 
         self.end_date_var = tk.StringVar()
         self.end_date_entry = ttk.Entry(end_date_frame, style='Input.TEntry', textvariable=self.end_date_var)
-        self.end_date_entry.grid(row=0, column=0, sticky='ew')
+        self.end_date_entry.grid(row=0, column=0, sticky='w')
 
-        # Edit Timer
-        label = ttk.Label(left_frame, text="Edit Timer (HH:MM:SS):", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=8, column=0, sticky='w')
-
-        # Timer frame
-        timer_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        timer_frame.grid(row=9, column=0, pady=(8, 6), sticky='ew')
-
-        self.timer_var = tk.StringVar()
-        self.task_time_entry = ttk.Entry(timer_frame, style='Input.TEntry', textvariable=self.timer_var)
-        self.task_time_entry.grid(row=0, column=0, sticky='ew')
 
         # Button frame below Time Complexity
-        button_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        button_frame.grid(row=10, column=0, pady=(3, 6), sticky='ew')
+        button_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
+        button_frame.grid(row=2, column=0, pady=(8, 0), sticky='w')
 
         # Cancel button
         cancel_btn = tk.Button(button_frame, text="Cancel", command=self.cancel_action,
@@ -338,7 +365,7 @@ class EditTaskWindow(tk.Tk):
         confirm_btn = tk.Button(button_frame, text="Confirm", command=self.confirm_action,
                                 bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
                                 activebackground="#A8F0A8", activeforeground="#000000")
-        confirm_btn.grid(row=0, column=1)
+        confirm_btn.grid(row=0, column=1,padx=(0,8))
 
         # Delete button
         delete_btn = tk.Button(button_frame, text="Delete", command=self.delete_action,
@@ -351,42 +378,61 @@ class EditTaskWindow(tk.Tk):
         right_frame.grid(row=0, column=1, padx=(8, 0), sticky='nsew')
 
         # Tags
-        label = ttk.Label(right_frame, text="Tags:", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=0, column=0, sticky='w')
+        label = ttk.Label(right_frame, text="Task Tags:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=0, column=0, sticky='w',pady=(2,0))
         
         # Create the tag text frame
-        tag_frame = ttk.Frame(right_frame)
-        tag_frame.grid(row=1, column=0, pady=(3, 4), sticky='w')
+        tag_frame = ttk.Frame(right_frame,style='MainFrame.TFrame')
+        tag_frame.grid(row=1, column=0, pady=(0, 0), sticky='w')
 
         # Add a scrollbar for tags
         tag_scrollbar = ttk.Scrollbar(tag_frame, orient='vertical')
-        tag_scrollbar.grid(row=0, column=1, sticky='ns')
+        tag_scrollbar.grid(row=1, column=1, sticky='ns')
 
         # Create the Text widget for tags
         self.task_tags_entry = tk.Text(tag_frame, height=7, width=12, bg='#d3d3d3', relief="solid", bd=1, font=("SF Pro Text", 10),
                                 yscrollcommand=tag_scrollbar.set)  # Link scrollbar to the Text widget
-        self.task_tags_entry.grid(row=0, column=0)
+        self.task_tags_entry.grid(row=1, column=0)
 
         # Configure the scrollbar to control tag_text
         tag_scrollbar.config(command=self.task_tags_entry.yview)
         
         # New frame specifically for Listbox and Scrollbar
-        listbox_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
-        listbox_frame.grid(row=2, column=0, pady=(0, 6), sticky='w')
+        listLabel_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
+        listLabel_frame.grid(row=2, column=0, pady=(0, 0), sticky='w')
 
+        listbox_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
+        listbox_frame.grid(row=3, column=0, pady=(0, 0), sticky='w')
+
+        label = ttk.Label(listLabel_frame, text="Choose Tags:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=0, column=0, sticky='w')
+        
         # Add a vertical scrollbar for the Listbox
         list_scrollbar = ttk.Scrollbar(listbox_frame, orient='vertical')
         list_scrollbar.grid(row=0, column=1, sticky='ns')  # Scrollbar placed next to the Listbox
 
         # Create the Listbox and link it to the scrollbar
-        self.tag_listbox = tk.Listbox(listbox_frame, selectmode="multiple", exportselection=0, width=14,height=8, bg="#d3d3d3", relief='solid', yscrollcommand=tag_scrollbar.set)
-        self.tag_listbox.grid(row=0, column=0, pady=(0, 6), sticky='w')
+        self.tag_listbox = tk.Listbox(listbox_frame, selectmode="multiple", exportselection=0, width=12,height=8,
+                                      font=("SF Pro Text", 10), bg="#d3d3d3", relief='solid', yscrollcommand=tag_scrollbar.set)
+        self.tag_listbox.grid(row=0, column=0, pady=(0, 0), sticky='w')
 
         # Configure the scrollbar to control the Listbox
         list_scrollbar.config(command=self.tag_listbox.yview)
 
         # Bind the Listbox selection to update the tag_text
         self.tag_listbox.bind("<<ListboxSelect>>", lambda _: self.update_tag_entry())
+
+        # Timer frame
+        timer_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
+        timer_frame.grid(row=4, column=0, pady=(8 ,0), sticky='nswe')
+
+        # Edit Timer
+        label = ttk.Label(timer_frame, text="Timer:", font=self.fonts['subheader'], style='TLabel')
+        label.grid(row=0, column=0, sticky='w',pady=(3,0))
+
+        self.timer_var = tk.StringVar()
+        self.task_time_entry = ttk.Entry(timer_frame, style='Input.TEntry', width=16,textvariable=self.timer_var)
+        self.task_time_entry.grid(row=1, column=0, sticky='w',pady=(0,0))
 
         # Adds the tags loaded from the tags table into the listbox
         for value in values:

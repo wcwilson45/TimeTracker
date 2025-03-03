@@ -1,5 +1,3 @@
-
-
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
@@ -134,16 +132,20 @@ class CompletedTasksWindow(tk.Tk):
             c = conn.cursor()
 
             try:
+                # Begin transaction
+                c.execute("BEGIN")
+                
                 # Get current task state before completion
                 c.execute("SELECT * FROM TaskList WHERE task_id = ?", (self.task_id,))
                 old_task = c.fetchone()
 
-                # Record completion as a history event
+                # Record completion as a history event - using existing connection
                 self.history_db.record_change(
                     self.task_id,
                     "status",
                     "in_progress",
-                    "completed"
+                    "completed",
+                    existing_conn=conn
                 )
 
                 # Insert into CompletedTasks
