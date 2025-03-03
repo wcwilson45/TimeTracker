@@ -71,12 +71,12 @@ class CompletedTasksList(tk.Frame):
                                       "Completion Date", "Total Duration")
 
         self.completed_list.column("#0", width=0, stretch=tk.NO)
-        self.completed_list.column('Task Name', anchor=tk.W, width=135)
-        self.completed_list.column('Task Time', anchor=tk.CENTER, width=75)
-        self.completed_list.column('Task Weight', anchor=tk.CENTER, width=50)
-        self.completed_list.column('Task ID', anchor=tk.CENTER, width=50)
-        self.completed_list.column('Completion Date', anchor=tk.CENTER, width=135)
-        self.completed_list.column('Total Duration', anchor=tk.CENTER, width=100)
+        self.completed_list.column('Task Name', anchor=tk.W, width=140)
+        self.completed_list.column('Task Time', anchor=tk.CENTER, width=77)
+        self.completed_list.column('Task Weight', anchor=tk.CENTER, width=77)
+        self.completed_list.column('Task ID', anchor=tk.CENTER, width=0,stretch=tk.NO)
+        self.completed_list.column('Completion Date', anchor=tk.CENTER, width=140)
+        self.completed_list.column('Total Duration', anchor=tk.CENTER, width=110)
 
         # Configure headings
         for col in self.completed_list['columns']:
