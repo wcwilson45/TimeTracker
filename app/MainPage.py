@@ -588,28 +588,52 @@ class App:
 
 
     def select_record(self, e):
-        #Clear entry boxes
+        # Clear entry boxes
         self.tn_entry.delete(0, END)
         self.tt_entry.delete(0, END)
         self.ti_entry.delete(0, END)
         self.tw_entry.delete(0, END)
         self.sd_entry.delete(0, END)
         self.td_entry.delete(0, END)
+        
+        # Clear description box
+        self.description_box.config(state=NORMAL)
+        self.description_box.delete("1.0", END)
 
-        #Grab record number
+        # Grab record number
         selected = self.task_list.focus()
 
-        #Grab record values
+        # Grab record values
         values = self.task_list.item(selected, "values")
 
-        #Insert into current task
+        # Only proceed if we have values
         if values:
-            self.tn_entry.insert(0, values[0])
-            self.tt_entry.insert(0, values[1])
-            self.ti_entry.insert(0, values[3])
-            self.tw_entry.insert(0, values[2])
-            self.sd_entry.insert(0, values[4])
-
+            task_id = values[3]  # Task ID is at index 3
+            
+            # Insert values from TreeView into entries
+            self.tn_entry.insert(0, values[0])  # Task Name
+            self.tt_entry.insert(0, values[1])  # Task Time
+            self.ti_entry.insert(0, task_id)    # Task ID
+            self.tw_entry.insert(0, values[2])  # Task Weight
+            self.sd_entry.insert(0, values[4] if len(values) > 4 else "")  # Start Date
+            
+            # Connect to database to get the full task details including description
+            conn = sqlite3.connect(path)
+            c = conn.cursor()
+            
+            try:
+                # Get task description directly from database
+                c.execute("SELECT task_description FROM TaskList WHERE task_id = ?", (task_id,))
+                result = c.fetchone()
+                
+                # If description exists, display it
+                if result and result[0]:
+                    self.description_box.insert("1.0", result[0])
+            except sqlite3.Error as e:
+                print(f"Database error when getting description: {e}")
+            finally:
+                conn.close()
+                
         #Send values from TaskList Table to CurrentTaskList Table
     
 
