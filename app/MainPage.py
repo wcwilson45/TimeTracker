@@ -16,7 +16,8 @@ from ui import (
     AddTaskWindow,
     CurrentTaskWindow,
     TagsDB,
-    CompletedTasksList
+    CompletedTasksList,
+    AnalyticsPage
 )
 
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
@@ -103,8 +104,8 @@ class App:
 
       self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-      icon = tk.PhotoImage(file="AppLogo.png")
-      self.root.iconphoto(True, icon)
+      #icon = tk.PhotoImage(file="AppLogo.png")
+      #self.root.iconphoto(True, icon)
 
       # Font Tuples for Use on pages
       self.fonts = {
@@ -137,6 +138,7 @@ class App:
       self.completedtasks_page = CompletedTasksList(self.main_container, self)
       self.smalloverlay_page = tk.Frame(self.main_container)
       self.tags_database_page = TagsDB(self.main_container)
+      self.analytics_page = AnalyticsPage(self.main_container)
 
       #Show main page at start-up
       self.current_page = self.full_page
@@ -148,6 +150,7 @@ class App:
       self.popup_menu.add_command(label="Completed Tasks", command=lambda: self.switch_page("Completed Tasks"))
       self.popup_menu.add_command(label="Small Overlay", command=lambda: self.switch_page("Small Overlay"))
       self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
+      self.popup_menu.add_command(label="Analytics", command=lambda: self.switch_page("Analytics"))
       self.popup_menu.configure(bg= background_color)
 
       self.setup_smalloverlay_page()
@@ -201,7 +204,12 @@ class App:
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  
             self.page_title.config(text="Tags Database", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("530x610")  
+            self.root.geometry("530x610")
+        elif page_name == "Analytics":
+            self.current_page = self.analytics_page  
+            self.page_title.config(text="Analytics", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
+            self.root.geometry("1000x1000")  
+  
 
 
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
