@@ -7,6 +7,7 @@ from .CurrentTaskWindow import CurrentTask
 from .CurrentTaskPage import CurrentTaskWindow
 from .TagsDB import TagsDB
 from .CompletedTasksList import CompletedTasksList
+from .Analytics import AnalyticsPage
 
 #from app.ui import SmallOverlay
 #from app.ui import CompletionPage
