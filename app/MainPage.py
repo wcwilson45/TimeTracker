@@ -87,6 +87,21 @@ c.execute("""CREATE TABLE if not exists CompletedTasks (
           PRIMARY KEY (task_id)
 )""")
 
+# Table for Archive database
+c.execute("""CREATE TABLE if not exists ArchivedTasks (
+          task_name text,
+          task_time text,
+          task_weight text,
+          task_id integer,
+          completion_date text,
+          total_duration text,
+          archive_date text,
+          task_tags text,
+          task_weight_type text,
+          task_description text,
+          PRIMARY KEY (task_id)
+)""")
+
 
 #Commit Changes
 conn.commit()
