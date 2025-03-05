@@ -189,35 +189,77 @@ class AnalyticsPage(tk.Frame):
     def plot_graph(self):
         selected_graph = self.graph_combo.get()
         if selected_graph == "Time vs Weight":
-            # the figure that will contain the plot 
-            fig = Figure(figsize = (5, 5), 
-                        dpi = 100) 
-        
-            # list of squares 
-            y = [i**2 for i in range(101)] 
-        
-            # adding the subplot 
-            plot1 = fig.add_subplot(111) 
-        
-            # plotting the graph 
-            plot1.plot(y) 
-        
-            # creating the Tkinter canvas 
-            # containing the Matplotlib figure 
-            canvas = FigureCanvasTkAgg(fig, 
-                                    master = self.right_frame)   
-            canvas.draw() 
-        
-            # placing the canvas on the Tkinter window 
-            canvas.get_tk_widget().grid(row=0, column=0, sticky='ew',padx=(25,0)) 
-        
-            # creating the Matplotlib toolbar 
-            toolbar = NavigationToolbar2Tk(canvas, 
-                                        self.right_frame) 
-            toolbar.update() 
-        
-            # placing the toolbar on the Tkinter window 
-            canvas.get_tk_widget().grid(row=0, column=0, sticky='ew',padx=(25,0))
+            # Clear any existing widgets in the right frame
+            for widget in self.right_frame.winfo_children():
+                widget.destroy()
+                
+            # Create a frame to contain the graph
+            graph_container = ttk.LabelFrame(self.right_frame, text="Time vs Weight Graph")
+            graph_container.grid(row=0, column=0, sticky='nsew', padx=(10, 0), pady=10)
+            graph_container.configure(style='TLabelframe')
+            
+            # Create the figure
+            fig = Figure(figsize=(5, 4), dpi=100)
+            
+            # Create plot data - replace this with your actual data
+            # This should use the values and complexity lists to create meaningful data
+            x = complexity
+            y = []
+            
+            # Convert time strings to seconds for plotting
+            for time_str in values:
+                h, m, s = map(int, time_str.split(':'))
+                total_seconds = h * 3600 + m * 60 + s
+                y.append(total_seconds)
+            
+            # Adding the subplot
+            plot1 = fig.add_subplot(111)
+            
+            # Set labels and title
+            plot1.set_xlabel('Task Weight')
+            plot1.set_ylabel('Time (seconds)')
+            plot1.set_title('Task Time vs Weight')
+            
+            # Plot the data
+            plot1.scatter(x, y)
+            
+            # Add best fit line
+            if len(x) > 1 and len(y) > 1:
+                try:
+                    # Convert string complexity to numeric if needed
+                    numeric_x = []
+                    for val in x:
+                        if val in self.tshirt_sizes:
+                            # Map T-shirt sizes to numeric values
+                            size_map = {"XXS": 1, "XS": 2, "S": 3, "M": 4, "L": 5, "XL": 6, "XXL": 7}
+                            numeric_x.append(size_map.get(val, 0))
+                        else:
+                            try:
+                                numeric_x.append(float(val))
+                            except ValueError:
+                                numeric_x.append(0)
+                    
+                    if all(isinstance(val, (int, float)) for val in numeric_x):
+                        import numpy as np
+                        z = np.polyfit(numeric_x, y, 1)
+                        p = np.poly1d(z)
+                        plot1.plot(numeric_x, p(numeric_x), "r--")
+                except Exception as e:
+                    print(f"Error creating best fit line: {e}")
+            
+            # Create the Tkinter canvas containing the Matplotlib figure
+            canvas = FigureCanvasTkAgg(fig, master=graph_container)
+            canvas.draw()
+            
+            # Place the canvas in the frame with proper padding
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            # Add the Matplotlib toolbar
+            toolbar_frame = tk.Frame(graph_container)
+            toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+            
+            toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+            toolbar.update()
 
     def total_Time(self,times):
         if not times or times == []:
