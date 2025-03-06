@@ -100,7 +100,7 @@ class AnalyticsPage(tk.Frame):
         self.complexity_types = ["T-Shirt Size", "Fibonacci"]
         self.tshirt_sizes = ["XXS", "XS", "S", "M", "L", "XL", "XXL"]
         self.fibonacci = ["1", "2", "3", "5", "7", "11", "13"]
-        self.graphs = ["Time vs Weight"]
+        self.graphs = ["Time vs Fibonacci"]
 
         # ================ FRAME 1: General Information ================
         general_frame = ttk.LabelFrame(self.left_frame, text="General Information")
@@ -188,20 +188,65 @@ class AnalyticsPage(tk.Frame):
 
     def plot_graph(self):
         selected_graph = self.graph_combo.get()
-        if selected_graph == "Time vs Weight":
+        if selected_graph == "Time vs Fibonacci":
+
+            new1T = []
+            new2T = []
+            new3T = []
+            new5T = []
+            new7T = []
+            new11T = []
+            new13T = []
+            
+            for i in range(len(complexity)):
+                if complexity[i] == "1":
+                    new1T.append(values[i])
+                if complexity[i] == "2":
+                    new2T.append(values[i])
+                if complexity[i] == "3":
+                    new3T.append(values[i])
+                if complexity[i] == "5":
+                    new5T.append(values[i])
+                if complexity[i] == "7":
+                    new7T.append(values[i])
+                if complexity[i] == "11":
+                    new11T.append(values[i])
+                if complexity[i] == "13":
+                    new13T.append(values[i])
+
+            avgTime = []
+            avgTime.append(self.avg_time(new1T))
+            avgTime.append(self.avg_time(new2T))
+            avgTime.append(self.avg_time(new3T))
+            avgTime.append(self.avg_time(new5T))
+            avgTime.append(self.avg_time(new7T))
+            avgTime.append(self.avg_time(new11T))
+            avgTime.append(self.avg_time(new13T))
+
+            total_seconds = 0
+            avgTimeSec = []
+            for time in avgTime:
+                # Split the time string into hours, minutes, and seconds
+                h, m, s = map(int, time.split(':'))
+                
+                # Convert the time into total seconds
+                avgTimeSec.append(h * 3600 + m * 60 + s)
+
+
+
             # Clear any existing widgets in the right frame
             for widget in self.right_frame.winfo_children():
                 widget.destroy()
                 
             # Create a frame to contain the graph
-            graph_container = ttk.LabelFrame(self.right_frame, text="Time vs Weight Graph")
+            graph_container = ttk.LabelFrame(self.right_frame, text="Graphs")
             graph_container.grid(row=0, column=0, sticky='nsew', padx=(10, 0), pady=10)
             graph_container.configure(style='TLabelframe')
             
             # Create the figure
             fig = Figure(figsize=(5, 4), dpi=100)
             
-            # Adding the subplot - empty plot
+            # Adding the subplot
             plot1 = fig.add_subplot(111)
             
             # Set labels and title
@@ -209,9 +254,9 @@ class AnalyticsPage(tk.Frame):
             plot1.set_ylabel('Time (seconds)')
             plot1.set_title('Task Time vs Weight')
             
-            # Create empty plot - no data processing or plotting
-            # The scatter and best fit line calculations are removed
-            
+            # Plot the data
+            plot1.bar(self.fibonacci, avgTimeSec)
+                        
             # Create the Tkinter canvas containing the Matplotlib figure
             canvas = FigureCanvasTkAgg(fig, master=graph_container)
             canvas.draw()
