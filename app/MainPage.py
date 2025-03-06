@@ -230,7 +230,7 @@ class App:
         elif page_name == "Archive":  
             self.current_page = self.archive_page
             self.page_title.config(text="Archived Tasks", background=background_color)
-            self.root.geometry("600x400")
+            self.root.geometry("650x600")
             self.archive_page.load_archive_tasks()
   
 
