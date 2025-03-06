@@ -11,6 +11,7 @@ NavigationToolbar2Tk)
 
 background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
+frame_bg_color = "#dcdcdc"
 
 global path 
 path = pathlib.Path(__file__).parent
@@ -57,7 +58,6 @@ class AnalyticsPage(tk.Frame):
         conn.commit()
         conn.close()
 
-
         # END OF DATABASE SECTION ##############################################
 
         # Set the main window 
@@ -74,33 +74,27 @@ class AnalyticsPage(tk.Frame):
         style = ttk.Style(self)
         style.theme_use("alt")  
         style.configure('Input.TEntry', fieldbackground=background_color, font=("SF Pro Text", 10))
-        style.configure('TLabel', background=background_color, font=("SF Pro Text", 10))  
+        style.configure('TLabel', background=frame_bg_color, font=("SF Pro Text", 10))  
         style.configure('TButton', background=background_color, font=("SF Pro Text", 10))
         style.configure('MainFrame.TFrame', background=background_color)
+        style.configure('TLabelframe', background=frame_bg_color)
+        style.configure('TLabelframe.Label', background=frame_bg_color, font=("SF Pro Display", 10, "bold"))
 
         # Main container
-        main_frame = ttk.Frame(self, style='MainFrame.TFrame')
+        main_frame = tk.Frame(self, bg=background_color)
         main_frame.grid(row=0, column=0, padx=10, pady=5, sticky='nsew')
 
         # Content container
-        content_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
+        content_frame = tk.Frame(main_frame, bg=background_color)
         content_frame.grid(row=0, column=0, columnspan=2, sticky='nsew')
 
         # Left column
-        self.left_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
-        self.left_frame.grid(row=0, column=0, padx=(0, 0), sticky='nsew')
+        self.left_frame = tk.Frame(content_frame, bg=background_color)
+        self.left_frame.grid(row=0, column=0, padx=(0, 10), sticky='nsew')
+        
         # Right column
-        self.right_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
+        self.right_frame = tk.Frame(content_frame, bg=background_color)
         self.right_frame.grid(row=0, column=1, padx=(0, 0), sticky='nsew')
-
-        # Label for total task time
-        label = ttk.Label(self.left_frame, text="Total Task Time:", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=0, column=0, sticky='w')
-
-        label_total = ttk.Label(self.left_frame, font=self.fonts['subheader'], style='TLabel')
-        label_total.grid(row=1, column=0, sticky='w')
-        total = self.total_Time(values)
-        label_total.configure(text=total)
 
         # Complexity types and values
         self.complexity_types = ["T-Shirt Size", "Fibonacci"]
@@ -108,57 +102,86 @@ class AnalyticsPage(tk.Frame):
         self.fibonacci = ["1", "2", "3", "5", "7", "11", "13"]
         self.graphs = ["Time vs Weight"]
 
-        # Label for complexity type selection
-        self.label = ttk.Label(self.left_frame, text="Choose a Time Complexity Type:", font=self.fonts['subheader'], style='TLabel')
-        self.label.grid(row=3, column=0, sticky='w')
+        # ================ FRAME 1: General Information ================
+        general_frame = ttk.LabelFrame(self.left_frame, text="General Information")
+        general_frame.grid(row=0, column=0, sticky='ew', pady=(0, 10), padx=5)
+        general_frame.configure(style='TLabelframe')
 
-        self.type_combo = ttk.Combobox(self.left_frame, values=self.complexity_types, style='TCombobox', state='readonly')
-        self.type_combo.grid(row=4, column=0, sticky='ew', pady=(0, 3))
+        # Label for total task time
+        total_time_label = ttk.Label(general_frame, text="Total Task Time:", font=self.fonts['subheader'])
+        total_time_label.grid(row=0, column=0, sticky='w', padx=5, pady=5)
+
+        total_time_value = ttk.Label(general_frame, font=self.fonts['subheader'])
+        total_time_value.grid(row=0, column=1, sticky='w', padx=5, pady=5)
+        total = self.total_Time(values)
+        total_time_value.configure(text=total)
+
+        # Label for complexity type selection
+        type_label = ttk.Label(general_frame, text="Choose a Time Complexity Type:", font=self.fonts['subheader'])
+        type_label.grid(row=1, column=0, sticky='w', padx=5, pady=5)
+
+        self.type_combo = ttk.Combobox(general_frame, values=self.complexity_types, state='readonly')
+        self.type_combo.grid(row=1, column=1, sticky='ew', padx=5, pady=5)
         self.type_combo.set("Select Type")
 
         # Label for complexity value selection
-        self.label = ttk.Label(self.left_frame, text="Choose a Time Complexity Value:", font=self.fonts['subheader'], style='TLabel')
-        self.label.grid(row=5, column=0, sticky='w')
+        value_label = ttk.Label(general_frame, text="Choose a Time Complexity Value:", font=self.fonts['subheader'])
+        value_label.grid(row=2, column=0, sticky='w', padx=5, pady=5)
 
-        self.value_combo = ttk.Combobox(self.left_frame, state='readonly')
-        self.value_combo.grid(row=6, column=0, sticky='ew')
+        self.value_combo = ttk.Combobox(general_frame, state='readonly')
+        self.value_combo.grid(row=2, column=1, sticky='ew', padx=5, pady=5)
         self.value_combo.set("Select Value")
 
         # Update the values in the second combobox based on the first one
         self.type_combo.bind('<<ComboboxSelected>>', self.update_values)
         
-        # Label that shows the time spent for the selected value
-        self.label_time_spent = ttk.Label(self.left_frame, text="Total Time Spent on:", font=self.fonts['subheader'], style='TLabel')
-        self.label_time_spent.grid(row=7, column=0, sticky='w')
+        # ================ FRAME 2: Time Analysis ================
+        analysis_frame = ttk.LabelFrame(self.left_frame, text="Time Analysis")
+        analysis_frame.grid(row=1, column=0, sticky='ew', pady=(0, 10), padx=5)
+        analysis_frame.configure(style='TLabelframe')
 
         # Label that shows the time spent for the selected value
-        self.label_time_com = ttk.Label(self.left_frame, text="", font=self.fonts['subheader'], style='TLabel')
-        self.label_time_com.grid(row=8, column=0, sticky='w')
+        self.label_time_spent = ttk.Label(analysis_frame, text="Total Time Spent on:", font=self.fonts['subheader'])
+        self.label_time_spent.grid(row=0, column=0, sticky='w', padx=5, pady=5)
 
-        self.label_time_maxS = ttk.Label(self.left_frame, text="Max Time Spent on:", font=self.fonts['subheader'], style='TLabel')
-        self.label_time_maxS.grid(row=9, column=0, sticky='w')
+        self.label_time_com = ttk.Label(analysis_frame, text="", font=self.fonts['subheader'])
+        self.label_time_com.grid(row=0, column=1, sticky='w', padx=5, pady=5)
 
-        self.label_time_max = ttk.Label(self.left_frame, text="", font=self.fonts['subheader'], style='TLabel')
-        self.label_time_max.grid(row=10, column=0, sticky='w')
+        self.label_time_maxS = ttk.Label(analysis_frame, text="Max Time Spent on:", font=self.fonts['subheader'])
+        self.label_time_maxS.grid(row=1, column=0, sticky='w', padx=5, pady=5)
 
-        self.label_time_minS = ttk.Label(self.left_frame, text="Min Time Spent on:", font=self.fonts['subheader'], style='TLabel')
-        self.label_time_minS.grid(row=11, column=0, sticky='w')
+        self.label_time_max = ttk.Label(analysis_frame, text="", font=self.fonts['subheader'])
+        self.label_time_max.grid(row=1, column=1, sticky='w', padx=5, pady=5)
 
-        self.label_time_min = ttk.Label(self.left_frame, text="", font=self.fonts['subheader'], style='TLabel')
-        self.label_time_min.grid(row=12, column=0, sticky='w')
+        self.label_time_minS = ttk.Label(analysis_frame, text="Min Time Spent on:", font=self.fonts['subheader'])
+        self.label_time_minS.grid(row=2, column=0, sticky='w', padx=5, pady=5)
 
-        self.label_time_avgS = ttk.Label(self.left_frame, text="Average Time Spent on:", font=self.fonts['subheader'], style='TLabel')
-        self.label_time_avgS.grid(row=13, column=0, sticky='w')
+        self.label_time_min = ttk.Label(analysis_frame, text="", font=self.fonts['subheader'])
+        self.label_time_min.grid(row=2, column=1, sticky='w', padx=5, pady=5)
 
-        self.label_time_avg = ttk.Label(self.left_frame, text="", font=self.fonts['subheader'], style='TLabel')
-        self.label_time_avg.grid(row=14, column=0, sticky='w')
+        self.label_time_avgS = ttk.Label(analysis_frame, text="Average Time Spent on:", font=self.fonts['subheader'])
+        self.label_time_avgS.grid(row=3, column=0, sticky='w', padx=5, pady=5)
 
-        self.graph_combo = ttk.Combobox(self.left_frame, state='readonly',values=self.graphs)
-        self.graph_combo.grid(row=15, column=0, sticky='ew')
+        self.label_time_avg = ttk.Label(analysis_frame, text="", font=self.fonts['subheader'])
+        self.label_time_avg.grid(row=3, column=1, sticky='w', padx=5, pady=5)
+
+        # ================ FRAME 3: Graph Options ================
+        graph_frame = ttk.LabelFrame(self.left_frame, text="Graph Options")
+        graph_frame.grid(row=2, column=0, sticky='ew', pady=(0, 10), padx=5)
+        graph_frame.configure(style='TLabelframe')
+
+        # Graph selection
+        graph_label = ttk.Label(graph_frame, text="Select Graph Type:", font=self.fonts['subheader'])
+        graph_label.grid(row=0, column=0, sticky='w', padx=5, pady=5)
+
+        self.graph_combo = ttk.Combobox(graph_frame, state='readonly', values=self.graphs)
+        self.graph_combo.grid(row=0, column=1, sticky='ew', padx=5, pady=5)
         self.graph_combo.set("Select Graph")
 
-        self.graphs_btn = tk.Button(self.left_frame, font=("SF Pro Text", 10),text="Plot Graph", command=self.plot_graph, bg=green_btn_color)
-        self.graphs_btn.grid(row=16, column=0,padx=(0,0),pady=(0,0),sticky='w')
+        # Plot button
+        self.graphs_btn = tk.Button(graph_frame, font=("SF Pro Text", 10), text="Plot Graph", 
+                                    command=self.plot_graph, bg=green_btn_color)
+        self.graphs_btn.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky='ew')
 
         # Bind the value_combo to update the label text when a value is selected
         self.value_combo.bind('<<ComboboxSelected>>', self.update_time_spent_label)
@@ -166,38 +189,79 @@ class AnalyticsPage(tk.Frame):
     def plot_graph(self):
         selected_graph = self.graph_combo.get()
         if selected_graph == "Time vs Weight":
-            # the figure that will contain the plot 
-            fig = Figure(figsize = (5, 5), 
-                        dpi = 100) 
-        
-            # list of squares 
-            y = [i**2 for i in range(101)] 
-        
-            # adding the subplot 
-            plot1 = fig.add_subplot(111) 
-        
-            # plotting the graph 
-            plot1.plot(y) 
-        
-            # creating the Tkinter canvas 
-            # containing the Matplotlib figure 
-            canvas = FigureCanvasTkAgg(fig, 
-                                    master = self.right_frame)   
-            canvas.draw() 
-        
-            # placing the canvas on the Tkinter window 
-            canvas.get_tk_widget().grid(row=0, column=0, sticky='ew',padx=(25,0)) 
-        
-            # creating the Matplotlib toolbar 
-            toolbar = NavigationToolbar2Tk(canvas, 
-                                        self.right_frame) 
-            toolbar.update() 
-        
-            # placing the toolbar on the Tkinter window 
-            canvas.get_tk_widget().grid(row=0, column=0, sticky='ew',padx=(25,0))
+            # Clear any existing widgets in the right frame
+            for widget in self.right_frame.winfo_children():
+                widget.destroy()
+                
+            # Create a frame to contain the graph
+            graph_container = ttk.LabelFrame(self.right_frame, text="Time vs Weight Graph")
+            graph_container.grid(row=0, column=0, sticky='nsew', padx=(10, 0), pady=10)
+            graph_container.configure(style='TLabelframe')
+            
+            # Create the figure
+            fig = Figure(figsize=(5, 4), dpi=100)
+            
+            # Create plot data - replace this with your actual data
+            # This should use the values and complexity lists to create meaningful data
+            x = complexity
+            y = []
+            
+            # Convert time strings to seconds for plotting
+            for time_str in values:
+                h, m, s = map(int, time_str.split(':'))
+                total_seconds = h * 3600 + m * 60 + s
+                y.append(total_seconds)
+            
+            # Adding the subplot
+            plot1 = fig.add_subplot(111)
+            
+            # Set labels and title
+            plot1.set_xlabel('Task Weight')
+            plot1.set_ylabel('Time (seconds)')
+            plot1.set_title('Task Time vs Weight')
+            
+            # Plot the data
+            plot1.scatter(x, y)
+            
+            # Add best fit line
+            if len(x) > 1 and len(y) > 1:
+                try:
+                    # Convert string complexity to numeric if needed
+                    numeric_x = []
+                    for val in x:
+                        if val in self.tshirt_sizes:
+                            # Map T-shirt sizes to numeric values
+                            size_map = {"XXS": 1, "XS": 2, "S": 3, "M": 4, "L": 5, "XL": 6, "XXL": 7}
+                            numeric_x.append(size_map.get(val, 0))
+                        else:
+                            try:
+                                numeric_x.append(float(val))
+                            except ValueError:
+                                numeric_x.append(0)
+                    
+                    if all(isinstance(val, (int, float)) for val in numeric_x):
+                        import numpy as np
+                        z = np.polyfit(numeric_x, y, 1)
+                        p = np.poly1d(z)
+                        plot1.plot(numeric_x, p(numeric_x), "r--")
+                except Exception as e:
+                    print(f"Error creating best fit line: {e}")
+            
+            # Create the Tkinter canvas containing the Matplotlib figure
+            canvas = FigureCanvasTkAgg(fig, master=graph_container)
+            canvas.draw()
+            
+            # Place the canvas in the frame with proper padding
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            # Add the Matplotlib toolbar
+            toolbar_frame = tk.Frame(graph_container)
+            toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+            
+            toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+            toolbar.update()
 
     def total_Time(self,times):
-
         if not times or times == []:
             return "00:00:00"
         value = times
@@ -249,7 +313,7 @@ class AnalyticsPage(tk.Frame):
             self.label_time_avgS.configure(text=f"Average Time Spent on {selected_comp}({selected_value}):")
 
             # Call update_time_comp() and update the corresponding labels with the results
-            time_total,max,min,avg  = self.update_time_comp()
+            time_total,max,min,avg = self.update_time_comp()
             
             # Update labels with the computed values
             self.label_time_com.configure(text=time_total)
@@ -294,7 +358,6 @@ class AnalyticsPage(tk.Frame):
         return arr[max_index]
     
     def min_time(self,arr):
-
         if not arr or arr == []:
             return "00:00:00"
         # Convert each time string (hh:mm:ss) into total seconds
@@ -361,5 +424,3 @@ class AnalyticsPage(tk.Frame):
         avg = self.avg_time(newTime)
 
         return total,max,min,avg
-
-            
