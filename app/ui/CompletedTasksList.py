@@ -137,71 +137,139 @@ class CompletedTasksList(tk.Frame):
         self.load_completed_tasks()
 
     def delete_selected_task(self):
-        """Delete the selected task from the completed tasks list"""
+        #Archive the selected task from the completed tasks list"""
         selected_items = self.completed_list.selection()
         
         if not selected_items:
-            messagebox.showwarning("Selection Required", "Please select a task to delete.")
+            messagebox.showwarning("Selection Required", "Please select a task to archive.")
             return
 
         # Get the task details for confirmation
         task_name = self.completed_list.item(selected_items[0])['values'][0]
         task_id = self.completed_list.item(selected_items[0])['values'][3]
 
-        # Confirm deletion
-        if not messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete the task '{task_name}'?"):
+        # Confirm archiving
+        if not messagebox.askyesno("Confirm Archive", f"Are you sure you want to archive the task '{task_name}'?"):
             return
 
-        # Delete from database
+        # Move to archive database
         conn = sqlite3.connect(path)
         c = conn.cursor()
 
         try:
-            c.execute("DELETE FROM CompletedTasks WHERE task_id = ?", (task_id,))
-            conn.commit()
+            # Begin transaction
+            c.execute("BEGIN")
             
-            # Remove from treeview
-            self.completed_list.delete(selected_items[0])
+            # Get the task data
+            c.execute("SELECT * FROM CompletedTasks WHERE task_id = ?", (task_id,))
+            task_data = c.fetchone()
             
-            # Recolor rows
-            for i, item in enumerate(self.completed_list.get_children()):
-                self.completed_list.item(item, tags=('evenrow' if i % 2 == 0 else 'oddrow'))
-            
-            messagebox.showinfo("Success", "Task deleted successfully!")
-
+            if task_data:
+                # Add to ArchivedTasks with current timestamp as archive_date
+                archive_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
+                # Insert into ArchivedTasks
+                c.execute("""
+                    INSERT INTO ArchivedTasks
+                    (task_name, task_time, task_weight, task_id, completion_date, 
+                    total_duration, archive_date, task_tags, task_weight_type, task_description)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    task_data[0],  # task_name
+                    task_data[1],  # task_time
+                    task_data[2],  # task_weight
+                    task_data[3],  # task_id
+                    task_data[4],  # completion_date
+                    task_data[5],  # total_duration
+                    archive_date,  # archive_date (new)
+                    task_data[7] if len(task_data) > 7 else None,  # task_tags
+                    task_data[8] if len(task_data) > 8 else None,  # task_weight_type
+                    task_data[9] if len(task_data) > 9 else None   # task_description
+                ))
+                
+                # Delete from CompletedTasks
+                c.execute("DELETE FROM CompletedTasks WHERE task_id = ?", (task_id,))
+                
+                # Commit changes
+                conn.commit()
+                
+                # Remove from treeview
+                self.completed_list.delete(selected_items[0])
+                
+                # Recolor rows
+                for i, item in enumerate(self.completed_list.get_children()):
+                    self.completed_list.item(item, tags=('evenrow' if i % 2 == 0 else 'oddrow'))
+                
+                messagebox.showinfo("Success", "Task archived successfully!")
+            else:
+                messagebox.showerror("Error", "Task not found in database.")
+                conn.rollback()
+                
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error deleting task: {str(e)}")
+            messagebox.showerror("Database Error", f"Error archiving task: {str(e)}")
             conn.rollback()
         finally:
             conn.close()
 
     def delete_all_tasks(self):
-        """Delete all tasks from the completed tasks list"""
+        # Archive all tasks from the completed tasks list"""
         if not self.completed_list.get_children():
-            messagebox.showinfo("No Tasks", "There are no completed tasks to delete.")
+            messagebox.showinfo("No Tasks", "There are no completed tasks to archive.")
             return
 
-        # Confirm deletion
-        if not messagebox.askyesno("Confirm Delete All", 
-                                  "Are you sure you want to delete ALL completed tasks? This cannot be undone."):
+        # Confirm archiving
+        if not messagebox.askyesno("Confirm Archive All", 
+                                "Are you sure you want to archive ALL completed tasks?"):
             return
 
-        # Delete from database
+        # Move to archive database
         conn = sqlite3.connect(path)
         c = conn.cursor()
 
         try:
+            # Begin transaction
+            c.execute("BEGIN")
+            
+            # Get all completed tasks
+            c.execute("SELECT * FROM CompletedTasks")
+            tasks = c.fetchall()
+            
+            archive_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # Archive each task
+            for task in tasks:
+                c.execute("""
+                    INSERT INTO ArchivedTasks
+                    (task_name, task_time, task_weight, task_id, completion_date, 
+                    total_duration, archive_date, task_tags, task_weight_type, task_description)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    task[0],  # task_name
+                    task[1],  # task_time
+                    task[2],  # task_weight
+                    task[3],  # task_id
+                    task[4],  # completion_date
+                    task[5],  # total_duration
+                    archive_date,  # archive_date (new)
+                    task[7] if len(task) > 7 else None,  # task_tags
+                    task[8] if len(task) > 8 else None,  # task_weight_type
+                    task[9] if len(task) > 9 else None   # task_description
+                ))
+            
+            # Delete all from CompletedTasks
             c.execute("DELETE FROM CompletedTasks")
+            
+            # Commit changes
             conn.commit()
             
             # Clear treeview
             for item in self.completed_list.get_children():
                 self.completed_list.delete(item)
             
-            messagebox.showinfo("Success", "All completed tasks deleted successfully!")
+            messagebox.showinfo("Success", "All completed tasks archived successfully!")
 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error deleting tasks: {str(e)}")
+            messagebox.showerror("Database Error", f"Error archiving tasks: {str(e)}")
             conn.rollback()
         finally:
             conn.close()
