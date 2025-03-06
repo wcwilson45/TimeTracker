@@ -8,6 +8,7 @@ from .CurrentTaskPage import CurrentTaskWindow
 from .TagsDB import TagsDB
 from .CompletedTasksList import CompletedTasksList
 from .Analytics import AnalyticsPage
+from .ArchiveTaskList import ArchiveTasksList
 
 #from app.ui import SmallOverlay
 #from app.ui import CompletionPage
