@@ -47,7 +47,7 @@ class ArchiveTasksList(tk.Frame):
         self.archive_list = ttk.Treeview(archivelist_frame,
                                            yscrollcommand=archivelist_scroll.set,
                                            selectmode="extended",
-                                           height=13)
+                                           height=20)
         self.archive_list.pack()
 
         archivelist_scroll.config(command=self.archive_list.yview)
@@ -57,13 +57,13 @@ class ArchiveTasksList(tk.Frame):
                                          "Completion Date", "Total Duration", "Archive Date")
 
         self.archive_list.column("#0", width=0, stretch=tk.NO)
-        self.archive_list.column('Task Name', anchor=tk.W, width=135)
+        self.archive_list.column('Task Name', anchor=tk.CENTER, width=100)
         self.archive_list.column('Task Time', anchor=tk.CENTER, width=75)
         self.archive_list.column('Task Weight', anchor=tk.CENTER, width=50)
         self.archive_list.column('Task ID', anchor=tk.CENTER, width=0, stretch=tk.NO)  # Hidden but available
-        self.archive_list.column('Completion Date', anchor=tk.CENTER, width=120)
+        self.archive_list.column('Completion Date', anchor=tk.CENTER, width=100)
         self.archive_list.column('Total Duration', anchor=tk.CENTER, width=100)
-        self.archive_list.column('Archive Date', anchor=tk.CENTER, width=120)
+        self.archive_list.column('Archive Date', anchor=tk.CENTER, width=155)
 
         # Headings
         self.archive_list.heading("#0", text="", anchor=tk.W)
