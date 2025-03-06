@@ -17,7 +17,8 @@ from ui import (
     CurrentTaskWindow,
     TagsDB,
     CompletedTasksList,
-    AnalyticsPage
+    AnalyticsPage,
+    ArchiveTasksList
 )
 
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
@@ -154,6 +155,7 @@ class App:
       self.smalloverlay_page = tk.Frame(self.main_container)
       self.tags_database_page = TagsDB(self.main_container)
       self.analytics_page = AnalyticsPage(self.main_container)
+      self.archive_page = ArchiveTasksList(self.main_container, self)
 
       #Show main page at start-up
       self.current_page = self.full_page
@@ -166,6 +168,7 @@ class App:
       self.popup_menu.add_command(label="Small Overlay", command=lambda: self.switch_page("Small Overlay"))
       self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
       self.popup_menu.add_command(label="Analytics", command=lambda: self.switch_page("Analytics"))
+      self.popup_menu.add_command(label="Archive", command=lambda: self.switch_page("Archive"))
       self.popup_menu.configure(bg= background_color)
 
       self.setup_smalloverlay_page()
@@ -224,6 +227,11 @@ class App:
             self.current_page = self.analytics_page  
             self.page_title.config(text="Analytics", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
             self.root.geometry("1000x1000")  
+        elif page_name == "Archive":  
+            self.current_page = self.archive_page
+            self.page_title.config(text="Archived Tasks", background=background_color)
+            self.root.geometry("600x400")
+            self.archive_page.load_archive_tasks()
   
 
 
