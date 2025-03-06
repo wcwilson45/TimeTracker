@@ -201,18 +201,7 @@ class AnalyticsPage(tk.Frame):
             # Create the figure
             fig = Figure(figsize=(5, 4), dpi=100)
             
-            # Create plot data - replace this with your actual data
-            # This should use the values and complexity lists to create meaningful data
-            x = complexity
-            y = []
-            
-            # Convert time strings to seconds for plotting
-            for time_str in values:
-                h, m, s = map(int, time_str.split(':'))
-                total_seconds = h * 3600 + m * 60 + s
-                y.append(total_seconds)
-            
-            # Adding the subplot
+            # Adding the subplot - empty plot
             plot1 = fig.add_subplot(111)
             
             # Set labels and title
@@ -220,32 +209,8 @@ class AnalyticsPage(tk.Frame):
             plot1.set_ylabel('Time (seconds)')
             plot1.set_title('Task Time vs Weight')
             
-            # Plot the data
-            plot1.scatter(x, y)
-            
-            # Add best fit line
-            if len(x) > 1 and len(y) > 1:
-                try:
-                    # Convert string complexity to numeric if needed
-                    numeric_x = []
-                    for val in x:
-                        if val in self.tshirt_sizes:
-                            # Map T-shirt sizes to numeric values
-                            size_map = {"XXS": 1, "XS": 2, "S": 3, "M": 4, "L": 5, "XL": 6, "XXL": 7}
-                            numeric_x.append(size_map.get(val, 0))
-                        else:
-                            try:
-                                numeric_x.append(float(val))
-                            except ValueError:
-                                numeric_x.append(0)
-                    
-                    if all(isinstance(val, (int, float)) for val in numeric_x):
-                        import numpy as np
-                        z = np.polyfit(numeric_x, y, 1)
-                        p = np.poly1d(z)
-                        plot1.plot(numeric_x, p(numeric_x), "r--")
-                except Exception as e:
-                    print(f"Error creating best fit line: {e}")
+            # Create empty plot - no data processing or plotting
+            # The scatter and best fit line calculations are removed
             
             # Create the Tkinter canvas containing the Matplotlib figure
             canvas = FigureCanvasTkAgg(fig, master=graph_container)
