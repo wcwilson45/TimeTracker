@@ -20,45 +20,8 @@ path = str(path).replace("Analytics.py", '') + '\\Databases' + '\\task_list.db'
 class AnalyticsPage(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        # DATABASE SECTION ####################################################
-
-        # Create a database or connect to an existing database
-        conn = sqlite3.connect(path)
-
-        # Create a cursor instance
-        c = conn.cursor()
-
-        c.execute("SELECT task_time FROM CompletedTasks ")  # Fetch task_time from completed tasks database
-        times = c.fetchall()
-        global values
-        values = []
-
-        # Add data to the list
-        for time in times:
-            values.append(time[0])
-
-        conn.commit()
-        conn.close()
-
-        # Create a database or connect to an existing database
-        conn = sqlite3.connect(path)
-
-        # Create a cursor instance
-        c = conn.cursor()
-
-        c.execute("SELECT task_weight FROM CompletedTasks ")  # Fetch task_time from completed tasks database
-        comps = c.fetchall()
-        global complexity
-        complexity = []
-
-        # Add data to the list
-        for comp in comps:
-            complexity.append(comp[0])
-
-        conn.commit()
-        conn.close()
-
-        # END OF DATABASE SECTION ##############################################
+        
+        self.load_data()
 
         # Set the main window 
         self.configure(bg=background_color)
@@ -187,6 +150,9 @@ class AnalyticsPage(tk.Frame):
         self.value_combo.bind('<<ComboboxSelected>>', self.update_time_spent_label)
 
     def plot_graph(self):
+        # Reload data 
+        self.load_data()
+
         # Grabs the graph the user selected
         selected_graph = self.graph_combo.get()
         
@@ -505,6 +471,7 @@ class AnalyticsPage(tk.Frame):
 
 
     def total_Time(self,times):
+        self.load_data()
         if not times or times == []:
             return "00:00:00"
         value = times
@@ -533,6 +500,8 @@ class AnalyticsPage(tk.Frame):
         return total
 
     def update_values(self, event=None):
+        # Reload data 
+        self.load_data()
         """This function updates the values in the second combobox based on the first one"""
         selected_type = self.type_combo.get()
         if selected_type == "T-Shirt Size":
@@ -667,3 +636,35 @@ class AnalyticsPage(tk.Frame):
         avg = self.avg_time(newTime)
 
         return total,max,min,avg
+
+    def load_data(self):
+        # DATABASE SECTION ####################################################
+        # Create a database or connect to an existing database
+        conn = sqlite3.connect(path)
+
+        # Create a cursor instance
+        c = conn.cursor()
+
+        c.execute("SELECT task_time FROM CompletedTasks")  # Fetch task_time from completed tasks database
+        times = c.fetchall()
+        global values
+        values = []
+
+        # Add data to the list
+        for time in times:
+            values.append(time[0])
+
+        c.execute("SELECT task_weight FROM CompletedTasks")  # Fetch task_weight from completed tasks database
+        comps = c.fetchall()
+        global complexity
+        complexity = []
+
+        # Add data to the list
+        for comp in comps:
+            complexity.append(comp[0])
+
+        conn.commit()
+        conn.close()
+        # END OF DATABASE SECTION ##############################################
+
+        

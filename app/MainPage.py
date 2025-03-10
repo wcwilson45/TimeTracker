@@ -214,19 +214,23 @@ class App:
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background= background_color)
             self.root.geometry("600x400")
+            self.query_database()
             self.completedtasks_page.load_completed_tasks()
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background=background_color)
             self.root.geometry("230x160")
+            self.query_database()
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  
             self.page_title.config(text="Tags Database", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
             self.root.geometry("530x610")
+            self.query_database()
         elif page_name == "Analytics":
             self.current_page = self.analytics_page  
             self.page_title.config(text="Analytics", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("1000x1000")  
+            self.root.geometry("1000x1000")
+            self.query_database()  
         elif page_name == "Archive":  
             self.current_page = self.archive_page
             self.page_title.config(text="Archived Tasks", background=background_color)
@@ -780,7 +784,7 @@ class App:
 
         
     def query_database(self):
-        """Modified query_database to respect list_place order"""
+        """Modified query_database to respect list_place order and refresh tables"""
         # Clear current display
         for record in self.task_list.get_children():
             self.task_list.delete(record)
@@ -789,6 +793,61 @@ class App:
         c = conn.cursor()
         
         try:
+            # Refresh all tables to ensure they exist
+            c.execute("""CREATE TABLE if not exists TaskList (
+                    task_name text,
+                    task_time text DEFAULT '00:00:00',
+                    task_weight text,
+                    task_id integer PRIMARY KEY AUTOINCREMENT,
+                    task_start_date text,
+                    task_end_date text,
+                    task_description text,
+                    task_weight_type text,
+                    task_tags text, 
+                    list_place integer
+                    )
+            """)
+            
+            c.execute("""CREATE TABLE if not exists CurrentTask(
+                    task_name text,
+                    task_time text,
+                    task_weight text,
+                    task_id integer,
+                    task_start_date text,
+                    task_end_date text,
+                    task_description text,
+                    task_weight_type text,
+                    task_tags text)
+            """)
+            
+            c.execute("""CREATE TABLE if not exists CompletedTasks (
+                    task_name text,
+                    task_time text,
+                    task_weight text,
+                    task_id integer,
+                    completion_date text,
+                    total_duration text,
+                    start_date text,
+                    task_tags text,
+                    task_weight_type text,
+                    task_description text,
+                    PRIMARY KEY (task_id)
+            )""")
+            
+            c.execute("""CREATE TABLE if not exists ArchivedTasks (
+                    task_name text,
+                    task_time text,
+                    task_weight text,
+                    task_id integer,
+                    completion_date text,
+                    total_duration text,
+                    archive_date text,
+                    task_tags text,
+                    task_weight_type text,
+                    task_description text,
+                    PRIMARY KEY (task_id)
+            )""")
+            
             # First, ensure all tasks have a list_place value
             c.execute("SELECT task_id FROM TaskList WHERE list_place IS NULL")
             null_place_tasks = c.fetchall()
@@ -839,6 +898,7 @@ class App:
             print(f"Database error: {e}")
             messagebox.showerror("Database Error", "Failed to load tasks from database")
         finally:
+            conn.commit()  # Commit any changes
             conn.close()
 
     def remove_all(self):
