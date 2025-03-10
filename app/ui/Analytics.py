@@ -508,7 +508,62 @@ class AnalyticsPage(tk.Frame):
             
             toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
             toolbar.update()
+    def get_fibonacci_time_data(self):
+        self.reload_datbase()
+        """Helper method to get time data for each Fibonacci weight"""
+        new1T = []
+        new2T = []
+        new3T = []
+        new5T = []
+        new7T = []
+        new11T = []
+        new13T = []
+        
+        for i in range(len(complexity)):
+            if complexity[i] == "1":
+                new1T.append(values[i])
+            if complexity[i] == "2":
+                new2T.append(values[i])
+            if complexity[i] == "3":
+                new3T.append(values[i])
+            if complexity[i] == "5":
+                new5T.append(values[i])
+            if complexity[i] == "7":
+                new7T.append(values[i])
+            if complexity[i] == "11":
+                new11T.append(values[i])
+            if complexity[i] == "13":
+                new13T.append(values[i])
                 
+        return new1T, new2T, new3T, new5T, new7T, new11T, new13T
+        
+    def get_total_time_by_fibonacci(self):
+        self.reload_datbase()
+        """Calculate total time in seconds for each Fibonacci weight"""
+        time_by_weight = {weight: 0 for weight in self.fibonacci}
+        
+        for i in range(len(complexity)):
+            if complexity[i] in self.fibonacci:
+                # Convert time string to seconds
+                h, m, s = map(int, values[i].split(':'))
+                seconds = h * 3600 + m * 60 + s
+                time_by_weight[complexity[i]] += seconds
+                
+        return time_by_weight
+        
+    def get_total_time_by_tshirt(self):
+        self.reload_datbase()
+        """Calculate total time in seconds for each T-shirt size weight"""
+        time_by_weight = {size: 0 for size in self.tshirt_sizes}
+        
+        for i in range(len(complexity)):
+            if complexity[i] in self.tshirt_sizes:
+                # Convert time string to seconds
+                h, m, s = map(int, values[i].split(':'))
+                seconds = h * 3600 + m * 60 + s
+                time_by_weight[complexity[i]] += seconds
+                
+        return time_by_weight
 
     # Convert time strings into total seconds
     def time_to_seconds(self,time_str):
