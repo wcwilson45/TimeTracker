@@ -508,6 +508,105 @@ class AnalyticsPage(tk.Frame):
             
             toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
             toolbar.update()
+
+        elif selected_graph == "Pie Chart - Fibonacci":
+            # New pie chart for Fibonacci weights
+            total_times = self.get_total_time_by_fibonacci()
+            labels = []
+            sizes = []
+            
+            for weight, time_seconds in total_times.items():
+                # Only include weights that have data
+                if time_seconds > 0:
+                    labels.append(weight)
+                    sizes.append(time_seconds)
+            
+            # Adding the subplot
+            plot1 = fig.add_subplot(111)
+            
+            # Set title
+            plot1.set_title('Time Distribution by Fibonacci Weight')
+            
+            # Create an explode array of the same length as labels
+            explode = [0.05] * len(labels)
+            
+            # Plot the data
+            wedges, texts, autotexts = plot1.pie(
+                sizes, 
+                labels=labels,
+                autopct='%1.1f%%',
+                startangle=90,
+                shadow=True,
+                explode=explode
+            )
+            
+            # Set font size for better readability using the Figure methods
+            for autotext in autotexts:
+                autotext.set_size(8)
+                autotext.set_weight('bold')
+            
+            for text in texts:
+                text.set_size(9)
+            
+            # Equal aspect ratio ensures that pie is drawn as a circle
+            plot1.axis('equal')
+            
+        elif selected_graph == "Pie Chart - T-Shirt Size":
+            # New pie chart for T-shirt size weights
+            total_times = self.get_total_time_by_tshirt()
+            labels = []
+            sizes = []
+            
+            for weight, time_seconds in total_times.items():
+                # Only include weights that have data
+                if time_seconds > 0:
+                    labels.append(weight)
+                    sizes.append(time_seconds)
+            
+            # Adding the subplot
+            plot1 = fig.add_subplot(111)
+            
+            # Set title
+            plot1.set_title('Time Distribution by T-Shirt Size')
+            
+            # Create an explode array of the same length as labels
+            explode = [0.05] * len(labels)
+            
+            # Plot the data
+            wedges, texts, autotexts = plot1.pie(
+                sizes, 
+                labels=labels,
+                autopct='%1.1f%%',
+                startangle=90,
+                shadow=True,
+                explode=explode
+            )
+            
+            # Set font size for better readability using the Figure methods
+            for autotext in autotexts:
+                autotext.set_size(8)
+                autotext.set_weight('bold')
+            
+            for text in texts:
+                text.set_size(9)
+            
+            # Equal aspect ratio ensures that pie is drawn as a circle
+            plot1.axis('equal')
+        
+        # Create the Tkinter canvas containing the Matplotlib figure
+        canvas = FigureCanvasTkAgg(fig, master=graph_container)
+        canvas.draw()
+        
+        # Place the canvas in the frame with proper padding
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Add the Matplotlib toolbar
+        toolbar_frame = tk.Frame(graph_container)
+        toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+        
+        toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+        toolbar.update()
+    
     def get_fibonacci_time_data(self):
         self.reload_datbase()
         """Helper method to get time data for each Fibonacci weight"""
