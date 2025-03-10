@@ -100,7 +100,7 @@ class AnalyticsPage(tk.Frame):
         self.complexity_types = ["T-Shirt Size", "Fibonacci"]
         self.tshirt_sizes = ["XXS", "XS", "S", "M", "L", "XL", "XXL"]
         self.fibonacci = ["1", "2", "3", "5", "7", "11", "13"]
-        self.graphs = ["Time vs Fibonacci", "Time vs T-Shirt Size", "BoxPlot(Fib)", "BoxPlot(T-Shirt)"]
+        self.graphs = ["Time vs Fibonacci", "Time vs T-Shirt Size", "BoxPlot(Fib)", "BoxPlot(T-Shirt)", "Pie Chart - Fibonacci", "Pie Chart - T-Shirt Size"]
 
         # ================ FRAME 1: General Information ================
         general_frame = ttk.LabelFrame(self.left_frame, text="General Information")
@@ -509,7 +509,20 @@ class AnalyticsPage(tk.Frame):
             toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
             toolbar.update()
 
-        elif selected_graph == "Pie Chart - Fibonacci":
+        # Fix for "Pie Chart - Fibonacci" option
+        if selected_graph == "Pie Chart - Fibonacci":
+            # Clear any existing widgets in the right frame
+            for widget in self.right_frame.winfo_children():
+                widget.destroy()
+                
+            # Create a frame to contain the graph
+            graph_container = ttk.LabelFrame(self.right_frame, text="Graphs")
+            graph_container.grid(row=0, column=0, sticky='nsew', padx=(10, 0), pady=10)
+            graph_container.configure(style='TLabelframe')
+            
+            # Create the figure - this was missing in the original code
+            fig = Figure(figsize=(5, 4), dpi=100)
+            
             # New pie chart for Fibonacci weights
             total_times = self.get_total_time_by_fibonacci()
             labels = []
@@ -550,8 +563,34 @@ class AnalyticsPage(tk.Frame):
             
             # Equal aspect ratio ensures that pie is drawn as a circle
             plot1.axis('equal')
+
+            # Create the Tkinter canvas containing the Matplotlib figure
+            canvas = FigureCanvasTkAgg(fig, master=graph_container)
+            canvas.draw()
             
-        elif selected_graph == "Pie Chart - T-Shirt Size":
+            # Place the canvas in the frame with proper padding
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            # Add the Matplotlib toolbar
+            toolbar_frame = tk.Frame(graph_container)
+            toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+            
+            toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+            toolbar.update()
+    
+        if selected_graph == "Pie Chart - T-Shirt Size":
+            # Clear any existing widgets in the right frame
+            for widget in self.right_frame.winfo_children():
+                widget.destroy()
+                
+            # Create a frame to contain the graph
+            graph_container = ttk.LabelFrame(self.right_frame, text="Graphs")
+            graph_container.grid(row=0, column=0, sticky='nsew', padx=(10, 0), pady=10)
+            graph_container.configure(style='TLabelframe')
+            
+            # Create the figure - this was missing in the original code
+            fig = Figure(figsize=(5, 4), dpi=100)
+            
             # New pie chart for T-shirt size weights
             total_times = self.get_total_time_by_tshirt()
             labels = []
@@ -592,23 +631,23 @@ class AnalyticsPage(tk.Frame):
             
             # Equal aspect ratio ensures that pie is drawn as a circle
             plot1.axis('equal')
+
+            # Create the Tkinter canvas containing the Matplotlib figure
+            canvas = FigureCanvasTkAgg(fig, master=graph_container)
+            canvas.draw()
+            
+            # Place the canvas in the frame with proper padding
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            # Add the Matplotlib toolbar
+            toolbar_frame = tk.Frame(graph_container)
+            toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+            
+            toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+            toolbar.update()
         
-        # Create the Tkinter canvas containing the Matplotlib figure
-        canvas = FigureCanvasTkAgg(fig, master=graph_container)
-        canvas.draw()
-        
-        # Place the canvas in the frame with proper padding
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Add the Matplotlib toolbar
-        toolbar_frame = tk.Frame(graph_container)
-        toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
-        
-        toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
-        toolbar.update()
     
     def get_fibonacci_time_data(self):
-        self.reload_datbase()
         """Helper method to get time data for each Fibonacci weight"""
         new1T = []
         new2T = []
@@ -637,7 +676,6 @@ class AnalyticsPage(tk.Frame):
         return new1T, new2T, new3T, new5T, new7T, new11T, new13T
         
     def get_total_time_by_fibonacci(self):
-        self.reload_datbase()
         """Calculate total time in seconds for each Fibonacci weight"""
         time_by_weight = {weight: 0 for weight in self.fibonacci}
         
@@ -651,7 +689,6 @@ class AnalyticsPage(tk.Frame):
         return time_by_weight
         
     def get_total_time_by_tshirt(self):
-        self.reload_datbase()
         """Calculate total time in seconds for each T-shirt size weight"""
         time_by_weight = {size: 0 for size in self.tshirt_sizes}
         
