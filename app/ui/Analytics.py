@@ -100,7 +100,7 @@ class AnalyticsPage(tk.Frame):
         self.complexity_types = ["T-Shirt Size", "Fibonacci"]
         self.tshirt_sizes = ["XXS", "XS", "S", "M", "L", "XL", "XXL"]
         self.fibonacci = ["1", "2", "3", "5", "7", "11", "13"]
-        self.graphs = ["Time vs Fibonacci"]
+        self.graphs = ["Time vs Fibonacci", "Time vs T-Shirt Size", "BoxPlot(Fib)", "BoxPlot(T-Shirt)"]
 
         # ================ FRAME 1: General Information ================
         general_frame = ttk.LabelFrame(self.left_frame, text="General Information")
@@ -187,7 +187,9 @@ class AnalyticsPage(tk.Frame):
         self.value_combo.bind('<<ComboboxSelected>>', self.update_time_spent_label)
 
     def plot_graph(self):
+        # Grabs the graph the user selected
         selected_graph = self.graph_combo.get()
+        # Checks to see what Graph it is with chain of if Statements
         if selected_graph == "Time vs Fibonacci":
 
             new1T = []
@@ -197,7 +199,8 @@ class AnalyticsPage(tk.Frame):
             new7T = []
             new11T = []
             new13T = []
-            
+
+            # Uses Empty Arrays to find all the times for that complexity group
             for i in range(len(complexity)):
                 if complexity[i] == "1":
                     new1T.append(values[i])
@@ -214,6 +217,7 @@ class AnalyticsPage(tk.Frame):
                 if complexity[i] == "13":
                     new13T.append(values[i])
 
+            # Gets there average times
             avgTime = []
             avgTime.append(self.avg_time(new1T))
             avgTime.append(self.avg_time(new2T))
@@ -223,7 +227,89 @@ class AnalyticsPage(tk.Frame):
             avgTime.append(self.avg_time(new11T))
             avgTime.append(self.avg_time(new13T))
 
-            total_seconds = 0
+            # Makes it into total seconds
+            avgTimeSec = []
+            for time in avgTime:
+                # Split the time string into hours, minutes, and seconds
+                h, m, s = map(int, time.split(':'))
+                
+                # Convert the time into total seconds
+                avgTimeSec.append(h * 3600 + m * 60 + s)
+
+
+
+            # Clear any existing widgets in the right frame
+            for widget in self.right_frame.winfo_children():
+                widget.destroy()
+                
+            # Create a frame to contain the graph
+            graph_container = ttk.LabelFrame(self.right_frame, text="Graphs")
+            graph_container.grid(row=0, column=0, sticky='nsew', padx=(10, 0), pady=10)
+            graph_container.configure(style='TLabelframe')
+            
+            # Create the figure
+            fig = Figure(figsize=(5, 4), dpi=100)
+            
+            # Adding the subplot
+            plot1 = fig.add_subplot(111)
+            
+            # Set labels and title
+            plot1.set_xlabel('Task Weight')
+            plot1.set_ylabel('Time (seconds)')
+            plot1.set_title('Task Time vs Weight')
+                
+            # Plot the data
+            plot1.bar(self.fibonacci,avgTimeSec)
+                        
+            # Create the Tkinter canvas containing the Matplotlib figure
+            canvas = FigureCanvasTkAgg(fig, master=graph_container)
+            canvas.draw()
+            
+            # Place the canvas in the frame with proper padding
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            # Add the Matplotlib toolbar
+            toolbar_frame = tk.Frame(graph_container)
+            toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+            
+            toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+            toolbar.update()
+
+        if selected_graph == "Time vs T-Shirt Size":
+
+            new1T = []
+            new2T = []
+            new3T = []
+            new5T = []
+            new7T = []
+            new11T = []
+            new13T = []
+            # Uses Empty Arrays to find all the times for that complexity group
+            for i in range(len(complexity)):
+                if complexity[i] == "XXS":
+                    new1T.append(values[i])
+                if complexity[i] == "XS":
+                    new2T.append(values[i])
+                if complexity[i] == "S":
+                    new3T.append(values[i])
+                if complexity[i] == "M":
+                    new5T.append(values[i])
+                if complexity[i] == "L":
+                    new7T.append(values[i])
+                if complexity[i] == "XL":
+                    new11T.append(values[i])
+                if complexity[i] == "XXL":
+                    new13T.append(values[i])
+            # Gets average time for all time values
+            avgTime = []
+            avgTime.append(self.avg_time(new1T))
+            avgTime.append(self.avg_time(new2T))
+            avgTime.append(self.avg_time(new3T))
+            avgTime.append(self.avg_time(new5T))
+            avgTime.append(self.avg_time(new7T))
+            avgTime.append(self.avg_time(new11T))
+            avgTime.append(self.avg_time(new13T))
+            # Makes it total seconds
             avgTimeSec = []
             for time in avgTime:
                 # Split the time string into hours, minutes, and seconds
@@ -255,7 +341,7 @@ class AnalyticsPage(tk.Frame):
             plot1.set_title('Task Time vs Weight')
             
             # Plot the data
-            plot1.bar(self.fibonacci, avgTimeSec)
+            plot1.bar(self.tshirt_sizes, avgTimeSec)
                         
             # Create the Tkinter canvas containing the Matplotlib figure
             canvas = FigureCanvasTkAgg(fig, master=graph_container)
@@ -270,6 +356,168 @@ class AnalyticsPage(tk.Frame):
             
             toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
             toolbar.update()
+
+        if selected_graph == "BoxPlot(Fib)":
+
+            new1T = []
+            new2T = []
+            new3T = []
+            new5T = []
+            new7T = []
+            new11T = []
+            new13T = []
+            # Uses Empty Arrays to find all the times for that complexity group
+            for i in range(len(complexity)):
+                if complexity[i] == "1":
+                    new1T.append(values[i])
+                if complexity[i] == "2":
+                    new2T.append(values[i])
+                if complexity[i] == "3":
+                    new3T.append(values[i])
+                if complexity[i] == "5":
+                    new5T.append(values[i])
+                if complexity[i] == "7":
+                    new7T.append(values[i])
+                if complexity[i] == "11":
+                    new11T.append(values[i])
+                if complexity[i] == "13":
+                    new13T.append(values[i])
+
+
+            # Convert the string times to seconds for each complexity level
+            new1T_sec = [self.time_to_seconds(t) for t in new1T]
+            new2T_sec = [self.time_to_seconds(t) for t in new2T]
+            new3T_sec = [self.time_to_seconds(t) for t in new3T]
+            new5T_sec = [self.time_to_seconds(t) for t in new5T]
+            new7T_sec = [self.time_to_seconds(t) for t in new7T]
+            new11T_sec = [self.time_to_seconds(t) for t in new11T]
+            new13T_sec = [self.time_to_seconds(t) for t in new13T]
+            # Makes a list of the time in seconds of each complexity level
+            time_data = [new1T_sec, new2T_sec, new3T_sec, new5T_sec, new7T_sec, new11T_sec, new13T_sec]
+
+            # Clear any existing widgets in the right frame
+            for widget in self.right_frame.winfo_children():
+                widget.destroy()
+                
+            # Create a frame to contain the graph
+            graph_container = ttk.LabelFrame(self.right_frame, text="Graphs")
+            graph_container.grid(row=0, column=0, sticky='nsew', padx=(10, 0), pady=10)
+            graph_container.configure(style='TLabelframe')
+            
+            # Create the figure
+            fig = Figure(figsize=(6, 4), dpi=100)
+            
+            # Adding the subplot
+            plot1 = fig.add_subplot(111)
+
+            # Set labels and title
+            plot1.set_title('BoxPlot(Fib)')
+            plot1.set_xlabel('Task Weight')
+            plot1.set_ylabel('Time (seconds)')
+            
+            # Plot the data
+            plot1.boxplot(time_data, labels=self.fibonacci)
+            
+                        
+            # Create the Tkinter canvas containing the Matplotlib figure
+            canvas = FigureCanvasTkAgg(fig, master=graph_container)
+            canvas.draw()
+            
+            # Place the canvas in the frame with proper padding
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            # Add the Matplotlib toolbar
+            toolbar_frame = tk.Frame(graph_container)
+            toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+            
+            toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+            toolbar.update()
+
+        if selected_graph == "BoxPlot(T-Shirt)":
+
+            new1T = []
+            new2T = []
+            new3T = []
+            new5T = []
+            new7T = []
+            new11T = []
+            new13T = []
+            # Uses Empty Arrays to find all the times for that complexity group
+            for i in range(len(complexity)):
+                if complexity[i] == "XXS":
+                    new1T.append(values[i])
+                if complexity[i] == "XS":
+                    new2T.append(values[i])
+                if complexity[i] == "S":
+                    new3T.append(values[i])
+                if complexity[i] == "M":
+                    new5T.append(values[i])
+                if complexity[i] == "L":
+                    new7T.append(values[i])
+                if complexity[i] == "XL":
+                    new11T.append(values[i])
+                if complexity[i] == "XXL":
+                    new13T.append(values[i])
+
+
+            # Convert the string times to seconds for each complexity level
+            new1T_sec = [self.time_to_seconds(t) for t in new1T]
+            new2T_sec = [self.time_to_seconds(t) for t in new2T]
+            new3T_sec = [self.time_to_seconds(t) for t in new3T]
+            new5T_sec = [self.time_to_seconds(t) for t in new5T]
+            new7T_sec = [self.time_to_seconds(t) for t in new7T]
+            new11T_sec = [self.time_to_seconds(t) for t in new11T]
+            new13T_sec = [self.time_to_seconds(t) for t in new13T]
+            # Makes a list of the time in seconds of each complexity level
+            time_data = [new1T_sec, new2T_sec, new3T_sec, new5T_sec, new7T_sec, new11T_sec, new13T_sec]
+
+            # Clear any existing widgets in the right frame
+            for widget in self.right_frame.winfo_children():
+                widget.destroy()
+                
+            # Create a frame to contain the graph
+            graph_container = ttk.LabelFrame(self.right_frame, text="Graphs")
+            graph_container.grid(row=0, column=0, sticky='nsew', padx=(10, 0), pady=10)
+            graph_container.configure(style='TLabelframe')
+            
+            # Create the figure
+            fig = Figure(figsize=(6, 4), dpi=100)
+            
+            # Adding the subplot
+            plot1 = fig.add_subplot(111)
+
+            # Set labels and title
+            plot1.set_title('BoxPlot(T-Shirt)')
+            plot1.set_xlabel('Task Weight')
+            plot1.set_ylabel('Time (seconds)')
+            
+            # Plot the data
+            plot1.boxplot(time_data, labels=self.fibonacci)
+            
+                        
+            # Create the Tkinter canvas containing the Matplotlib figure
+            canvas = FigureCanvasTkAgg(fig, master=graph_container)
+            canvas.draw()
+            
+            # Place the canvas in the frame with proper padding
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            # Add the Matplotlib toolbar
+            toolbar_frame = tk.Frame(graph_container)
+            toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
+            
+            toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+            toolbar.update()
+                
+
+    # Convert time strings into total seconds
+    def time_to_seconds(self,time_str):
+        if not time_str or time_str == []:
+            return 0
+        else:
+            h, m, s = map(int, time_str.split(':'))
+            return h * 3600 + m * 60 + s
+
 
     def total_Time(self,times):
         if not times or times == []:
