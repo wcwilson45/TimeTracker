@@ -74,10 +74,9 @@ class AnalyticsPage(tk.Frame):
         total_time_label = ttk.Label(general_frame, text="Total Task Time:", font=self.fonts['subheader'])
         total_time_label.grid(row=0, column=0, sticky='w', padx=5, pady=5)
 
-        total_time_value = ttk.Label(general_frame, font=self.fonts['subheader'])
-        total_time_value.grid(row=0, column=1, sticky='w', padx=5, pady=5)
-        total = self.total_Time(values)
-        total_time_value.configure(text=total)
+        self.total_time_value = ttk.Label(general_frame, font=self.fonts['subheader'])
+        self.total_time_value.grid(row=0, column=1, sticky='w', padx=5, pady=5)
+        self.update_total_time()
 
         # Label for complexity type selection
         type_label = ttk.Label(general_frame, text="Choose a Time Complexity Type:", font=self.fonts['subheader'])
@@ -498,6 +497,12 @@ class AnalyticsPage(tk.Frame):
 
         total = str(total_h) + ":" + str(total_m) + ":" + str(total_s)
         return total
+    
+    def update_total_time(self):
+        self.load_data()
+        total = self.total_Time(values)
+        self.total_time_value.configure(text=total)
+
 
     def update_values(self, event=None):
         # Reload data 
@@ -639,32 +644,55 @@ class AnalyticsPage(tk.Frame):
 
     def load_data(self):
         # DATABASE SECTION ####################################################
-        # Create a database or connect to an existing database
         conn = sqlite3.connect(path)
-
-        # Create a cursor instance
         c = conn.cursor()
 
-        c.execute("SELECT task_time FROM CompletedTasks")  # Fetch task_time from completed tasks database
-        times = c.fetchall()
-        global values
-        values = []
+        try:
+            # --- Fetch task_time values ---
+            c.execute("SELECT task_time FROM CompletedTasks")
+            times = c.fetchall()
+            global values
+            values = [time[0] for time in times]
 
-        # Add data to the list
-        for time in times:
-            values.append(time[0])
+            # --- Fetch task_weight values ---
+            c.execute("SELECT task_weight FROM CompletedTasks")
+            comps = c.fetchall()
+            global complexity
+            complexity = [comp[0] for comp in comps]
 
-        c.execute("SELECT task_weight FROM CompletedTasks")  # Fetch task_weight from completed tasks database
-        comps = c.fetchall()
-        global complexity
-        complexity = []
+            # --- Update the completed_tasks_list Treeview ---
+            if hasattr(self, 'completed_tasks_list'):
+                # Clear existing data in Treeview
+                for record in self.completed_tasks_list.get_children():
+                    self.completed_tasks_list.delete(record)
 
-        # Add data to the list
-        for comp in comps:
-            complexity.append(comp[0])
+                # Fetch full data from CompletedTasks table
+                c.execute("SELECT * FROM CompletedTasks ORDER BY completion_date DESC")
+                completed_data = c.fetchall()
 
-        conn.commit()
-        conn.close()
+                # Insert data into Treeview
+                for count, record in enumerate(completed_data):
+                    tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
+                    self.completed_tasks_list.insert('', 'end', iid=count, values=(
+                        record[0],  # task_name
+                        record[1],  # task_time
+                        record[2],  # task_weight
+                        record[3],  # task_id
+                        record[4],  # completion_date
+                        record[5],  # total_duration
+                        record[6],  # start_date
+                        record[7],  # task_tags
+                        record[8],  # task_weight_type
+                        record[9],  # task_description
+                    ), tags=tags)
+
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            messagebox.showerror("Database Error", "Failed to load data from CompletedTasks.")
+        finally:
+            conn.commit()
+            conn.close()
         # END OF DATABASE SECTION ##############################################
 
-        
+
+            

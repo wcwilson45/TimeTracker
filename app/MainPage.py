@@ -784,122 +784,139 @@ class App:
 
         
     def query_database(self):
-        """Modified query_database to respect list_place order and refresh tables"""
-        # Clear current display
-        for record in self.task_list.get_children():
-            self.task_list.delete(record)
-
+        """Refresh all task-related tables in the GUI with the latest database data."""
         conn = sqlite3.connect(path)
         c = conn.cursor()
         
         try:
-            # Refresh all tables to ensure they exist
-            c.execute("""CREATE TABLE if not exists TaskList (
-                    task_name text,
-                    task_time text DEFAULT '00:00:00',
-                    task_weight text,
-                    task_id integer PRIMARY KEY AUTOINCREMENT,
-                    task_start_date text,
-                    task_end_date text,
-                    task_description text,
-                    task_weight_type text,
-                    task_tags text, 
-                    list_place integer
-                    )
-            """)
-            
-            c.execute("""CREATE TABLE if not exists CurrentTask(
-                    task_name text,
-                    task_time text,
-                    task_weight text,
-                    task_id integer,
-                    task_start_date text,
-                    task_end_date text,
-                    task_description text,
-                    task_weight_type text,
-                    task_tags text)
-            """)
-            
-            c.execute("""CREATE TABLE if not exists CompletedTasks (
-                    task_name text,
-                    task_time text,
-                    task_weight text,
-                    task_id integer,
-                    completion_date text,
-                    total_duration text,
-                    start_date text,
-                    task_tags text,
-                    task_weight_type text,
-                    task_description text,
-                    PRIMARY KEY (task_id)
+            # Ensure all tables exist
+            c.execute("""CREATE TABLE IF NOT EXISTS TaskList (
+                task_name text,
+                task_time text DEFAULT '00:00:00',
+                task_weight text,
+                task_id integer PRIMARY KEY AUTOINCREMENT,
+                task_start_date text,
+                task_end_date text,
+                task_description text,
+                task_weight_type text,
+                task_tags text, 
+                list_place integer
             )""")
             
-            c.execute("""CREATE TABLE if not exists ArchivedTasks (
-                    task_name text,
-                    task_time text,
-                    task_weight text,
-                    task_id integer,
-                    completion_date text,
-                    total_duration text,
-                    archive_date text,
-                    task_tags text,
-                    task_weight_type text,
-                    task_description text,
-                    PRIMARY KEY (task_id)
+            c.execute("""CREATE TABLE IF NOT EXISTS CurrentTask(
+                task_name text,
+                task_time text,
+                task_weight text,
+                task_id integer,
+                task_start_date text,
+                task_end_date text,
+                task_description text,
+                task_weight_type text,
+                task_tags text
             )""")
-            
-            # First, ensure all tasks have a list_place value
+
+            c.execute("""CREATE TABLE IF NOT EXISTS CompletedTasks (
+                task_name text,
+                task_time text,
+                task_weight text,
+                task_id integer PRIMARY KEY,
+                completion_date text,
+                total_duration text,
+                start_date text,
+                task_tags text,
+                task_weight_type text,
+                task_description text
+            )""")
+
+            c.execute("""CREATE TABLE IF NOT EXISTS ArchivedTasks (
+                task_name text,
+                task_time text,
+                task_weight text,
+                task_id integer PRIMARY KEY,
+                completion_date text,
+                total_duration text,
+                archive_date text,
+                task_tags text,
+                task_weight_type text,
+                task_description text
+            )""")
+
+            # --- Update TaskList (Main Task Table) ---
+            # Ensure all tasks have a list_place
             c.execute("SELECT task_id FROM TaskList WHERE list_place IS NULL")
             null_place_tasks = c.fetchall()
-            
             if null_place_tasks:
-                # Get highest existing list_place
                 c.execute("SELECT COALESCE(MAX(list_place), 0) FROM TaskList")
                 max_place = c.fetchone()[0]
-                
-                # Assign sequential list_place values to tasks without them
                 for i, (task_id,) in enumerate(null_place_tasks):
-                    c.execute("""
-                        UPDATE TaskList 
-                        SET list_place = ? 
-                        WHERE task_id = ?
-                    """, (max_place + i + 1, task_id))
-                
+                    c.execute("UPDATE TaskList SET list_place = ? WHERE task_id = ?", (max_place + i + 1, task_id))
                 conn.commit()
-            
-            # Query tasks ordered by list_place
-            c.execute("""
-                SELECT rowid, * FROM TaskList 
-                ORDER BY list_place
-            """)
-            tasks = c.fetchall()
-            
-            # Add data to screen
-            for count, record in enumerate(tasks):
+
+            # Clear and populate TaskList
+            for record in self.task_list.get_children():
+                self.task_list.delete(record)
+
+            c.execute("SELECT * FROM TaskList ORDER BY list_place")
+            tasklist_data = c.fetchall()
+            for count, record in enumerate(tasklist_data):
                 tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
-                self.task_list.insert(
-                    parent='',
-                    index='end',
-                    iid=count,
-                    text='',
-                    values=(
-                        record[1],   # task_name
-                        record[2],   # task_time
-                        record[3],   # task_weight
-                        record[4],   # task_id
-                        record[5],   # start_date
-                        record[6],   # end_date
-                        record[7]    # description
-                    ),
-                    tags=tags
-                )
-                
+                self.task_list.insert('', 'end', iid=count, values=(
+                    record[0],  # task_name
+                    record[1],  # task_time
+                    record[2],  # task_weight
+                    record[3],  # task_id
+                    record[4],  # task_start_date
+                    record[5],  # task_end_date
+                    record[6],  # task_description
+                ), tags=tags)
+
+            # --- Update CompletedTasks ---
+            if hasattr(self, 'completed_tasks_list'):
+                for record in self.completed_tasks_list.get_children():
+                    self.completed_tasks_list.delete(record)
+
+                c.execute("SELECT * FROM CompletedTasks ORDER BY completion_date DESC")
+                completed_data = c.fetchall()
+                for count, record in enumerate(completed_data):
+                    tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
+                    self.completed_tasks_list.insert('', 'end', iid=count, values=(
+                        record[0],  # task_name
+                        record[1],  # task_time
+                        record[2],  # task_weight
+                        record[3],  # task_id
+                        record[4],  # completion_date
+                        record[5],  # total_duration
+                        record[6],  # start_date
+                        record[7],  # task_tags
+                    ), tags=tags)
+
+            # --- Update ArchivedTasks ---
+            if hasattr(self, 'archived_tasks_list'):
+                for record in self.archived_tasks_list.get_children():
+                    self.archived_tasks_list.delete(record)
+
+                c.execute("SELECT * FROM ArchivedTasks ORDER BY archive_date DESC")
+                archived_data = c.fetchall()
+                for count, record in enumerate(archived_data):
+                    tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
+                    self.archived_tasks_list.insert('', 'end', iid=count, values=(
+                        record[0],  # task_name
+                        record[1],  # task_time
+                        record[2],  # task_weight
+                        record[3],  # task_id
+                        record[4],  # completion_date
+                        record[5],  # total_duration
+                        record[6],  # archive_date
+                        record[7],  # task_tags
+                    ), tags=tags)
+
         except sqlite3.Error as e:
             print(f"Database error: {e}")
-            messagebox.showerror("Database Error", "Failed to load tasks from database")
+            messagebox.showerror("Database Error", "Failed to load tasks from database.")
         finally:
-            conn.commit()  # Commit any changes
+            conn.commit()
             conn.close()
+
 
     def remove_all(self):
         response = messagebox.askyesno("Are you sure you want to delete everything?              ")
