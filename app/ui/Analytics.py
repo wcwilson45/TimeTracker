@@ -477,33 +477,31 @@ class AnalyticsPage(tk.Frame):
             return h * 3600 + m * 60 + s
 
 
-    def total_Time(self,times):
-        self.load_data()
+    def total_Time(self, times):
+    
         if not times or times == []:
             return "00:00:00"
-        value = times
+        
         total_h = 0
         total_m = 0
         total_s = 0
-        for time in value:
+        
+        for time in times:
             h, m, s = map(int, time.split(':'))
             total_h += h
             total_m += m
             total_s += s
-            if total_s >= 60:
-                total_m += int(total_s / 60)
-                total_s = total_s % 60
-            if total_m >= 60:
-                total_h += int(total_m / 60)
-                total_m = total_m % 60
-        if total_h == 0 or total_h < 9:
-            total_h = "0" + str(total_h)
-        if total_m == 0 or total_m < 9:
-            total_m = "0" + str(total_m)
-        if total_s == 0 or total_s < 9:
-            total_s = "0" + str(total_s)
-
-        total = str(total_h) + ":" + str(total_m) + ":" + str(total_s)
+        
+        # Convert seconds to minutes and hours
+        total_m += total_s // 60
+        total_s %= 60
+        
+        # Convert minutes to hours
+        total_h += total_m // 60
+        total_m %= 60
+        
+        # Format with leading zeros
+        total = f"{total_h:02d}:{total_m:02d}:{total_s:02d}"
         return total
     
     def update_total_time(self):

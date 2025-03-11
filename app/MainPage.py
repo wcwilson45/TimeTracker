@@ -230,7 +230,8 @@ class App:
             self.current_page = self.analytics_page  
             self.page_title.config(text="Analytics", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
             self.root.geometry("1000x1000")
-            self.query_database()  
+            self.query_database()
+            self.analytics_page.update_total_time()  
         elif page_name == "Archive":  
             self.current_page = self.archive_page
             self.page_title.config(text="Archived Tasks", background=background_color)
