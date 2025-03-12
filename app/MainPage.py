@@ -12,7 +12,7 @@ import csv
 from ui import (
     CompletedTasksWindow,
     EditTaskWindow,
-    CommitHistoryWindow,
+    CommitHistoryPage,
     AddTaskWindow,
     CurrentTaskWindow,
     TagsDB,
@@ -156,6 +156,7 @@ class App:
       self.tags_database_page = TagsDB(self.main_container)
       self.analytics_page = AnalyticsPage(self.main_container)
       self.archive_page = ArchiveTasksList(self.main_container, self)
+      self.commit_page = tk.Frame(self.main_container)
 
       #Show main page at start-up
       self.current_page = self.full_page
@@ -169,6 +170,7 @@ class App:
       self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
       self.popup_menu.add_command(label="Analytics", command=lambda: self.switch_page("Analytics"))
       self.popup_menu.add_command(label="Archive", command=lambda: self.switch_page("Archive"))
+      self.popup_menu.add_command(label="Commit History", command=lambda: self.switch_page("Commit History"))
       self.popup_menu.configure(bg= background_color)
 
       self.setup_smalloverlay_page()
@@ -237,7 +239,10 @@ class App:
             self.page_title.config(text="Archived Tasks", background=background_color)
             self.root.geometry("650x600")
             self.archive_page.load_archive_tasks()
-  
+        elif page_name == "Commit History":
+            self.current_page = self.commit_page
+            self.page_title.config(text = "Commit History", background=background_color)
+            self.root.geometry("650x600")
 
 
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
