@@ -243,7 +243,7 @@ class App:
             self.current_page = self.commit_page
             self.page_title.config(text = "Commit History", background=background_color)
             self.root.geometry("650x600")
-
+            
 
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
 
