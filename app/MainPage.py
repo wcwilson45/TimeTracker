@@ -12,7 +12,6 @@ import csv
 from ui import (
     CompletedTasksWindow,
     EditTaskWindow,
-    CommitHistoryPage,
     AddTaskWindow,
     CurrentTaskWindow,
     TagsDB,
@@ -20,7 +19,7 @@ from ui import (
     AnalyticsPage,
     ArchiveTasksList
 )
-
+from ui.CommitHistoryPage import CommitHistoryWindow
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
 #IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
@@ -117,7 +116,7 @@ class App:
 
       self.addtask_window = None
       self.edittask_window = None
-
+      self.commithistory_window = None
       self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
       #icon = tk.PhotoImage(file="AppLogo.png")
@@ -156,7 +155,6 @@ class App:
       self.tags_database_page = TagsDB(self.main_container)
       self.analytics_page = AnalyticsPage(self.main_container)
       self.archive_page = ArchiveTasksList(self.main_container, self)
-      self.commit_page = tk.Frame(self.main_container)
 
       #Show main page at start-up
       self.current_page = self.full_page
@@ -170,7 +168,7 @@ class App:
       self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
       self.popup_menu.add_command(label="Analytics", command=lambda: self.switch_page("Analytics"))
       self.popup_menu.add_command(label="Archive", command=lambda: self.switch_page("Archive"))
-      self.popup_menu.add_command(label="Commit History", command=lambda: self.switch_page("Commit History"))
+      # self.popup_menu.add_command(label="Commit History", command=lambda: self.switch_page("Commit History"))
       self.popup_menu.configure(bg= background_color)
 
       self.setup_smalloverlay_page()
@@ -189,6 +187,8 @@ class App:
                 self.addtask_window.destroy()
             if self.edittask_window:
                 self.edittask_window.destroy()
+            if self.commithistory_window:
+                self.commithistory_window.destroy()
             root.destroy()
         else:
             self.root.lift()
@@ -239,10 +239,11 @@ class App:
             self.page_title.config(text="Archived Tasks", background=background_color)
             self.root.geometry("650x600")
             self.archive_page.load_archive_tasks()
-        elif page_name == "Commit History":
-            self.current_page = self.commit_page
-            self.page_title.config(text = "Commit History", background=background_color)
-            self.root.geometry("650x600")
+        # elif page_name == "Commit History":
+        #     self.current_page = self.commit_page
+        #     self.page_title.config(text = "Commit History", background=background_color)
+        #     self.root.geometry("650x600")
+        #     self.commit_page.create_main_layout()
             
 
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
@@ -493,6 +494,9 @@ class App:
         #Buttons
         self.update_button = tk.Button(button_frame, text = "Edit Task",bg = main_btn_color, command = self.open_EditTaskWindow)
         self.update_button.grid(row = 0, column = 0, padx = 6, pady = 10)
+
+        self.commit_button = tk.Button(button_frame, text="Commit History", bg=main_btn_color, command=self.open_CommitHistoryWindow)
+        self.commit_button.grid(row=0, column=3, padx=6, pady=10)
 
         self.add_button = tk.Button(button_frame, text = "Add Task",bg = main_btn_color, command = self.open_AddTaskWindow)
         self.add_button.grid(row = 0, column = 1, padx = 6, pady = 10)
@@ -1053,7 +1057,13 @@ class App:
             self.addtask_window.deiconify()
             self.addtask_window.lift()
 
-
+    def open_CommitHistoryWindow(self):
+        if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
+            self.commit_button.config(state=tk.DISABLED)  # Disable the button
+            self.commithistory_window = CommitHistoryWindow(self)  # Pass self to allow callback
+        else:
+            self.CommitHistoryWindow.deiconify()
+            self.CommitHistoryWindow.lift()
     
 
     def open_AddCompleteTaskWindow(self, task_id):

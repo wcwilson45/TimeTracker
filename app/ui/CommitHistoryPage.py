@@ -3,8 +3,10 @@ from tkinter import ttk
 import tkinter.font as tkfont
 
 class CommitHistoryWindow(tk.Tk):
-    def __init__(self):
+    def __init__(self, main_app):
         super().__init__()
+        self.main_app = main_app
+        self.main_app.commithistory_window = self
 
         # Set the main window geometry and title
         self.geometry("630x600")  # Set the window size
@@ -25,6 +27,8 @@ class CommitHistoryWindow(tk.Tk):
         
         # Main layout for the data
         self.create_main_layout()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def configure_styles(self):
         """Set default styles for widgets."""
@@ -160,6 +164,10 @@ class CommitHistoryWindow(tk.Tk):
                 # Link the scrollbar to the text box
                 desc_scrollbar.config(command=desc_text.yview)
 
+    def on_close(self):
+        self.main_app.commithistory_window = None  # Reset reference to allow reopening
+        self.main_app.commit_button.config(state=tk.NORMAL)
+        self.destroy()
 
 # Run the application
 if __name__ == "__main__":

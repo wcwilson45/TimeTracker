@@ -353,6 +353,8 @@ class AddTaskWindow(tk.Tk):
         self.main_app.add_button.config(state=tk.NORMAL)
         self.destroy()
 
+
+
 if __name__ == "__main__":
     app = AddTaskWindow()
     app.mainloop()
