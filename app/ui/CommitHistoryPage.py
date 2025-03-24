@@ -1,12 +1,17 @@
+import pathlib
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import tkinter.font as tkfont
+import sqlite3
+from typing import final
+
 
 class CommitHistoryWindow(tk.Tk):
-    def __init__(self, main_app):
+    def __init__(self, task_id, main_app):
         super().__init__()
         self.main_app = main_app
         self.main_app.commithistory_window = self
+        self.task_id = task_id
 
         # Set the main window geometry and title
         self.geometry("630x600")  # Set the window size
@@ -24,11 +29,31 @@ class CommitHistoryWindow(tk.Tk):
 
         # Header section of the window
         self.create_header()
-        
+        self.path = pathlib.Path(__file__).parent
+        self.path = str(self.path).replace("EditTaskPage.py", '') + '\\Databases' + '\\task_list.db'
+        # Create or Connect to the database
+        conn = sqlite3.connect(self.path)
+
+        # Create a cursor instance
+        c = conn.cursor()
+
+        c.execute("SELECT * FROM TaskList WHERE task_id = ?", (int(task_id),))
+        final_task = c.fetchone()
+        # self.final_task = final_task
+
+        conn.close()
+        if not final_task:
+            messagebox.showerror("Error", "Task not found!")
+            self.destroy()
+        # Add data to the list
+        # for tag in tags:
+        #     values.append(tag[0])
         # Main layout for the data
-        self.create_main_layout()
+        self.create_main_layout(final_task)
 
         self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+
 
     def configure_styles(self):
         """Set default styles for widgets."""
@@ -60,7 +85,7 @@ class CommitHistoryWindow(tk.Tk):
         exit_btn = tk.Button(
             self,
             text="Exit",  # Text displayed on the button
-            command=self.destroy,  # Function to call when the button is clicked
+            command=self.on_close,  # Function to call when the button is clicked
             bg="#F08080",  # Button background color
             fg="#000000",  # Button text color
             font=("SF Pro Text", 10),  # Button font
@@ -70,7 +95,7 @@ class CommitHistoryWindow(tk.Tk):
         )
         exit_btn.place(relx=0.98, rely=0.02, anchor="ne")  # Place the button near the top-right corner
 
-    def create_main_layout(self):
+    def create_main_layout(self, final_task):
         """Create the main layout of the window with two frames for data."""
         main_frame = tk.Frame(self, bg="#5DADE2")  # Create a frame for the main content with a blue background
         main_frame.pack(fill="both", expand=True, padx=20, pady=10)  # Pack the main frame to fill the window
@@ -87,6 +112,7 @@ class CommitHistoryWindow(tk.Tk):
         ).pack(pady=5)  # Add padding around the label
 
         # Populate the original data frame with labels and data fields
+
         self.populate_frame(
             original_frame,
             [
@@ -111,15 +137,25 @@ class CommitHistoryWindow(tk.Tk):
         ).pack(pady=5)  # Add padding around the label
 
         # Populate the changed data frame with labels and data fields
+        task_name_var = ['', str(final_task[0])]
+        task_time_var = ['',str(final_task[1])]
+        task_weight_var = ['',str(final_task[2])]
+        task_start_date_var = ['',str(final_task[4])]
+        task_end_date_var = ['',str(final_task[5])]
+        task_desc_var = ['',str(final_task[6])]
+        task_weight_type_var = ['',str(final_task[7])]
+        task_tags_var = ['',str(final_task[8])]
+
+
         self.populate_frame(
             changed_frame,
             [
-                ("Task Name:", "Save some lives"),
-                ("Description:", "Some lives might not be saved"),
-                ("Tags:", "Somewhat important"),
-                ("Completion Time:", "Probably not possible"),
-                ("Time Complexity:", ":("),
-                ("Date Completed:", "December 2, 2035")
+                ("Task Name:", task_name_var[1]),
+                ("Description:", task_desc_var[1]),
+                ("Tags:", task_tags_var[1]),
+                ("Completion Time:", task_time_var[1]),
+                ("Time Complexity:", ["Type:", task_weight_type_var[1], "Value:", task_weight_var[1]]),
+                ("Date Completed:", task_end_date_var[1])
             ]
         )
 

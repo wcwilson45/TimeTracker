@@ -1058,12 +1058,13 @@ class App:
             self.addtask_window.lift()
 
     def open_CommitHistoryWindow(self):
+        task = self.ti_entry.get()
         if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
             self.commit_button.config(state=tk.DISABLED)  # Disable the button
-            self.commithistory_window = CommitHistoryWindow(self)  # Pass self to allow callback
+            self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task)  # Pass self to allow callback
         else:
-            self.CommitHistoryWindow.deiconify()
-            self.CommitHistoryWindow.lift()
+            self.commithistory_window.deiconify()
+            self.commithistory_window.lift()
     
 
     def open_AddCompleteTaskWindow(self, task_id):
