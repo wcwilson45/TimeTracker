@@ -119,8 +119,8 @@ class App:
       self.commithistory_window = None
       self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-      #icon = tk.PhotoImage(file="AppLogo.png")
-      #self.root.iconphoto(True, icon)
+      icon = tk.PhotoImage(file="TimeTracker/app/image.png")
+      self.root.iconphoto(True, icon)
 
       # Font Tuples for Use on pages
       self.fonts = {
