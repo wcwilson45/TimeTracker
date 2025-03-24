@@ -25,7 +25,7 @@ main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
 
 class CompletedTasksList(tk.Frame):
-    def __init__(self, parent, controller=None):
+    def __init__(self, parent, main_app, controller=None):
         super().__init__(parent)
         self.controller = controller
         self.current_sort_reverse = False
@@ -126,6 +126,10 @@ class CompletedTasksList(tk.Frame):
         export_button = tk.Button(button_frame, text="Export",
                                 bg="#b2fba5", command=self.export_tasks)
         export_button.pack(side="left")
+
+        commit_button = tk.Button(button_frame, text="Commit History",
+                                  bg="#b2fba5", command=main_app.open_CommitHistoryWindow)
+        commit_button.pack(side="left")
 
         undo_button = tk.Button(button_frame, text="Undo Commit",
                             bg="#b2fba5", command=self.undo_task_completion)
