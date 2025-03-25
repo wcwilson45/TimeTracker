@@ -1085,13 +1085,16 @@ class App:
             self.addtask_window.lift()
 
     def open_CommitHistoryWindow(self):
-        if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
-            self.commit_button.config(state=tk.DISABLED)  # Disable the button
-            self.commithistory_window = CommitHistoryWindow(self)  # Pass self to allow callback
+        task = self.ti_entry.get()
+        if task:
+            if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
+                self.commit_button.config(state=tk.DISABLED)  # Disable the button
+                self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=False)  # Pass self to allow callback
+            else:
+                self.commithistory_window.deiconify()
+                self.commithistory_window.lift()
         else:
-            self.CommitHistoryWindow.deiconify()
-            self.CommitHistoryWindow.lift()
-    
+            messagebox.showwarning("Selection Required", "Please select a task to complete.")
 
     def open_AddCompleteTaskWindow(self, task_id):
         self.task_window = CompletedTasksWindow(
