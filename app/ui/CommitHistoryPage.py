@@ -7,7 +7,7 @@ from typing import final
 
 
 class CommitHistoryWindow(tk.Tk):
-    def __init__(self, task_id, main_app):
+    def __init__(self, task_id, main_app, compFlag):
         super().__init__()
         self.main_app = main_app
         self.main_app.commithistory_window = self
@@ -36,8 +36,10 @@ class CommitHistoryWindow(tk.Tk):
 
         # Create a cursor instance
         c = conn.cursor()
-
-        c.execute("SELECT * FROM TaskList WHERE task_id = ?", (int(task_id),))
+        if compFlag:
+            c.execute("SELECT * FROM CompletedTasks WHERE task_id = ?", (int(task_id),))
+        else:
+            c.execute("SELECT * FROM TaskList WHERE task_id = ?", (int(task_id),))
         final_task = c.fetchone()
         # self.final_task = final_task
 
@@ -141,7 +143,7 @@ class CommitHistoryWindow(tk.Tk):
         task_time_var = ['',str(final_task[1])]
         task_weight_var = ['',str(final_task[2])]
         task_start_date_var = ['',str(final_task[4])]
-        task_end_date_var = ['',str(final_task[5])]
+        task_end_date_var = ['',str(final_task[4])]
         task_desc_var = ['',str(final_task[6])]
         task_weight_type_var = ['',str(final_task[7])]
         task_tags_var = ['',str(final_task[8])]

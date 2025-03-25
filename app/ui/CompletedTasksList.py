@@ -10,6 +10,8 @@ import pathlib
 import os
 from datetime import datetime
 from .TaskHistory import TaskHistoryDB
+from .CommitHistoryPage import CommitHistoryWindow
+
 
 global path 
 path = pathlib.Path(__file__).parent
@@ -30,8 +32,9 @@ class CompletedTasksList(tk.Frame):
         self.controller = controller
         self.current_sort_reverse = False
         self.history_db = TaskHistoryDB()
-
+        self.commithistory_window = None
         self.configure(background="#A9A9A9")
+        self.main_app = main_app
 
         # Create main container
         self.main_container = tk.Frame(self, bg="#A9A9A9")
@@ -127,9 +130,9 @@ class CompletedTasksList(tk.Frame):
                                 bg="#b2fba5", command=self.export_tasks)
         export_button.pack(side="left")
 
-        commit_button = tk.Button(button_frame, text="Commit History",
-                                  bg="#b2fba5", command=main_app.open_CommitHistoryWindow)
-        commit_button.pack(side="left")
+        self.commit_button = tk.Button(button_frame, text="Commit History",
+                                  bg="#b2fba5", command=self.open_CommitHistoryWindow)
+        self.commit_button.pack(side="left")
 
         undo_button = tk.Button(button_frame, text="Undo Commit",
                             bg="#b2fba5", command=self.undo_task_completion)
@@ -506,3 +509,15 @@ class CompletedTasksList(tk.Frame):
         else:
             self.prev_text.insert(tk.END, "No history available")
             self.new_text.insert(tk.END, "No history available")
+
+    def open_CommitHistoryWindow(self):
+        selection = self.completed_list.selection()
+        task_values = self.completed_list.item(selection[0])['values']
+        task = task_values[3]
+        if not task:
+            messagebox.showwarning("Selection Required", "Please select a task to complete.")
+        elif self.main_app.commithistory_window is None or not self.main_app.commithistory_window.winfo_exists():
+            self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=True)
+        else:
+            messagebox.showwarning("A commit history window is already open", "Please close it before reopening.")
+

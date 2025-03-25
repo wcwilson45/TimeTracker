@@ -1062,7 +1062,7 @@ class App:
         if task:
             if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
                 self.commit_button.config(state=tk.DISABLED)  # Disable the button
-                self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task)  # Pass self to allow callback
+                self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=False)  # Pass self to allow callback
             else:
                 self.commithistory_window.deiconify()
                 self.commithistory_window.lift()
