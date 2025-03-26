@@ -177,7 +177,7 @@ class ArchiveTasksList(tk.Frame):
             conn.close()
 
     def restore_task(self):
-        """Move selected task from ArchivedTasks back to CompletedTasks"""
+        # Move selected task from ArchivedTasks back to TaskList"""
         selected_items = self.archive_list.selection()
         
         if not selected_items:
@@ -190,7 +190,7 @@ class ArchiveTasksList(tk.Frame):
         task_id = values[3]
 
         # Confirm restore
-        if not messagebox.askyesno("Confirm Restore", f"Move '{task_name}' back to completed tasks list?"):
+        if not messagebox.askyesno("Confirm Restore", f"Move '{task_name}' back to task list?"):
             return
 
         conn = sqlite3.connect(path)
@@ -210,20 +210,27 @@ class ArchiveTasksList(tk.Frame):
                 conn.close()
                 return
             
-            # Insert task back to CompletedTasks
+            # Get the highest list_place value for proper positioning
+            c.execute("SELECT COALESCE(MAX(list_place), 0) FROM TaskList")
+            max_list_place = c.fetchone()[0] or 0
+            
+            # Insert task back to TaskList with appropriate columns
             c.execute("""
-                INSERT INTO CompletedTasks 
-                (task_name, task_time, task_weight, task_id, completion_date, 
-                total_duration, task_description) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO TaskList 
+                (task_name, task_time, task_weight, task_id, task_start_date, 
+                task_end_date, task_description, task_weight_type, task_tags, list_place) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                task_data[0],  # task_name
-                task_data[1],  # task_time
-                task_data[2],  # task_weight
-                task_data[3],  # task_id
-                task_data[4],  # completion_date
-                task_data[5],  # total_duration
-                task_data[9] if len(task_data) > 9 else ""  # task_description
+                task_data[0],                          # task_name
+                task_data[1],                          # task_time
+                task_data[2],                          # task_weight
+                task_data[3],                          # task_id
+                datetime.now().strftime("%Y-%m-%d"),   # task_start_date (current date)
+                None,                                  # task_end_date
+                task_data[9] if len(task_data) > 9 else None,  # task_description
+                task_data[8] if len(task_data) > 8 else None,  # task_weight_type
+                task_data[7] if len(task_data) > 7 else None,  # task_tags
+                max_list_place + 1                     # list_place (at the end)
             ))
 
             # Remove from ArchivedTasks
@@ -239,12 +246,11 @@ class ArchiveTasksList(tk.Frame):
             for i, item in enumerate(self.archive_list.get_children()):
                 self.archive_list.item(item, tags=('evenrow' if i % 2 == 0 else 'oddrow'))
 
-            # Refresh completed tasks list if controller exists
-            if self.controller and hasattr(self.controller, 'completedtasks_page') and \
-               hasattr(self.controller.completedtasks_page, 'load_completed_tasks'):
-                self.controller.completedtasks_page.load_completed_tasks()
+            # Refresh main task list if controller exists
+            if self.controller and hasattr(self.controller, 'query_database'):
+                self.controller.query_database()
 
-            messagebox.showinfo("Success", "Task restored to completed tasks successfully!")
+            messagebox.showinfo("Success", "Task restored to task list successfully!")
 
         except sqlite3.Error as e:
             messagebox.showerror("Database Error", f"Error restoring task: {str(e)}")

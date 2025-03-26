@@ -8,6 +8,7 @@ import tkinter.font as tkfont
 import sqlite3
 from datetime import datetime
 import pathlib
+import os
 import csv
 import threading
 from ui import (
@@ -128,7 +129,9 @@ class App:
      # Set initial inactivity timer
       self.reset_inactivity_timer()
 
-      icon = tk.PhotoImage(file="TimeTracker/app/image.png")
+      base_dir = os.path.dirname(os.path.abspath(__file__))
+      image_path = os.path.join(base_dir, "image.png")
+      icon = tk.PhotoImage(file=image_path)
       self.root.iconphoto(True, icon)
 
       # Font Tuples for Use on pages
