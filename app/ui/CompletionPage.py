@@ -406,110 +406,135 @@ class CompletedTasksWindow(tk.Tk):
         self.style.theme_use('alt')
         self.style.configure("Info.TLabel", font=("Arial", 10), background='#A9A9A9')
         self.style.configure("Tag.TLabel", font=("Arial", 8), background='#A9A9A9', padding=2, foreground='black')
+        
+        # Configure the Treeview style to match the gray background
+        self.style = ttk.Style()
+        self.style.configure("Treeview", 
+                            background="#e0e0e0",
+                            fieldbackground="#e0e0e0")
+        self.style.map('Treeview',
+                    background=[('selected', '#4a6984')],
+                    foreground=[('selected', 'white')])
+
+        # Configure main layout - 2 columns, 2 rows
+        self.grid_columnconfigure(0, weight=1)  # Left side
+        self.grid_columnconfigure(1, weight=1)  # Right side
+        self.grid_rowconfigure(0, weight=10)    # Main content area
+        self.grid_rowconfigure(1, weight=1)     # Button area at bottom
+
+        # ===== LEFT SIDE =====
+        left_frame = tk.Frame(self, bg="#A9A9A9")
+        left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        
+        # Configure left frame grid
+        left_frame.grid_columnconfigure(0, weight=1)
+        left_frame.grid_rowconfigure(0, weight=1)  # Task name
+        left_frame.grid_rowconfigure(1, weight=2)  # Info section
+        left_frame.grid_rowconfigure(2, weight=6)  # Description section
 
         # Task Name Frame
-        name_frame = tk.LabelFrame(self, text="Task Name", bg="#dcdcdc")
-        name_frame.grid(row=0, column=0, padx=10, pady=10, sticky = "new")
+        name_frame = tk.LabelFrame(left_frame, text="Task Name", bg="#e0e0e0")
+        name_frame.grid(row=0, column=0, padx=5, pady=5, sticky="new")
         
         self.name_label = tk.Label(name_frame, text=self.task_name or "No Task Selected", 
-                                   font=self.fonts['Body_Tuple'], bg="#dcdcdc")
+                                  font=self.fonts['Body_Tuple'], bg="#e0e0e0")
         self.name_label.grid(row=0, column=0, sticky="w", padx=5, pady=5)
         
         # Task ID hidden in name frame for reference
-        self.id_hidden = tk.Label(name_frame, text=self.task_id, bg="#dcdcdc")
+        self.id_hidden = tk.Label(name_frame, text=self.task_id, bg="#e0e0e0")
         self.id_hidden.grid_forget()  # Hide this, just keep as a reference
 
+        # Information Frame
+        info_frame = tk.LabelFrame(left_frame, text="Information", bg="#e0e0e0")
+        info_frame.grid(row=1, column=0, padx=5, pady=5, sticky="new")
+        
+        # Information Fields
+        time_label = tk.Label(info_frame, text="Task Time:", font=self.fonts['Body_Tuple'], bg="#e0e0e0")
+        time_label.grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        
+        time_value = tk.Label(info_frame, text=self.task_time or "00:00:00", 
+                             font=self.fonts['Description_Tuple'], bg="#e0e0e0")
+        time_value.grid(row=0, column=1, sticky="w", padx=5, pady=5)
+        
+        weight_label = tk.Label(info_frame, text="Task Weight:", font=self.fonts['Body_Tuple'], bg="#e0e0e0")
+        weight_label.grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        
+        weight_value = tk.Label(info_frame, text=self.task_weight or "N/A", 
+                               font=self.fonts['Description_Tuple'], bg="#e0e0e0")
+        weight_value.grid(row=1, column=1, sticky="w", padx=5, pady=5)
+
+        start_date_label = tk.Label(info_frame, text="Start Date:", font=self.fonts['Body_Tuple'], bg="#e0e0e0")
+        start_date_label.grid(row=2, column=0, sticky="w", padx=5, pady=5)
+
+        start_date_value = tk.Label(info_frame, text=self.start_date or "N/A",
+                                   font=self.fonts['Description_Tuple'], bg="#e0e0e0")
+        start_date_value.grid(row=2, column=1, sticky="w", padx=5, pady=5)
+        
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        date_label = tk.Label(info_frame, text="Completion Date:", font=self.fonts['Body_Tuple'], bg="#e0e0e0")
+        date_label.grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        
+        date_value = tk.Label(info_frame, text=current_time, 
+                             font=self.fonts['Description_Tuple'], bg="#e0e0e0")
+        date_value.grid(row=3, column=1, sticky="w", padx=5, pady=5)
+        
+        task_id_label = tk.Label(info_frame, text="Task ID:", font=self.fonts['Body_Tuple'], bg="#e0e0e0")
+        task_id_label.grid(row=4, column=0, sticky="w", padx=5, pady=5)
+        
+        task_id_value = tk.Label(info_frame, text=self.task_id or "N/A", 
+                                font=self.fonts['Description_Tuple'], bg="#e0e0e0")
+        task_id_value.grid(row=4, column=1, sticky="w", padx=5, pady=5)
+
         # Description Frame
-        description_frame = tk.LabelFrame(self, text="Description", bg="#dcdcdc")
-        description_frame.grid(row=0, column=0, padx=10, pady=80, sticky = "new")
+        description_frame = tk.LabelFrame(left_frame, text="Description", bg="#e0e0e0")
+        description_frame.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
+        
+        # Make the description frame expandable
+        description_frame.grid_columnconfigure(0, weight=1)
+        description_frame.grid_rowconfigure(1, weight=1)
         
         self.description_scroll = Scrollbar(description_frame)
         self.description_scroll.grid(row=1, column=1, sticky="ns")
         
         self.description_box = Text(description_frame, yscrollcommand=self.description_scroll.set,
-                                   height=5, width=40, border=1, font=self.fonts['Description_Tuple'],
-                                   background="#dcdcdc")
-        self.description_box.grid(row=1, column=0, padx=5, pady=5)
+                                  height=5, width=40, border=1, font=self.fonts['Description_Tuple'],
+                                  background="#e0e0e0")
+        self.description_box.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
         self.description_box.insert("1.0", self.task_description)
         self.description_scroll.config(command=self.description_box.yview)
         
         # Make description box read-only
         self.description_box.config(state=DISABLED)
-        
-        # Configure grid weights
-        self.grid_columnconfigure(0, weight=3)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_rowconfigure(2, weight=1)
 
-        # Information Frame
-        info_frame = tk.LabelFrame(self, text="Information", bg="#dcdcdc")
-        info_frame.grid(row=0, column=1, padx=10, pady=10, sticky = "new")
+        # ===== RIGHT SIDE =====
+        right_frame = tk.Frame(self, bg="#A9A9A9")
+        right_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
         
-        # Information Fields
-        time_label = tk.Label(info_frame, text="Task Time:", font=self.fonts['Body_Tuple'], bg="#dcdcdc")
-        time_label.grid(row=0, column=0, sticky="w", padx=5, pady=5)
-        
-        time_value = tk.Label(info_frame, text=self.task_time or "00:00:00", 
-                              font=self.fonts['Description_Tuple'], bg="#dcdcdc")
-        time_value.grid(row=0, column=1, sticky="w", padx=5, pady=5)
-        
-        weight_label = tk.Label(info_frame, text="Task Weight:", font=self.fonts['Body_Tuple'], bg="#dcdcdc")
-        weight_label.grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        
-        weight_value = tk.Label(info_frame, text=self.task_weight or "N/A", 
-                                font=self.fonts['Description_Tuple'], bg="#dcdcdc")
-        weight_value.grid(row=1, column=1, sticky="w", padx=5, pady=5)
+        # Configure right frame grid
+        right_frame.grid_columnconfigure(0, weight=1)
+        right_frame.grid_rowconfigure(0, weight=1)  # Search bar
+        right_frame.grid_rowconfigure(1, weight=9)  # Commit history
 
-        start_date_label = tk.Label(info_frame, text = "Start Date:", font = self.fonts['Body_Tuple'], bg="#dcdcdc")
-        start_date_label.grid(row = 2, column = 0)
-
-        start_date_value = tk.Label(info_frame, text = self.start_date or "N/A",
-                                    font=self.fonts['Description_Tuple'], bg="#dcdcdc")
-        start_date_value.grid(row = 2, column = 1, sticky = "w", padx = 5, pady = 5)
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Search Frame
+        search_frame = tk.LabelFrame(right_frame, text="Search bar", bg="#e0e0e0")
+        search_frame.grid(row=0, column=0, padx=5, pady=5, sticky="new")
         
-        date_label = tk.Label(info_frame, text="Completion Date:", font=self.fonts['Body_Tuple'], bg="#dcdcdc")
-        date_label.grid(row=3, column=0, sticky="w", padx=5, pady=5)
-        
-        date_value = tk.Label(info_frame, text=current_time, 
-                              font=self.fonts['Description_Tuple'], bg="#dcdcdc")
-        date_value.grid(row=3, column=1, sticky="w", padx=5, pady=5)
-        
-        task_id_label = tk.Label(info_frame, text="Task ID:", font=self.fonts['Body_Tuple'], bg="#dcdcdc")
-        task_id_label.grid(row=4, column=0, sticky="w", padx=5, pady=5)
-        
-        task_id_value = tk.Label(info_frame, text=self.task_id or "N/A", 
-                                font=self.fonts['Description_Tuple'], bg="#dcdcdc")
-        task_id_value.grid(row=4, column=1, sticky="w", padx=5, pady=5)
-        
-        # Commit History Frame
-
-        search_frame = tk.LabelFrame(self, text = "Search bar", bg = "#dcdcdc")
-        search_frame.grid(row = 0, column = 0, padx = 10, pady = 235, sticky = "new")
-
-        commit_frame = tk.LabelFrame(self, text="Commit History", bg="#dcdcdc")
-        commit_frame.grid(row=0, column=0, padx=10, pady=290, sticky="new")
-
-        btn_frame = tk.LabelFrame(self, text = "Buttons", bg = "#dcdcdc")
-        btn_frame.grid(row = 0, column = 1, padx = 10, pady = 290, sticky = "sew")
-
-        complete_btn = tk.Button(btn_frame, text = "Complete", command = self.complete_task,
-                                bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
-                                activebackground="#A8F0A8", activeforeground="#000000")
-        complete_btn.grid(row = 0, column = 0, padx = 5, pady= 5, sticky = "e")
-
-        cancel_btn = tk.Button(btn_frame, text = "Cancel", command = self.after_cancel, bg="#F08080", fg="#000000", font=("SF Pro Text", 10),
-                               activebackground="#F49797", activeforeground="#000000")
-        cancel_btn.grid(row = 0, column = 1, padx = 5, pady = 5, sticky = "e")
-        #Search bar
-        Label(search_frame, text = "Search: ", background= "#dcdcdc").grid(row= 0, column = 0, padx = 5, pady = 5)
-        self.search_entry = tk.Entry(search_frame, bg = "#dcdcdc", width = 15)
-        self.search_entry.grid(row = 0, column = 1, padx = 5, pady = 5)
+        Label(search_frame, text="Search:", background="#e0e0e0").grid(row=0, column=0, padx=5, pady=5)
+        self.search_entry = tk.Entry(search_frame, bg="#e0e0e0", width=25)
+        self.search_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         self.search_entry.bind("<KeyRelease>", self.search_commit)
+
+        # Commit History Frame
+        commit_frame = tk.LabelFrame(right_frame, text="Commit History", bg="#e0e0e0")
+        commit_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
         
-        #History Treeview
-        history_frame = tk.Frame(commit_frame, bg="#dcdcdc")
+        # Make the commit frame expandable
+        commit_frame.grid_columnconfigure(0, weight=1)
+        commit_frame.grid_rowconfigure(0, weight=1)
+        
+        # History Treeview
+        history_frame = tk.Frame(commit_frame, bg="#e0e0e0")
         history_frame.pack(fill="both", expand=True, padx=5, pady=5)
         
         # Add a scrollbar
@@ -521,7 +546,7 @@ class CompletedTasksWindow(tk.Tk):
             history_frame,
             yscrollcommand=history_scroll.set,
             selectmode="browse",
-            height=6
+            height=15
         )
         self.history_tree.pack(side=LEFT, fill="both", expand=True)
         
@@ -542,11 +567,32 @@ class CompletedTasksWindow(tk.Tk):
         history_scroll.config(command=self.history_tree.yview)
         
         # Configure row appearance
-        self.history_tree.tag_configure('oddrow', background="#A9A9A9")
-        self.history_tree.tag_configure('evenrow', background="#dcdcdc")
+        self.history_tree.tag_configure('oddrow', background="#d0d0d0")  # Darker gray for odd rows
+        self.history_tree.tag_configure('evenrow', background="#e0e0e0")  # Light gray for even rows
         
         # Bind double-click event to open detailed history view
         self.history_tree.bind("<Double-1>", lambda e: self.open_commit_history_page())
+        
+        # ===== BUTTON AREA =====
+        btn_frame = tk.Frame(self, bg="#A9A9A9")
+        btn_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="sew")
+        
+        # Configure for right-aligned buttons
+        btn_frame.grid_columnconfigure(0, weight=1)  # Spacer that pushes buttons right
+        btn_frame.grid_columnconfigure(1, weight=0)  # Complete button
+        btn_frame.grid_columnconfigure(2, weight=0)  # Cancel button
+        
+        complete_btn = tk.Button(btn_frame, text="Complete", command=self.complete_task,
+                               bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
+                               activebackground="#A8F0A8", activeforeground="#000000",
+                               width=10)
+        complete_btn.grid(row=0, column=1, padx=10, pady=5, sticky="e")
+
+        cancel_btn = tk.Button(btn_frame, text="Cancel", command=self.destroy,
+                             bg="#F08080", fg="#000000", font=("SF Pro Text", 10),
+                             activebackground="#F49797", activeforeground="#000000",
+                             width=10)
+        cancel_btn.grid(row=0, column=2, padx=(0, 10), pady=5, sticky="e")
         
         # Load history data if we have a task ID
         if self.task_id:
