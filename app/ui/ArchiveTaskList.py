@@ -290,20 +290,48 @@ class ArchiveTasksList(tk.Frame):
             # Create Archives directory if it doesn't exist
             export_dir = pathlib.Path(__file__).parent / "Archives"
             export_dir.mkdir(exist_ok=True)
-
-            # Create filename with timestamp
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = export_dir / f"archived_tasks_{timestamp}.csv"
-
+            
             # Get all tasks from the treeview
             tasks = []
             headers = self.archive_list['columns']
             tasks.append(headers)  # Add headers as first row
-
+            
+            # Variables to track earliest completion date and latest archive date
+            earliest_completion = None
+            latest_archive = None
+            
+            # Collect data and find date range
             for item in self.archive_list.get_children():
                 values = self.archive_list.item(item)['values']
                 tasks.append(values)
-
+                
+                # Get completion date and archive date from the row
+                # Based on column positions: Completion Date at index 4, Archive Date at index 6
+                completion_date = values[4]
+                archive_date = values[6]
+                
+                try:
+                    # Parse dates to datetime objects
+                    if completion_date:
+                        completion_dt = datetime.strptime(completion_date, "%Y-%m-%d %H:%M:%S")
+                        if earliest_completion is None or completion_dt < earliest_completion:
+                            earliest_completion = completion_dt
+                    
+                    if archive_date:
+                        archive_dt = datetime.strptime(archive_date, "%Y-%m-%d %H:%M:%S")
+                        if latest_archive is None or archive_dt > latest_archive:
+                            latest_archive = archive_dt
+                except ValueError:
+                    # Handle case where date format is different
+                    pass
+            
+            # Format dates for filename - using dashes instead of slashes to avoid filename errors
+            start_date_str = earliest_completion.strftime("%m-%d-%y") if earliest_completion else "unknown"
+            end_date_str = latest_archive.strftime("%m-%d-%y") if latest_archive else "unknown"
+            
+            # Create filename with date range
+            filename = export_dir / f"archive_list_{start_date_str}_to_{end_date_str}.csv"
+            
             # Write to CSV
             with open(filename, 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
@@ -319,13 +347,35 @@ class ArchiveTasksList(tk.Frame):
         try:
             # Retrieve all items from Treeview
             items = [(self.archive_list.set(k, col), k) for k in self.archive_list.get_children("")]
+            
+            # Helper function to convert time string to seconds for sorting
+            def time_to_seconds(time_str):
+                if not time_str:
+                    return 0
+                try:
+                    # Handle time format "HH:MM:SS"
+                    parts = time_str.split(":")
+                    if len(parts) == 3:
+                        hours, minutes, seconds = parts
+                        return int(hours) * 3600 + int(minutes) * 60 + int(seconds)
+                    # Handle other potential time formats
+                    return 0
+                except (ValueError, IndexError):
+                    return 0
 
             # Convert to appropriate type (for numeric columns)
-            if col in ["Task Time", "Task Weight", "Task ID", "Total Duration"]:
-                items.sort(key=lambda x: float(x[0]) if x[0] else 0, reverse=self.current_sort_reverse)
-            elif col in ["Completion Date", "Archive Date"]:
+            if col in ["Task Time", "Total Time"]:
+                # Use the helper function for time columns
+                items.sort(key=lambda x: time_to_seconds(x[0]), reverse=self.current_sort_reverse)
+            elif col in ["Task Weight", "Task ID"]:
+                # These are still numeric columns
+                items.sort(key=lambda x: float(x[0]) if x[0] and x[0].replace('.', '', 1).isdigit() else 0, 
+                        reverse=self.current_sort_reverse)
+            elif col in ["Completed On", "Archive Date", "Archived On"]:
+                # Date columns
                 items.sort(key=lambda x: x[0] if x[0] else "", reverse=self.current_sort_reverse)
             else:
+                # Text columns
                 items.sort(reverse=self.current_sort_reverse)
 
             # Rearrange items in sorted order

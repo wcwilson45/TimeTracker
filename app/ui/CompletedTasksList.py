@@ -456,12 +456,34 @@ class CompletedTasksList(tk.Frame):
             # Retrieve all items from Treeview
             items = [(self.completed_list.set(k, col), k) for k in self.completed_list.get_children("")]
 
+            # Helper function to convert time string to seconds for sorting
+            def time_to_seconds(time_str):
+                if not time_str:
+                    return 0
+                try:
+                    # Handle time format "HH:MM:SS"
+                    parts = time_str.split(":")
+                    if len(parts) == 3:
+                        hours, minutes, seconds = parts
+                        return int(hours) * 3600 + int(minutes) * 60 + int(seconds)
+                    # Handle other potential time formats
+                    return 0
+                except (ValueError, IndexError):
+                    return 0
+
             # Convert to appropriate type (for numeric columns)
-            if col in ["Task Time", "Task Weight", "Task ID", "Total Duration"]:
-                items.sort(key=lambda x: float(x[0]) if x[0] else 0, reverse=self.current_sort_reverse)
+            if col in ["Task Time", "Total Duration"]:
+                # Use the helper function for time columns
+                items.sort(key=lambda x: time_to_seconds(x[0]), reverse=self.current_sort_reverse)
+            elif col in ["Task Weight", "Task ID"]:
+                # Safely convert numeric columns
+                items.sort(key=lambda x: float(x[0]) if x[0] and str(x[0]).replace('.', '', 1).isdigit() else 0, 
+                        reverse=self.current_sort_reverse)
             elif col in ["Completion Date"]:
+                # Date columns
                 items.sort(key=lambda x: x[0] if x[0] else "", reverse=self.current_sort_reverse)
             else:
+                # Text columns
                 items.sort(reverse=self.current_sort_reverse)
 
             # Rearrange items in sorted order
