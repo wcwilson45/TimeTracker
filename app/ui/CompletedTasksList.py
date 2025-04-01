@@ -11,6 +11,7 @@ import os
 from datetime import datetime
 from .TaskHistory import TaskHistoryDB
 from .CommitHistoryPage import CommitHistoryWindow
+from .CompletedTaskDetailsPage import CompletedTaskDetailsWindow
 
 
 global path 
@@ -33,6 +34,7 @@ class CompletedTasksList(tk.Frame):
         self.current_sort_reverse = False
         self.history_db = TaskHistoryDB()
         self.commithistory_window = None
+        self.task_details_window = None
         self.configure(background="#A9A9A9")
         self.main_app = main_app
 
@@ -89,6 +91,9 @@ class CompletedTasksList(tk.Frame):
         self.completed_list.tag_configure('oddrow', background="white")
         self.completed_list.tag_configure('evenrow', background="#d3d3d3")
 
+        # Bind double-click to open task details
+        self.completed_list.bind("<Double-1>", self.open_task_details)
+
         # Right side - History view
         self.history_frame = tk.Frame(self.main_container, bg="#A9A9A9", width=400)
         self.history_frame.pack(side="right", fill="both", padx=5, pady=5)
@@ -138,10 +143,58 @@ class CompletedTasksList(tk.Frame):
                             bg="#b2fba5", command=self.undo_task_completion)
         undo_button.pack(side="left", padx=6)
 
+        # View details button
+        details_button = tk.Button(button_frame, text="View Details",
+                                bg="#b2fba5", command=self.open_selected_task_details)
+        details_button.pack(side="left", padx=6)
+
         # Bind selection event
         self.completed_list.bind('<<TreeviewSelect>>', self.on_task_select)
 
         self.load_completed_tasks()
+    
+    def open_task_details(self, event):
+        """Open task details window on double-click"""
+        # Get the selected item
+        selected = self.completed_list.selection()
+        if not selected:
+            return
+            
+        # Get the task ID
+        task_id = self.completed_list.item(selected[0])['values'][3]
+        
+        # Open the task details window
+        self.open_task_details_window(task_id)
+    
+    def open_selected_task_details(self):
+        """Open task details window for the selected task"""
+        # Get the selected item
+        selected = self.completed_list.selection()
+        if not selected:
+            messagebox.showwarning("Selection Required", "Please select a task to view details.")
+            return
+            
+        # Get the task ID
+        task_id = self.completed_list.item(selected[0])['values'][3]
+        
+        # Open the task details window
+        self.open_task_details_window(task_id)
+    
+    def open_task_details_window(self, task_id):
+        """Open a task details window for the given task ID"""
+        if self.task_details_window is None or not tk.Toplevel.winfo_exists(self.task_details_window):
+            self.task_details_window = CompletedTaskDetailsWindow(task_id=task_id, parent=self)
+            self.task_details_window.grab_set()  # Make window modal
+        else:
+            # If window already exists, try to close it and open a new one
+            try:
+                self.task_details_window.destroy()
+                self.task_details_window = CompletedTaskDetailsWindow(task_id=task_id, parent=self)
+                self.task_details_window.grab_set()
+            except:
+                messagebox.showinfo("Info", "Please close the existing details window first.")
+                self.task_details_window.lift()
+                self.task_details_window.focus_force()
 
     def delete_selected_task(self):
         #Archive the selected task from the completed tasks list"""
@@ -456,34 +509,12 @@ class CompletedTasksList(tk.Frame):
             # Retrieve all items from Treeview
             items = [(self.completed_list.set(k, col), k) for k in self.completed_list.get_children("")]
 
-            # Helper function to convert time string to seconds for sorting
-            def time_to_seconds(time_str):
-                if not time_str:
-                    return 0
-                try:
-                    # Handle time format "HH:MM:SS"
-                    parts = time_str.split(":")
-                    if len(parts) == 3:
-                        hours, minutes, seconds = parts
-                        return int(hours) * 3600 + int(minutes) * 60 + int(seconds)
-                    # Handle other potential time formats
-                    return 0
-                except (ValueError, IndexError):
-                    return 0
-
             # Convert to appropriate type (for numeric columns)
-            if col in ["Task Time", "Total Duration"]:
-                # Use the helper function for time columns
-                items.sort(key=lambda x: time_to_seconds(x[0]), reverse=self.current_sort_reverse)
-            elif col in ["Task Weight", "Task ID"]:
-                # Safely convert numeric columns
-                items.sort(key=lambda x: float(x[0]) if x[0] and str(x[0]).replace('.', '', 1).isdigit() else 0, 
-                        reverse=self.current_sort_reverse)
+            if col in ["Task Time", "Task Weight", "Task ID", "Total Duration"]:
+                items.sort(key=lambda x: float(x[0]) if x[0] else 0, reverse=self.current_sort_reverse)
             elif col in ["Completion Date"]:
-                # Date columns
                 items.sort(key=lambda x: x[0] if x[0] else "", reverse=self.current_sort_reverse)
             else:
-                # Text columns
                 items.sort(reverse=self.current_sort_reverse)
 
             # Rearrange items in sorted order
@@ -542,4 +573,3 @@ class CompletedTasksList(tk.Frame):
             self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=True)
         else:
             messagebox.showwarning("A commit history window is already open", "Please close it before reopening.")
-
