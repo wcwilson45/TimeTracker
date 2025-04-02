@@ -69,6 +69,7 @@ class AnalyticsPage(tk.Frame):
         self.tshirt_sizes = ["XXS", "XS", "S", "M", "L", "XL", "XXL"]
         self.fibonacci = ["1", "2", "3", "5", "7", "11", "13"]
         self.graphs = ["Time vs Fibonacci", "Time vs T-Shirt Size", "BoxPlot(Fib)", "BoxPlot(T-Shirt)", "Pie Chart - Fibonacci", "Pie Chart - T-Shirt Size"]
+        self.models = ["WIP"]
 
         # ================ FRAME 1: General Information ================
         general_frame = ttk.LabelFrame(self.left_frame, text="General Information")
@@ -153,6 +154,25 @@ class AnalyticsPage(tk.Frame):
         # Bind the value_combo to update the label text when a value is selected
         self.value_combo.bind('<<ComboboxSelected>>', self.update_time_spent_label)
 
+        # ================ FRAME 3: Model Options ================
+        model_frame = ttk.LabelFrame(self.left_frame, text="Model Options")
+        model_frame.grid(row=3, column=0, sticky='ew', pady=(0, 10), padx=5)
+        model_frame.configure(style='TLabelframe')
+
+        # Graph selection
+        graph_label = ttk.Label(model_frame, text="Select Model:", font=self.fonts['subheader'])
+        graph_label.grid(row=0, column=0, sticky='w', padx=5, pady=5)
+
+        self.model_combo = ttk.Combobox(model_frame, state='readonly', values=self.models)
+        self.model_combo.grid(row=0, column=1, sticky='ew', padx=5, pady=5)
+        self.model_combo.set("Select Model")
+
+        # Plot button
+        self.model_btn = tk.Button(model_frame, font=("SF Pro Text", 10), text="Plot Model", 
+                                    bg=green_btn_color)
+        self.model_btn.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky='ew')
+
+        
     def plot_graph(self):
         # Reload data 
         self.load_data()
@@ -623,11 +643,11 @@ class AnalyticsPage(tk.Frame):
         avg_s = int(avg_seconds % 60)
         
         # Format the result into hh:mm:ss
-        if avg_h == 0 or avg_h < 9:
+        if avg_h == 0 or avg_h <= 9:
             avg_h = "0" + str(avg_h)
-        if avg_m == 0 or avg_m < 9:
+        if avg_m == 0 or avg_m <= 9:
             avg_m = "0" + str(avg_m)
-        if avg_s == 0 or avg_s < 9:
+        if avg_s == 0 or avg_s <= 9:
             avg_s = "0" + str(avg_s)
 
         avg_time_str = str(avg_h) + ":" + str(avg_m) + ":" + str(avg_s)
