@@ -8,6 +8,7 @@ import tkinter.font as tkfont
 import pathlib
 import sqlite3
 from datetime import date
+import re
 
 background_color = "#A9A9A9"
 
@@ -257,17 +258,15 @@ class AddTaskWindow(tk.Tk):
         end_date = "01-02-2025"
 
         # Store required fields in a dictionary or list
-        required_fields = {
-            "Task Name": task_name,
-            "Description": description,
-            "Tags": tags,
+        check_field = {
+            "TaskName": task_name,
             "Start Date": start_date,
             "Complexity Type": complexity_type,
             "Complexity Value": complexity_value
         }
 
         # Check if any required field is empty and show a warning if so
-        missing_fields = [field for field, value in required_fields.items() if not value or value == "Select Value" or value == "Select Type"]
+        missing_fields = [field for field, value in check_field.items() if not value or value == "Select Value" or value == "Select Type"]
         
         if missing_fields:
             missing_fields_str = ", ".join(missing_fields)
@@ -275,15 +274,25 @@ class AddTaskWindow(tk.Tk):
             self.lift()
             self.focus_force()
             
-            return  # Stop further action if any field is missing
+            # Stop further action if any field is missing
+            return
+        # Pattern for Date
+        pattern = r"^(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])-(19|20)\d{2}$"
+        if not re.match(pattern,start_date):
+            messagebox.showwarning("Warning", f"The Start Date you have is invaild")
+            self.lift()
+            self.focus_force()
+            return
         
         res = tags.split('\n') # Splits the string to check tags
-
+        values.append("")
         if not all(tag in values for tag in res): #Checks to see if tags are in the accepted tags
-          
+        
             messagebox.showwarning("Warning", f"The Tags you have selected are invaild")
-
-            return  # Stop further action if any field is missing
+            self.lift()
+            self.focus_force()
+            # Stop further action if any field is missing
+            return
         else:
             
             confirm = messagebox.askyesno("Confirm Add", "Are you sure you want to add this task?") #Askes if sure to add task
