@@ -189,6 +189,8 @@ class App:
       self.setup_smalloverlay_page()
       self.setup_full_page()
       self.completedtasks_page.pack_forget()
+
+      #self.initialize_ui_enhancements()
       
 
       #Query the database for all information inside
@@ -319,7 +321,7 @@ class App:
     def setup_full_page(self):
         self.full_page.configure(background= background_color)
         style = ttk.Style()
-        style.configure('TLabel', background="#dcdcdc")
+        style.configure('TLabel', background= "#dcdcdc")
         style.theme_use('alt')
         style.configure("Treeview",
         background = "black",
@@ -429,6 +431,7 @@ class App:
 
         self.search_entry = tk.Entry(top_btn_frame, bg="#dcdcdc", width = 15)
         self.search_entry.grid(row = 0, column= 5, padx = 4, pady= 6)
+        self.search_entry.bind("<KeyRelease>", self.search_Task)
 
         #Create scrollbar
         tasklist_scroll = Scrollbar(tasklist_frame)
@@ -521,7 +524,7 @@ class App:
         remove_all_button.grid(row = 0, column = 4, padx = 6, pady = 10)
 
 
-        select_record_button = tk.Button(button_frame, text = "Select Record",bg = main_btn_color, command = self.select_current_task)
+        select_record_button = tk.Button(button_frame, text = "Select Task",bg = main_btn_color, command = self.select_current_task)
         select_record_button.grid(row = 0, column = 2, padx = 6, pady = 10)
 
         #Uses select button on single click. Takes value from TreeView, not the database
@@ -774,6 +777,8 @@ class App:
             self.task_id_label.config(text=cur_task[3])  # Assuming Task ID is at index 3
             self.time_box_full.delete("1.0", END)
             self.time_box_full.insert("1.0", cur_task[1])  # Assuming Task Time is at index 1
+            self.time_box_overlay.delete("1.0", END)
+            self.time_box_overlay.insert("1.0", cur_task[1])
             self.description_box.delete("1.0", END)
             self.description_box.insert("1.0", cur_task[6])  # Assuming description is at index 6
             self.disable_boxes()
@@ -1347,7 +1352,6 @@ class App:
             self.query_database()
 
     def search_Task(self, event):
-            
 
             #Getting the name they entered
             lookup = self.search_entry.get()
@@ -1418,6 +1422,10 @@ class App:
 
             # Close connection to the database
             conn.close()
+ 
+ 
+
+
     def setup_keyboard_shortcuts(self):
         """Setup keyboard shortcuts for common operations"""
         # Global application shortcuts
@@ -1660,7 +1668,7 @@ class App:
         theme_label.pack(side="left", padx=(0, 10))
         
         theme_var = tk.StringVar(value=preferences.get('theme', 'light'))
-        theme_rb_light = tk.Radiobutton(theme_frame, text="Light", variable=theme_var, value="light", bg="#A9A9A9")
+        theme_rb_light = tk.Radiobutton(theme_frame, text="Light", variable=theme_var, value="light", bg="#dcdcdc")
         theme_rb_light.pack(side="left", padx=5)
         
         theme_rb_dark = tk.Radiobutton(theme_frame, text="Dark", variable=theme_var, value="dark", bg="#A9A9A9")
@@ -1805,6 +1813,7 @@ class App:
             # Set light theme colors
             self.bg_color = "#A9A9A9"
             self.fg_color = "#000000"
+            self.frame_color = "#dcdcdc"
             self.entry_bg_color = "#d3d3d3"
             self.button_bg_color = "#b2fba5"
             self.delete_button_bg_color = "#e99e56"
@@ -1828,6 +1837,8 @@ class App:
             # Update this widget's colors if applicable
             if isinstance(widget, (tk.Frame, tk.LabelFrame)):
                 widget.configure(bg=self.bg_color)
+            elif isinstance(widget, tk.LabelFrame):
+                widget.configure(bg = self.frame_color)
             elif isinstance(widget, tk.Label):
                 widget.configure(bg=self.bg_color, fg=self.fg_color)
             elif isinstance(widget, tk.Entry):
