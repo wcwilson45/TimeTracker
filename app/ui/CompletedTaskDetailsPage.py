@@ -4,6 +4,7 @@ from tkinter import filedialog
 from tkinter import ttk
 import tkinter as tk
 import tkinter.font as tkfont
+from config import DB_PATH, COLORS, FONTS
 from datetime import datetime
 from tkinter import messagebox
 import sqlite3

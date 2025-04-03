@@ -3,25 +3,24 @@ from tkinter.ttk import *
 from tkinter import filedialog
 from tkinter import ttk
 import tkinter as tk
+from config import DB_PATH, COLORS, FONTS
 import tkinter.font as tkfont
 from datetime import datetime
 from tkinter import messagebox
 import sqlite3
 import pathlib
 
-global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list.db'
+global path
+path = DB_PATH
 
-bad_btn = "#e99e56"
-good_btn = "#77DD77"
-bg_color = "#A9A9A9"
-frame_color = "#dcdcdc"
+bad_btn = COLORS["del_btn_color"]
+good_btn = COLORS["green_button_color"]
+bg_color = COLORS["background_color"]
+frame_color = COLORS["grey_button_color"]
 
 class TaskHistoryDB:
     def __init__(self):
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = DB_PATH
         
         # Create the history table
         conn = sqlite3.connect(self.path)
@@ -121,8 +120,9 @@ class CommitHistoryWindow(tk.Toplevel):
         
         # Fonts
         self.fonts = {
-            'header': tkfont.Font(family="SF Pro Display", size=16, weight="bold"),
-            'body': tkfont.Font(family="SF Pro Text", size=12)
+            "Title_Tuple": tkfont.Font(family=FONTS["title"][0], size=24, weight="bold"),
+            "Body_Tuple": tkfont.Font(family=FONTS["body"][0], size=12, weight="bold"),
+            "Description_Tuple": tkfont.Font(family=FONTS["description"][0], size=12)
         }
         
         self.create_widgets()
@@ -238,9 +238,9 @@ class CompletedTasksWindow(tk.Tk):
 
         # Font Tuples for Use on pages
         self.fonts = {
-            "Title_Tuple": tkfont.Font(family="SF Pro Display", size=24, weight="bold"),
-            "Body_Tuple": tkfont.Font(family="SF Pro Display", size=12, weight="bold"),
-            "Description_Tuple": tkfont.Font(family="Sf Pro Text", size=12)
+            "Title_Tuple": tkfont.Font(family=FONTS["title"][0], size=24, weight="bold"),
+            "Body_Tuple": tkfont.Font(family=FONTS["body"][0], size=12, weight="bold"),
+            "Description_Tuple": tkfont.Font(family=FONTS["description"][0], size=12)
         }
 
         self.setup_ui()

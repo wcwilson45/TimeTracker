@@ -6,6 +6,7 @@ import tkinter.font as tkfont
 import sqlite3
 import csv
 from tkinter import messagebox
+from config import DB_PATH, COLORS, FONTS
 import pathlib
 import os
 from datetime import datetime
@@ -15,8 +16,7 @@ from .CompletedTaskDetailsPage import CompletedTaskDetailsWindow
 
 
 global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("CompletedTasksList.py", '') + '\\Databases' + '\\task_list.db'
+path = DB_PATH
 
 background_color = "#A9A9A9"
 grey_button_color = "#d3d3d3"
@@ -448,25 +448,44 @@ class CompletedTasksList(tk.Frame):
             conn.close()
 
     def load_completed_tasks(self):
-        """Loads completed tasks from SQLite database into Treeview."""
-        for item in self.completed_list.get_children():
-            self.completed_list.delete(item)
-
-        conn = sqlite3.connect(path)
-        c = conn.cursor()
-
         try:
-            c.execute("SELECT * FROM CompletedTasks ORDER BY completion_date DESC")
-            tasks = c.fetchall()
+            conn = sqlite3.connect(path)
+            c = conn.cursor()
+            
+            # Clear existing items
+            for record in self.completed_list.get_children():
+                self.completed_list.delete(record)
 
-            for i, task in enumerate(tasks):
-                tag = ('evenrow' if i % 2 == 0 else 'oddrow')
-                self.completed_list.insert('', 'end', values=task, tags=tag)
+            # Fetch completed tasks
+            c.execute("SELECT * FROM CompletedTasks ORDER BY completion_date DESC")
+            completed_data = c.fetchall()
+            
+            # If no data, just return without error
+            if not completed_data:
+                return
+
+            # Populate the treeview
+            for count, record in enumerate(completed_data):
+                tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
+                self.completed_list.insert('', 'end', iid=count, values=(
+                    record[0],  # task_name
+                    record[1],  # task_time
+                    record[2],  # task_weight
+                    record[3],  # task_id
+                    record[4],  # completion_date
+                    record[5],  # total_duration
+                    record[6],  # start_date
+                    record[7],  # task_tags
+                ), tags=tags)
 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error loading completed tasks: {str(e)}")
+            print(f"Error loading completed tasks: {e}")
+            # Optionally show a non-blocking message
+            import tkinter.messagebox as messagebox
+            messagebox.showwarning("Database Warning", "Could not load completed tasks.")
         finally:
-            conn.close()
+            if 'conn' in locals():
+                conn.close()
 
     def export_tasks(self):
         """Export completed tasks to CSV file"""
