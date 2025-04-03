@@ -5,7 +5,9 @@ from tkinter import ttk, messagebox
 import tkinter.font as tkfont
 
 class SettingsPage(tk.Frame):
-    
+    def __init__(self, parent, app):
+        super().__init__(parent)  # Ensure proper initialization
+        self.app = app  # Store reference to the app if needed
     
 class HelpPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -169,28 +171,3 @@ class HelpPage(tk.Frame):
             font=("SF Pro Text", 10)
         )
         back_button.pack(pady=10, side="bottom")
-
-    def refresh_colors(self):
-        """Update all colors when theme changes"""
-        # Update main frame
-        self.config(bg=background_color)
-        
-        # Update header
-        self.header_frame.config(bg=background_color)
-        self.title_label.config(bg=background_color)
-        
-        # Update buttons
-        self.back_button.config(bg=del_btn_color)
-        
-        # Update tab contents
-        self.shortcuts_frame.config(bg=grey_button_color)
-        self.shortcut_text.config(bg=grey_button_color)
-        
-        self.general_frame.config(bg=grey_button_color)
-        self.general_text.config(bg=grey_button_color)
-        
-        self.about_frame.config(bg=grey_button_color)
-        self.about_label.config(bg=grey_button_color)
-
-    
-    
