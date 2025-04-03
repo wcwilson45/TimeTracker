@@ -251,7 +251,7 @@ class App:
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  
             self.page_title.config(text="Tags Database", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("530x610")
+            self.root.geometry("640x580")
             self.query_database()
         elif page_name == "Analytics":
             self.current_page = self.analytics_page  
@@ -1356,7 +1356,34 @@ class App:
                     # If the first row matches the header, remove it
                     if header == expected_header:
                         data = data[1:]
-        
+
+            tags_path = str(path).replace('task_list.db', 'tags.db')
+            tag = []
+            for tags in data:
+                tag.append(tags[5])
+            
+            # Fetch existing tag names from the database
+            conn = sqlite3.connect(tags_path)
+            c = conn.cursor()
+            c.execute("SELECT tag_name FROM tags")
+            existing_tags = [tag[0] for tag in c.fetchall()]  # List of tag names already in the DB
+            conn.close()
+
+            # Insert new tags into the database if they do not exist
+            conn = sqlite3.connect(tags_path)
+            c = conn.cursor()
+
+            for new_tag in tag:
+                if new_tag not in existing_tags:
+                    try:
+                        # Insert the new tag into the 'tags' table
+                        c.execute("INSERT INTO tags (tag_name) VALUES (?)", (new_tag,))
+                    except sqlite3.Error as e:
+                        print(f"Error inserting tag '{new_tag}': {str(e)}")
+
+            # Commit the changes and close the connection
+            conn.commit()
+            conn.close()
             # Connect to the SQLite database
             conn = sqlite3.connect(path)
             c = conn.cursor()
