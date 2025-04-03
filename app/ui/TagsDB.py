@@ -19,6 +19,27 @@ class TagsDB(tk.Frame):
 
         self.path = pathlib.Path(__file__).parent
         self.path = str(self.path).replace("TagsDB.py", '') + '\\Databases' + '\\tags.db'
+
+        # Create or Connect to the database
+        conn = sqlite3.connect(self.path)
+
+        # Create a cursor instance
+        c = conn.cursor()
+
+        c.execute("SELECT tag_name FROM tags")  # Fetch tag_names from tag database
+        tags = c.fetchall()
+        global values
+        values = []
+
+        # Add data to the list
+        for tag in tags:
+            values.append(tag[0])
+
+        # Commit changes
+        conn.commit()
+
+        # Close connection to the database
+        conn.close()
         
 
         # Create or Connect to database
@@ -41,7 +62,7 @@ class TagsDB(tk.Frame):
 
         # Close connection to database
         conn.close()
-
+        
         def query_database():
             # Create or Connect to the database
             conn = sqlite3.connect(self.path)
@@ -226,7 +247,7 @@ class TagsDB(tk.Frame):
         # Remove all Tags
         def remove_all_Tags():
             # Add a little message box for fun
-            response = messagebox.askyesno("WOAH!!!!", "This Will Delete EVERYTHING From The Table\nAre You Sure?!")
+            response = messagebox.askyesno("Delete All Tags", "This Will Delete EVERYTHING from the database.\nAre You Sure?")
 
             #Add logic for message box
             if response == 1:
@@ -270,32 +291,38 @@ class TagsDB(tk.Frame):
 
         # Add Tag to db
         def add_Tag():
-            #Create db connection
-            conn = sqlite3.connect(self.path)
 
-            # Create cursor
-            c = conn.cursor()
+            if n_entry.get() not in values:
+                #Create db connection
+                conn = sqlite3.connect(self.path)
 
-            c.execute("INSERT INTO tags (tag_name, description) VALUES (:name, :desc)",
-              {
-                'name': n_entry.get(),
-                'desc': desc_text.get("1.0", "end-1c")
-              })
+                # Create cursor
+                c = conn.cursor()
+                c.execute("INSERT INTO tags (tag_name, description) VALUES (:name, :desc)",
+                {
+                    'name': n_entry.get(),
+                    'desc': desc_text.get("1.0", "end-1c")
+                })
 
-            conn.commit()
-            conn.close()
+                conn.commit()
+                conn.close()
 
-            # Clear entry boxes
-            n_entry.delete(0, END)
-            desc_text.delete("1.0", END)
-            id_display.configure(text="")
+                # Clear entry boxes
+                n_entry.delete(0, END)
+                desc_text.delete("1.0", END)
+                id_display.configure(text="")
 
-            # Clear Treeview table
-            my_tree.delete(*my_tree.get_children())
+                # Clear Treeview table
+                my_tree.delete(*my_tree.get_children())
 
-            # Query Data base to add data
-            query_database()
+                # Query Data base to add data
+                query_database()
 
+            else:
+                messagebox.showwarning("Warning", f"The tag your adding already exists.")
+            self.lift()
+            self.focus_force()
+            return
 
         # Update Tag
         def update_Tag():
@@ -376,13 +403,12 @@ class TagsDB(tk.Frame):
 
 
         def import_Tags():
-            global data
             # Ask user for the file
             file_path = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
-            # If file has been selected cont
+            # If file has been selected, proceed
             if file_path:
-                # Open file and read from file
+                # Open the file and read from it
                 with open(file_path, "r", encoding="utf-8-sig") as file:
                     csv_reader = csv.reader(file)
                     data = list(csv_reader)
@@ -395,20 +421,45 @@ class TagsDB(tk.Frame):
                         # If the first row matches the header, remove it
                         if header == expected_header:
                             data = data[1:]
-            
-            # Connect to the SQLite database
-            conn = sqlite3.connect(self.path)
-            c = conn.cursor()
 
-            # Insert data into the table
-            c.executemany("INSERT INTO tags (tag_name, description) VALUES (?, ?)", data)
+                # Fetch existing tag names from the database
+                conn = sqlite3.connect(self.path)
+                c = conn.cursor()
+                c.execute("SELECT tag_name FROM tags")
+                existing_tags = [tag[0] for tag in c.fetchall()]  # List of tag names already in the DB
+                conn.close()
 
-            # Commit the changes and close the connection
-            conn.commit()
-            conn.close()
+                # Import tags from CSV to the database
+                for tag in data:
+                    tag_name = tag[0]
+                    description = tag[1]
 
-            query_database()
+                    # Check if the tag already exists in the database
+                    if tag_name not in existing_tags:
+                        # Connect to the SQLite database
+                        conn = sqlite3.connect(self.path)
+                        c = conn.cursor()
 
+                        print(f"Inserting tag: {tag_name}, {description}")
+                        # Insert data into the table
+                        c.execute("INSERT INTO tags (tag_name, description) VALUES (?, ?)", (tag_name, description))
+
+                        # Commit the changes and close the connection
+                        conn.commit()
+                        conn.close()
+
+                        # Clear Treeview table
+                        my_tree.delete(*my_tree.get_children())
+
+                        # Query the database to update the Treeview with new data
+                        query_database()
+
+                    else:
+                        # Show a warning if the tag already exists
+                        messagebox.showwarning("Warning", f"The Tag '{tag_name}' you are trying to import already exists")
+                        self.lift()
+                        self.focus_force()
+                        return
 
         def export_Tags():
             # Connect to the database
