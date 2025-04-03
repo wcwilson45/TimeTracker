@@ -13,6 +13,11 @@ global path
 path = pathlib.Path(__file__).parent
 path = str(path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list.db'
 
+bad_btn = "#e99e56"
+good_btn = "#77DD77"
+bg_color = "#A9A9A9"
+frame_color = "#dcdcdc"
+
 class TaskHistoryDB:
     def __init__(self):
         self.path = pathlib.Path(__file__).parent
@@ -83,12 +88,31 @@ class TaskHistoryDB:
         conn.close()
         
         return history
+        
+    def get_specific_history_entry(self, task_id, date, field):
+        """Get a specific history entry based on task_id, date, and field"""
+        conn = sqlite3.connect(self.path)
+        c = conn.cursor()
+        
+        c.execute("""
+            SELECT change_date, field_changed, old_value, new_value
+            FROM task_history
+            WHERE task_id = ? AND change_date = ? AND field_changed = ?
+        """, (task_id, date, field))
+        
+        entry = c.fetchone()
+        conn.close()
+        
+        return entry
 
 class CommitHistoryWindow(tk.Toplevel):
-    def __init__(self, task_id):
+    def __init__(self, task_id, selected_date=None, selected_field=None):
         super().__init__()
         self.task_id = task_id
+        self.selected_date = selected_date
+        self.selected_field = selected_field
         self.history_db = TaskHistoryDB()
+        self.resizable(width = 0, height = 0)
         
         # Window setup
         self.title("Task History")
@@ -108,8 +132,6 @@ class CommitHistoryWindow(tk.Toplevel):
         # Timeline frame on the left
         timeline_frame = ttk.Frame(self)
         timeline_frame.pack(side="left", fill="y", padx=10, pady=10)
-        
-        ttk.Label(timeline_frame, text="Change History", font=self.fonts['header']).pack(pady=(0, 10))
 
         # Configure Treeview style
         style = ttk.Style()
@@ -117,20 +139,17 @@ class CommitHistoryWindow(tk.Toplevel):
             "Treeview", 
             background="#d3d3d3",
             foreground="black",  # Text color - black for readability
-            rowheight=25,
+            rowheight=20,
             fieldbackground="#d3d3d3"  # Field background color
         )
         
         # Create timeline list
-        self.timeline = ttk.Treeview(timeline_frame, columns=("date",), show="headings", height=20, style = "Treeview")
+        self.timeline = ttk.Treeview(timeline_frame, columns=("date", "field"), show="headings", height=20, style="Treeview")
         self.timeline.heading("date", text="Date & Time")
-        self.timeline.column("date", width=150)
-        self.timeline.pack(fill="y", expand=True)
-        
-        # Add a scrollbar for the timeline
-        timeline_scroll = ttk.Scrollbar(timeline_frame, orient="vertical", command=self.timeline.yview)
-        timeline_scroll.pack(side="right", fill="y")
-        self.timeline.configure(yscrollcommand=timeline_scroll.set)
+        self.timeline.heading("field", text="Field Changed")
+        self.timeline.column("date", width=0)
+        self.timeline.column("field", width=0)
+        self.timeline.pack(fill="y")
         
         # Details frame on the right
         details_frame = ttk.Frame(self)
@@ -140,18 +159,19 @@ class CommitHistoryWindow(tk.Toplevel):
         prev_frame = ttk.LabelFrame(details_frame, text="Previous State")
         prev_frame.pack(fill="both", expand=True, pady=(0, 5))
         
-        self.prev_text = tk.Text(prev_frame, height=10, wrap="word")
+        self.prev_text = tk.Text(prev_frame, height=10, wrap="word", bg="#d3d3d3")
         self.prev_text.pack(fill="both", expand=True, padx=5, pady=5)
         
         # New state
         new_frame = ttk.LabelFrame(details_frame, text="Changed State")
         new_frame.pack(fill="both", expand=True, pady=(5, 0))
         
-        self.new_text = tk.Text(new_frame, height=10, wrap="word")
+        self.new_text = tk.Text(new_frame, height=10, wrap="word", bg="#d3d3d3")
         self.new_text.pack(fill="both", expand=True, padx=5, pady=5)
         
         # Bind selection event
         self.timeline.bind("<<TreeviewSelect>>", self.on_select_change)
+        self.timeline.pack_forget()
 
     def load_history(self):
         history = self.history_db.get_task_history(self.task_id)
@@ -162,10 +182,25 @@ class CommitHistoryWindow(tk.Toplevel):
         
         # Insert history records
         for i, (date, field, old_val, new_val) in enumerate(history):
-            self.timeline.insert("", "end", values=(date,), tags=(date, field, old_val, new_val))
+            item_id = self.timeline.insert("", "end", values=(date, field), tags=(date, field, old_val, new_val))
+            
+            # If this is the selected date and field, store the item_id
+            if (self.selected_date and date == self.selected_date and 
+                self.selected_field and field == self.selected_field):
+                self.selected_item_id = item_id
+            # If only date is specified, still select it
+            elif self.selected_date and date == self.selected_date and not self.selected_field:
+                self.selected_item_id = item_id
         
-        # Select the first item if it exists
-        if self.timeline.get_children():
+        # Select the appropriate item
+        if hasattr(self, 'selected_item_id'):
+            # Select the item that matches the selected date and field
+            self.timeline.selection_set(self.selected_item_id)
+            self.timeline.focus(self.selected_item_id)
+            self.timeline.see(self.selected_item_id)  # Ensure it's visible
+            self.on_select_change(None)  # Trigger the selection event
+        elif self.timeline.get_children():
+            # Otherwise select the first item if it exists
             first_item = self.timeline.get_children()[0]
             self.timeline.selection_set(first_item)
             self.timeline.focus(first_item)
@@ -188,7 +223,7 @@ class CommitHistoryWindow(tk.Toplevel):
 
 
 class CompletedTasksWindow(tk.Tk):
-    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, task_description=None, refresh_callback=None, start_date = None):
+    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, task_description=None, refresh_callback=None, start_date=None):
         super().__init__()
         self.history_db = TaskHistoryDB()
         self.task_name = task_name
@@ -199,6 +234,7 @@ class CompletedTasksWindow(tk.Tk):
         self.start_date = start_date
         self.refresh_callback = refresh_callback
         self.commit_history_window = None
+        self.resizable(width = 0, height = 0)
 
         # Font Tuples for Use on pages
         self.fonts = {
@@ -290,7 +326,7 @@ class CompletedTasksWindow(tk.Tk):
             messagebox.showerror("Error", "No task selected to complete.")
 
     def cancel_task(self):
-        self.destroy(CompletedTasksWindow)
+        self.destroy()
 
     def load_history_data(self):
         """Load the task history data into the Treeview"""
@@ -324,34 +360,55 @@ class CompletedTasksWindow(tk.Tk):
         if self.task_id:
             # Get the selected item for focused history
             selected = self.history_tree.selection()
+            selected_date = None
+            selected_field = None
+            
+            if selected:
+                # Get the date and field from the selected item
+                selected_values = self.history_tree.item(selected[0])['values']
+                if len(selected_values) >= 2:
+                    selected_date = selected_values[0]  # Date is at index 0
+                    selected_field = selected_values[1]  # Field is at index 1
             
             if self.commit_history_window is None or not tk.Toplevel.winfo_exists(self.commit_history_window):
-                self.commit_history_window = CommitHistoryWindow(self.task_id)
+                # Pass the selected date AND field to the CommitHistoryWindow
+                self.commit_history_window = CommitHistoryWindow(
+                    self.task_id, 
+                    selected_date, 
+                    selected_field
+                )
                 self.commit_history_window.grab_set()  # Make window modal
                 
                 # Position the history window relative to this window
                 if self.winfo_exists():
                     x = self.winfo_x() + 50
                     y = self.winfo_y() + 50
-                    self.commit_history_window.geometry(f"+{x}+{y}")
-                
-                # If a specific history item is selected, focus on it
-                if selected:
-                    # Find the corresponding item in the history window
-                    selected_date = self.history_tree.item(selected[0])['values'][0]
-                    
-                    # Find and select the matching item in the new window's timeline
-                    for item in self.commit_history_window.timeline.get_children():
-                        if self.commit_history_window.timeline.item(item)['values'][0] == selected_date:
-                            self.commit_history_window.timeline.selection_set(item)
-                            self.commit_history_window.timeline.focus(item)
-                            self.commit_history_window.on_select_change(None)  # Trigger update
-                            break
+                    self.commit_history_window.geometry("800x600")
             else:
+                # If window already exists, bring it to front and update selected item if needed
                 self.commit_history_window.lift()
                 self.commit_history_window.focus_force()
+                
+                # If a different item is selected, update the CommitHistoryWindow
+                if selected and selected_date:
+                    # Update the selected properties
+                    self.commit_history_window.selected_date = selected_date
+                    self.commit_history_window.selected_field = selected_field
+                    # Reload history with the new selection
+                    self.commit_history_window.load_history()
         else:
             messagebox.showwarning("No Task Selected", "Please select a task to view its history.")
+    
+    def on_history_select(self, event):
+        """Handle selection in the history tree"""
+        selected = self.history_tree.selection()
+        if selected:
+            # Get the date, field, and values from the selected item
+            item = self.history_tree.item(selected[0])
+            date, field, old_val, new_val = item["tags"][1:5]  # Skip the 'oddrow'/'evenrow' tag
+            
+            # Highlight the selected row
+            self.history_tree.focus(selected[0])
     
     def search_commit(self, event=None):
         """Search through commit history by date or field changed"""
@@ -377,11 +434,14 @@ class CompletedTasksWindow(tk.Tk):
                     tags=(tag, date, field, old_val, new_val)  # Store full data in tags for reference
                 )
         else:
-            # Search for matching date or field
+            # Search for matching date or field or values
             matches = []
             for i, (date, field, old_val, new_val) in enumerate(history):
-                # Check if the search term is in the date or field (case-insensitive)
-                if lookup in date.lower() or lookup in field.lower():
+                # Check if the search term is in the date, field, or values (case-insensitive)
+                if (lookup in date.lower() or 
+                    lookup in field.lower() or 
+                    lookup in old_val.lower() or 
+                    lookup in new_val.lower()):
                     matches.append((i, date, field, old_val, new_val))
             
             # Insert matching items
@@ -575,7 +635,7 @@ class CompletedTasksWindow(tk.Tk):
         
         # ===== BUTTON AREA =====
         btn_frame = tk.Frame(self, bg="#A9A9A9")
-        btn_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="sew")
+        btn_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="sew")
         
         # Configure for right-aligned buttons
         btn_frame.grid_columnconfigure(0, weight=1)  # Spacer that pushes buttons right
@@ -583,13 +643,13 @@ class CompletedTasksWindow(tk.Tk):
         btn_frame.grid_columnconfigure(2, weight=0)  # Cancel button
         
         complete_btn = tk.Button(btn_frame, text="Complete", command=self.complete_task,
-                               bg="#90EE90", fg="#000000", font=("SF Pro Text", 10),
+                               bg=good_btn, fg="#000000", font=("SF Pro Text", 10),
                                activebackground="#A8F0A8", activeforeground="#000000",
                                width=10)
         complete_btn.grid(row=0, column=1, padx=10, pady=5, sticky="e")
 
         cancel_btn = tk.Button(btn_frame, text="Cancel", command=self.destroy,
-                             bg="#F08080", fg="#000000", font=("SF Pro Text", 10),
+                             bg=bad_btn, fg="#000000", font=("SF Pro Text", 10),
                              activebackground="#F49797", activeforeground="#000000",
                              width=10)
         cancel_btn.grid(row=0, column=2, padx=(0, 10), pady=5, sticky="e")

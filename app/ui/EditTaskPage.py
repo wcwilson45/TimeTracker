@@ -64,7 +64,6 @@ class EditTaskWindow(tk.Tk):
 
         conn.close()
 
-        print(self.edit_task)
         if self.edit_task:
             self.task_name_var = edit_task[0]
             self.task_time_var = edit_task[1]
@@ -93,14 +92,32 @@ class EditTaskWindow(tk.Tk):
 
 
     def insert_task(self):
+        """Modified insert_task method to handle tags properly"""
+        # Insert task details
         self.task_name_entry.insert(0, self.edit_task[0])
         self.task_time_entry.insert(0, self.edit_task[1])
         self.value_combo.set(self.edit_task[2])
         self.start_date_entry.insert(0, self.edit_task[4])
-        self.end_date_entry.insert(0, self.edit_task[5])
+        self.end_date_entry.insert(0, self.edit_task[5] if self.edit_task[5] else "")
         self.type_combo.set(self.edit_task[7])
-        self.desc_text_entry.insert("1.0", self.edit_task[6])
-        self.task_tags_entry.insert("1.0", self.edit_task[8])
+        self.desc_text_entry.insert("1.0", self.edit_task[6] if self.edit_task[6] else "")
+        
+        # Handle tags - first clear any existing content
+        self.task_tags_entry.delete("1.0", "end")
+        
+        # Insert tags if they exist
+        if self.edit_task[8]:
+            self.task_tags_entry.insert("1.0", self.edit_task[8])
+            
+            # Also select the corresponding tags in the listbox
+            tag_list = self.edit_task[8].strip().split('\n')
+            
+            # Loop through listbox items and select those that match our tags
+            for i in range(self.tag_listbox.size()):
+                item_text = self.tag_listbox.get(i)
+                if item_text in tag_list:
+                    self.tag_listbox.selection_set(i)
+
 
     def update_values(self, event=None):
         selected_type = self.type_combo.get()
@@ -113,12 +130,16 @@ class EditTaskWindow(tk.Tk):
         self.value_combo.set("Select Value")
     
     def update_tag_entry(self):
+        """Updated tag entry function to handle tag selection properly"""
         # Get selected values from the Listbox widget
         selected_values = [self.tag_listbox.get(idx) for idx in self.tag_listbox.curselection()]
 
-        # Update with the selected values
-        self.task_tags_entry.delete(1.0, "end")  # Clear the Text widget
-        self.task_tags_entry.insert("1.0", "\n".join(selected_values))  # Insert the selected tags
+        # Update with the selected values - clear first
+        self.task_tags_entry.delete("1.0", "end")
+        
+        # Insert as newline-separated
+        if selected_values:
+            self.task_tags_entry.insert("1.0", "\n".join(selected_values))
 
     def cancel_action(self):
         # Implement the cancel action (e.g., close the window)
