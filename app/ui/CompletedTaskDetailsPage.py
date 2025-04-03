@@ -115,13 +115,14 @@ class CommitHistoryWindow(tk.Toplevel):
         
         # Window setup
         self.title("Task History")
-        self.geometry("800x600")
+        self.geometry("800x480")
         self.configure(bg="#A9A9A9")
-        self.resizable(width = 0, height = 0)
+        self.resizable(width=0, height=0)
         
         # Fonts
         self.fonts = {
             'header': tkfont.Font(family="SF Pro Display", size=16, weight="bold"),
+            'subheader': tkfont.Font(family="SF Pro Display", size=12, weight="bold"),
             'body': tkfont.Font(family="SF Pro Text", size=12)
         }
         
@@ -129,49 +130,139 @@ class CommitHistoryWindow(tk.Toplevel):
         self.load_history()
 
     def create_widgets(self):
-        # Timeline frame on the left
-        timeline_frame = ttk.Frame(self)
-        timeline_frame.pack(side="left", fill="y", padx=10, pady=10)
-
-        # Configure Treeview style
-        style = ttk.Style()
-        style.configure(
-            "Treeview", 
-            background="#d3d3d3",
-            foreground="black",  # Text color - black for readability
-            rowheight=20,
-            fieldbackground="#d3d3d3"  # Field background color
-        )
+        # Main container
+        main_container = tk.Frame(self, bg="#A9A9A9")
+        main_container.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # Create timeline list
-        self.timeline = ttk.Treeview(timeline_frame, columns=("date", "field"), show="headings", height=20, style="Treeview")
+        # Top section for timeline
+        top_frame = tk.Frame(main_container, bg="#A9A9A9")
+        top_frame.pack(fill="x", padx=5, pady=5)
+        
+        # Timeline list with scrollbar
+        timeline_frame = tk.Frame(top_frame, bg="#A9A9A9")
+        timeline_frame.pack(fill="x", expand=True)
+        
+        timeline_scroll = ttk.Scrollbar(timeline_frame, orient="horizontal")
+        timeline_scroll.pack(side="bottom", fill="x")
+        
+        self.timeline = ttk.Treeview(
+            timeline_frame, 
+            columns=("date", "field"), 
+            show="headings", 
+            height=6, 
+            xscrollcommand=timeline_scroll.set
+        )
         self.timeline.heading("date", text="Date & Time")
         self.timeline.heading("field", text="Field Changed")
-        self.timeline.column("date", width=0)
-        self.timeline.column("field", width=0)
-        self.timeline.pack(expand=True)
+        self.timeline.column("date", width=150)
+        self.timeline.column("field", width=150)
+        self.timeline.pack(fill="x", expand=True)
         
-        # Details frame on the right
-        details_frame = ttk.Frame(self)
-        details_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+        timeline_scroll.config(command=self.timeline.xview)
         
-        # Previous state
-        prev_frame = ttk.LabelFrame(details_frame, text="Previous State")
-        prev_frame.pack(fill="both", expand=True, pady=(0, 5))
+        # Bottom frame to hold the comparison panels
+        bottom_frame = tk.Frame(main_container, bg="#A9A9A9")
+        bottom_frame.pack(fill="both", expand=True, pady=1)
         
-        self.prev_text = tk.Text(prev_frame, height=10, wrap="word", bg="#d3d3d3")
-        self.prev_text.pack(fill="both", expand=True, padx=5, pady=5)
+        # Configure the grid for even spacing
+        bottom_frame.columnconfigure(0, weight=1)
+        bottom_frame.columnconfigure(1, weight=1)
         
-        # New state
-        new_frame = ttk.LabelFrame(details_frame, text="Changed State")
-        new_frame.pack(fill="both", expand=True, pady=(5, 0))
+        # Two main panels for comparison
+        # Previous state panel
+        self.previous_panel = tk.LabelFrame(bottom_frame, text="Previous State", 
+                                       font=self.fonts['subheader'],
+                                       bg="#d3d3d3", fg="#000000")
+        self.previous_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
         
-        self.new_text = tk.Text(new_frame, height=10, wrap="word", bg="#d3d3d3")
-        self.new_text.pack(fill="both", expand=True, padx=5, pady=5)
+        # New state panel
+        self.new_panel = tk.LabelFrame(bottom_frame, text="Changed State", 
+                                   font=self.fonts['subheader'],
+                                   bg="#d3d3d3", fg="#000000")
+        self.new_panel.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
         
-        # Bind selection event
+        # Create sub-frames for each panel
+        self.setup_panel_content(self.previous_panel, "previous")
+        self.setup_panel_content(self.new_panel, "new")
+        
+        # Close button at bottom
+        close_btn = tk.Button(main_container, text="Close", 
+                           command=self.destroy,
+                           bg=bad_btn, fg="#000000", 
+                           font=self.fonts['body'])
+        close_btn.pack(side = RIGHT, pady=1)
+        
+        # Bind timeline selection event
         self.timeline.bind("<<TreeviewSelect>>", self.on_select_change)
+
         self.timeline.pack_forget()
+        timeline_scroll.pack_forget()
+    
+    def setup_panel_content(self, parent_frame, panel_type):
+        """Create the sub-frames within each panel"""
+        # Date sub-frame
+        date_frame = tk.LabelFrame(parent_frame, text="Date", 
+                                bg="#d3d3d3", fg="#000000",
+                                font=self.fonts['subheader'])
+        date_frame.pack(fill="x", padx=10, pady=(10, 5))
+        
+        # Date value label
+        if panel_type == "previous":
+            self.prev_date_value = tk.Label(date_frame, text="", 
+                                       font=self.fonts['body'], 
+                                       bg="#d3d3d3", wraplength=300)
+            self.prev_date_value.pack(fill="x", padx=10, pady=5)
+        else:
+            self.new_date_value = tk.Label(date_frame, text="", 
+                                      font=self.fonts['body'], 
+                                      bg="#d3d3d3", wraplength=300)
+            self.new_date_value.pack(fill="x", padx=10, pady=5)
+        
+        # Field sub-frame
+        field_frame = tk.LabelFrame(parent_frame, text="Field Changed", 
+                                 bg="#d3d3d3", fg="#000000",
+                                 font=self.fonts['subheader'])
+        field_frame.pack(fill="x", padx=10, pady=5)
+        
+        # Field value label
+        if panel_type == "previous":
+            self.prev_field_value = tk.Label(field_frame, text="", 
+                                        font=self.fonts['body'], 
+                                        bg="#d3d3d3", wraplength=300)
+            self.prev_field_value.pack(fill="x", padx=10, pady=5)
+        else:
+            self.new_field_value = tk.Label(field_frame, text="", 
+                                       font=self.fonts['body'], 
+                                       bg="#d3d3d3", wraplength=300)
+            self.new_field_value.pack(fill="x", padx=10, pady=5)
+        
+        # Value sub-frame (using text widget for scrollable content)
+        value_frame = tk.LabelFrame(parent_frame, text="Value", 
+                                 bg="#d3d3d3", fg="#000000",
+                                 font=self.fonts['subheader'])
+        value_frame.pack(fill="both", expand=True, padx=10, pady=5)
+        
+        # Add scrollbars
+        scroll_y = ttk.Scrollbar(value_frame, orient="vertical")
+        scroll_y.pack(side="right", fill="y")
+        
+        # Value text widget
+        if panel_type == "previous":
+            self.prev_value_text = tk.Text(value_frame, height=10, width=30,
+                                      wrap="none", bg="#e0e0e0",
+                                      font=self.fonts['body'],
+                                      yscrollcommand=scroll_y.set)
+            self.prev_value_text.pack(fill="both", expand=True, padx=5, pady=5)
+            scroll_y.config(command=self.prev_value_text.yview)
+            self.prev_value_text.config(state="disabled")
+        else:
+            self.new_value_text = tk.Text(value_frame, height=10, width=30,
+                                     wrap="none", bg="#e0e0e0",
+                                     font=self.fonts['body'],
+                                     yscrollcommand=scroll_y.set)
+            self.new_value_text.pack(fill="both", expand=True, padx=5, pady=5)
+            scroll_y.config(command=self.new_value_text.yview)
+            self.new_value_text.config(state="disabled")
 
     def load_history(self):
         history = self.history_db.get_task_history(self.task_id)
@@ -214,12 +305,24 @@ class CommitHistoryWindow(tk.Toplevel):
         item = self.timeline.item(selection[0])
         date, field, old_val, new_val = item["tags"]
         
-        # Update text widgets
-        self.prev_text.delete(1.0, tk.END)
-        self.new_text.delete(1.0, tk.END)
+        # Update date values
+        self.prev_date_value.config(text=date)
+        self.new_date_value.config(text=date)
         
-        self.prev_text.insert(tk.END, f"Date: {date}\nField: {field}\nValue: {old_val}")
-        self.new_text.insert(tk.END, f"Date: {date}\nField: {field}\nValue: {new_val}")
+        # Update field values
+        self.prev_field_value.config(text=field)
+        self.new_field_value.config(text=field)
+        
+        # Update value text widgets (must enable first, then disable after)
+        self.prev_value_text.config(state="normal")
+        self.prev_value_text.delete(1.0, tk.END)
+        self.prev_value_text.insert(tk.END, old_val)
+        self.prev_value_text.config(state="disabled")
+        
+        self.new_value_text.config(state="normal")
+        self.new_value_text.delete(1.0, tk.END)
+        self.new_value_text.insert(tk.END, new_val)
+        self.new_value_text.config(state="disabled")
 
 class CompletedTaskDetailsWindow(tk.Toplevel):
     def __init__(self, task_id=None, parent=None):
@@ -430,7 +533,7 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
                 )
 
     def setup_ui(self):
-        self.geometry("900x500")
+        self.geometry("900x520")
         self.title("Task Details")
         self.configure(bg="#A9A9A9")
 
@@ -619,7 +722,7 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
                              bg=bad_btn, fg="#000000", font=("SF Pro Text", 10),
                              activebackground="#F49797", activeforeground="#000000",
                              width=10)
-        cancel_btn.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="e")
+        cancel_btn.grid(row=0, column=0, padx=(0, 10), pady=5, sticky="e")
         
         # Load history data if we have a task ID
         if self.task_id:
