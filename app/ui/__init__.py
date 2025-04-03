@@ -9,6 +9,8 @@ from .TagsDB import TagsDB
 from .CompletedTasksList import CompletedTasksList
 from .Analytics import AnalyticsPage
 from .ArchiveTaskList import ArchiveTasksList
+from .SettingsPage import SettingsPage
+from .SettingsPage import HelpPage
 
 #from app.ui import SmallOverlay
 #from app.ui import CompletionPage
