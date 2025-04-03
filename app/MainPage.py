@@ -22,7 +22,9 @@ from ui import (
     TagsDB,
     CompletedTasksList,
     AnalyticsPage,
-    ArchiveTasksList
+    ArchiveTasksList, 
+    SettingsPage,
+    HelpPage
 )
 from ui.CommitHistoryPage import CommitHistoryWindow
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
@@ -170,6 +172,8 @@ class App:
       self.tags_database_page = TagsDB(self.main_container)
       self.analytics_page = AnalyticsPage(self.main_container)
       self.archive_page = ArchiveTasksList(self.main_container, self)
+      self.help_page = HelpPage(self.main_container, self)
+      self.settings_page = SettingsPage(self.main_container, self)
 
       #Show main page at start-up
       self.current_page = self.full_page
@@ -183,12 +187,16 @@ class App:
       self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
       self.popup_menu.add_command(label="Analytics", command=lambda: self.switch_page("Analytics"))
       self.popup_menu.add_command(label="Archive", command=lambda: self.switch_page("Archive"))
+      self.popup_menu.add_command(label="Help", command=lambda: self.switch_page("Help"))
+      self.popup_menu.add_command(label="Settings", command=lambda: self.switch_page("Settings"))
       # self.popup_menu.add_command(label="Commit History", command=lambda: self.switch_page("Commit History"))
       self.popup_menu.configure(bg= background_color)
 
       self.setup_smalloverlay_page()
       self.setup_full_page()
       self.completedtasks_page.pack_forget()
+
+      #self.initialize_ui_enhancements()
       
 
       #Query the database for all information inside
@@ -256,11 +264,16 @@ class App:
             self.page_title.config(text="Archived Tasks", background=background_color)
             self.root.geometry("650x515")
             self.archive_page.load_archive_tasks()
-        # elif page_name == "Commit History":
-        #     self.current_page = self.commit_page
-        #     self.page_title.config(text = "Commit History", background=background_color)
-        #     self.root.geometry("650x600")
-        #     self.commit_page.create_main_layout()
+        elif page_name == "Help":
+            self.current_page = self.help_page
+            self.page_title.config(text = "Help", background=background_color)
+            self.root.geometry("650x600")
+            self.query_database()
+        elif page_name == "Settings":
+            self.current_page = self.settings_page
+            self.page_title.config(text = "Settings", background=background_color)
+            self.root.geometry("650x600")
+            self.query_database()
             
 
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
@@ -325,7 +338,7 @@ class App:
     def setup_full_page(self):
         self.full_page.configure(background= background_color)
         style = ttk.Style()
-        style.configure('TLabel', background="#dcdcdc")
+        style.configure('TLabel', background= "#dcdcdc")
         style.theme_use('alt')
         style.configure("Treeview",
         background = "black",
@@ -436,6 +449,7 @@ class App:
 
         self.search_entry = tk.Entry(top_btn_frame, bg="#dcdcdc", width = 15)
         self.search_entry.grid(row = 0, column= 5, padx = 4, pady= 6)
+        self.search_entry.bind("<KeyRelease>", self.search_Task)
 
         #Create scrollbar
         tasklist_scroll = Scrollbar(tasklist_frame)
@@ -528,7 +542,7 @@ class App:
         remove_all_button.grid(row = 0, column = 4, padx = 6, pady = 10)
 
 
-        select_record_button = tk.Button(button_frame, text = "Select Record",bg = main_btn_color, command = self.select_current_task)
+        select_record_button = tk.Button(button_frame, text = "Select Task",bg = main_btn_color, command = self.select_current_task)
         select_record_button.grid(row = 0, column = 2, padx = 6, pady = 10)
 
         #Uses select button on single click. Takes value from TreeView, not the database
@@ -781,6 +795,8 @@ class App:
             self.task_id_label.config(text=cur_task[3])  # Assuming Task ID is at index 3
             self.time_box_full.delete("1.0", END)
             self.time_box_full.insert("1.0", cur_task[1])  # Assuming Task Time is at index 1
+            self.time_box_overlay.delete("1.0", END)
+            self.time_box_overlay.insert("1.0", cur_task[1])
             self.description_box.delete("1.0", END)
             self.description_box.insert("1.0", cur_task[6])  # Assuming description is at index 6
             self.disable_boxes()
@@ -1320,11 +1336,12 @@ class App:
         self.small_overlay_stop_button.config(state=stop_state)
 
     def import_Tasks(self):
+        """Import tasks from a CSV file with proper tag handling"""
         global data
         # Ask user for the file
         file_path = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
-        # If file has been selected cont
+        # If file has been selected continue
         if file_path:
             # Open file and read from file
             with open(file_path, "r", encoding="utf-8-sig") as file:
@@ -1362,20 +1379,84 @@ class App:
             tasks_skipped = 0
             skipped_tasks = []
 
+            # Get the tags database path
+            tags_path = str(path).replace('task_list.db', 'tags.db')
+            
+            # Connect to tags database to get valid tags
+            tags_conn = sqlite3.connect(tags_path)
+            tags_c = tags_conn.cursor()
+            
+            # Get all valid tag names
+            tags_c.execute("SELECT tag_name FROM tags")
+            valid_tags = [row[0] for row in tags_c.fetchall()]
+            tags_conn.close()
+
             # Filter out tasks with names that already exist in the database
             filtered_data = []
             for task in data:
+                if len(task) < 6:
+                    # Skip tasks with incomplete data
+                    tasks_skipped += 1
+                    if task and len(task) > 0:
+                        skipped_tasks.append(task[0])
+                    continue
+                    
                 if task[0] not in existing_tasks:  # task[0] is the task name
-                    filtered_data.append(task)
+                    # Process the task tags (index 5) to ensure they're in the correct format
+                    tag_text = task[5].strip()
+                    
+                    # Split tags if they're comma-separated
+                    if ',' in tag_text:
+                        tag_list = [t.strip() for t in tag_text.split(',')]
+                    else:
+                        tag_list = [t.strip() for t in tag_text.split() if t.strip()]  # Split by whitespace if no commas
+                    
+                    # Only keep valid tags that exist in the tags database
+                    valid_task_tags = [tag for tag in tag_list if tag in valid_tags]
+                    
+                    # Format tags as newline-separated list (the format used by the app)
+                    formatted_tags = '\n'.join(valid_task_tags)
+                    
+                    # Update the task data with formatted tags
+                    task_with_formatted_tags = list(task)
+                    task_with_formatted_tags[5] = formatted_tags
+                    
+                    filtered_data.append(task_with_formatted_tags)
                     tasks_imported += 1
                 else:
                     tasks_skipped += 1
                     skipped_tasks.append(task[0])
 
-            # Insert filtered data into the table
+            # Get the max list_place value
+            c.execute("SELECT COALESCE(MAX(list_place), 0) FROM TaskList")
+            max_list_place = c.fetchone()[0] or 0
+            
+            # Insert filtered data into the table with proper list_place values
             if filtered_data:
-                c.executemany("""INSERT INTO TaskList (task_name, task_weight, task_start_date, task_description,
-                            task_weight_type, task_tags) VALUES (?, ?, ?, ?, ?, ?)""", filtered_data)
+                for i, task_data in enumerate(filtered_data):
+                    # Add a default task time
+                    task_time = "00:00:00"
+                    
+                    # Set end date to None (can be updated later)
+                    task_end_date = None
+                    
+                    # Use prepared statement
+                    c.execute("""
+                        INSERT INTO TaskList (
+                            task_name, task_weight, task_start_date, task_description,
+                            task_weight_type, task_tags, task_time, task_end_date, list_place
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        task_data[0],  # task_name
+                        task_data[1],  # task_weight
+                        task_data[2],  # task_start_date
+                        task_data[3],  # task_description
+                        task_data[4],  # task_weight_type
+                        task_data[5],  # task_tags (properly formatted)
+                        task_time,     # default task_time
+                        task_end_date, # default task_end_date (None)
+                        max_list_place + i + 1  # increment list_place for each task
+                    ))
 
             # Commit the changes and close the connection
             conn.commit()
@@ -1385,12 +1466,12 @@ class App:
             if tasks_imported > 0 and tasks_skipped > 0:
                 messagebox.showinfo("Import Results", 
                                 f"Successfully imported {tasks_imported} tasks.\n"
-                                f"Skipped {tasks_skipped} tasks with duplicate names found in TaskList, CurrentTask, or CompletedTasks.")
+                                f"Skipped {tasks_skipped} tasks with duplicate names or missing data.")
                 
                 # If there are many skipped tasks, offer to show them in a separate dialog
                 if tasks_skipped > 5:
                     show_details = messagebox.askyesno("Show Details", 
-                                                    "Would you like to see the list of skipped tasks?")
+                                                    f"Would you like to see the list of skipped tasks?")
                     if show_details:
                         skipped_list = "\n".join(skipped_tasks[:20])
                         if len(skipped_tasks) > 20:
@@ -1401,14 +1482,13 @@ class App:
                 messagebox.showinfo("Import Complete", f"Successfully imported {tasks_imported} tasks.")
             elif tasks_skipped > 0:
                 messagebox.showwarning("Import Failed", 
-                                    f"All {tasks_skipped} tasks already exist in the database. No new tasks were imported.")
+                                    f"All {tasks_skipped} tasks could not be imported due to duplicates or missing data.")
             else:
                 messagebox.showinfo("Import Notice", "No tasks were found to import.")
 
             self.query_database()
 
     def search_Task(self, event):
-            
 
             #Getting the name they entered
             lookup = self.search_entry.get()
@@ -1479,6 +1559,10 @@ class App:
 
             # Close connection to the database
             conn.close()
+ 
+ 
+
+
     def setup_keyboard_shortcuts(self):
         """Setup keyboard shortcuts for common operations"""
         # Global application shortcuts
@@ -1721,7 +1805,7 @@ class App:
         theme_label.pack(side="left", padx=(0, 10))
         
         theme_var = tk.StringVar(value=preferences.get('theme', 'light'))
-        theme_rb_light = tk.Radiobutton(theme_frame, text="Light", variable=theme_var, value="light", bg="#A9A9A9")
+        theme_rb_light = tk.Radiobutton(theme_frame, text="Light", variable=theme_var, value="light", bg="#dcdcdc")
         theme_rb_light.pack(side="left", padx=5)
         
         theme_rb_dark = tk.Radiobutton(theme_frame, text="Dark", variable=theme_var, value="dark", bg="#A9A9A9")
@@ -1866,6 +1950,7 @@ class App:
             # Set light theme colors
             self.bg_color = "#A9A9A9"
             self.fg_color = "#000000"
+            self.frame_color = "#dcdcdc"
             self.entry_bg_color = "#d3d3d3"
             self.button_bg_color = "#b2fba5"
             self.delete_button_bg_color = "#e99e56"
@@ -1889,6 +1974,8 @@ class App:
             # Update this widget's colors if applicable
             if isinstance(widget, (tk.Frame, tk.LabelFrame)):
                 widget.configure(bg=self.bg_color)
+            elif isinstance(widget, tk.LabelFrame):
+                widget.configure(bg = self.frame_color)
             elif isinstance(widget, tk.Label):
                 widget.configure(bg=self.bg_color, fg=self.fg_color)
             elif isinstance(widget, tk.Entry):

@@ -12,6 +12,13 @@ import pathlib
 global path 
 path = pathlib.Path(__file__).parent
 path = str(path).replace("CompletedTaskDetailsPage.py", '') + '\\Databases' + '\\task_list.db'
+
+
+bad_btn = "#e99e56"
+good_btn = "#77DD77"
+bg_color = "#A9A9A9"
+frame_color = "#dcdcdc"
+
 class TaskHistoryDB:
     def __init__(self):
         self.path = pathlib.Path(__file__).parent
@@ -110,6 +117,7 @@ class CommitHistoryWindow(tk.Toplevel):
         self.title("Task History")
         self.geometry("800x600")
         self.configure(bg="#A9A9A9")
+        self.resizable(width = 0, height = 0)
         
         # Fonts
         self.fonts = {
@@ -131,7 +139,7 @@ class CommitHistoryWindow(tk.Toplevel):
             "Treeview", 
             background="#d3d3d3",
             foreground="black",  # Text color - black for readability
-            rowheight=25,
+            rowheight=20,
             fieldbackground="#d3d3d3"  # Field background color
         )
         
@@ -232,6 +240,8 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
         
         # Setup UI
         self.setup_ui()
+
+        self.resizable(width=0, height=0)
         
         # Protocol handler for closing window
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -606,7 +616,7 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
         btn_frame.grid_columnconfigure(2, weight=0)  # Cancel button
 
         cancel_btn = tk.Button(btn_frame, text="Cancel", command=self.destroy,
-                             bg="#F08080", fg="#000000", font=("SF Pro Text", 10),
+                             bg=bad_btn, fg="#000000", font=("SF Pro Text", 10),
                              activebackground="#F49797", activeforeground="#000000",
                              width=10)
         cancel_btn.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="e")
