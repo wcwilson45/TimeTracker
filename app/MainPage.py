@@ -6,6 +6,7 @@ import tkinter as tk
 import tkinter.font as tkfont
 import sqlite3
 from datetime import datetime
+from config import DB_PATH, COLORS, FONTS
 import pathlib
 import csv
 import threading
@@ -30,87 +31,103 @@ from ui.CommitHistoryPage import CommitHistoryWindow
 #IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
 
 #Global Variables
-background_color = "#A9A9A9"
-grey_button_color = "#d3d3d3"
-green_button_color = "#77DD77"
-red_button_color = "#FF7276"
-scroll_trough_color = "#E0E0E0"
+background_color = COLORS["background_color"]
+grey_button_color = COLORS["grey_button_color"]
+green_button_color = COLORS["green_button_color"]
+red_button_color = COLORS["red_button_color"]
+scroll_trough_color = COLORS["scroll_trough_color"]
+main_btn_color = COLORS["main_btn_color"]
+del_btn_color = COLORS["del_btn_color"]
 
-main_btn_color = "#b2fba5"
-del_btn_color = "#e99e56"
+# Print current script location and working directory
+print("Current script location:", os.path.abspath(__file__))
+print("Current working directory:", os.getcwd())
+print("Python path:", sys.path)
 
 global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("MainPage.py", '') + '\\ui' + '\\Databases' + '\\task_list.db'
+path = DB_PATH
       
 
 #Create a database or connect to an existing database
-conn = sqlite3.connect(path)
+try:
+    # Ensure the database directory exists
+    os.makedirs(os.path.dirname(path), exist_ok=True)
 
-#Create a cursor instance
-c = conn.cursor()
+    # Connect to the database
+    conn = sqlite3.connect(path)
+    c = conn.cursor()
 
-#Table for TaskList database
-c.execute("""CREATE TABLE if not exists TaskList (
-          task_name text,
-          task_time text DEFAULT '00:00:00',
-          task_weight text,
-          task_id integer PRIMARY KEY AUTOINCREMENT,
-          task_start_date text,
-          task_end_date text,
-          task_description text,
-          task_weight_type text,
-          task_tags text, 
-          list_place integer
-          )
-""")
-#Table for Current Task
-c.execute("""CREATE TABLE if not exists CurrentTask(
-          task_name text,
-          task_time text,
-          task_weight text,
-          task_id integer,
-          task_start_date text,
-          task_end_date text,
-          task_description text,
-          task_weight_type text,
-          task_tags text)
-""")
+    # List of table creation statements with more verbose error handling
+    table_creations = [
+        ("TaskList", """CREATE TABLE IF NOT EXISTS TaskList (
+            task_name text,
+            task_time text DEFAULT '00:00:00',
+            task_weight text,
+            task_id integer PRIMARY KEY AUTOINCREMENT,
+            task_start_date text,
+            task_end_date text,
+            task_description text,
+            task_weight_type text,
+            task_tags text, 
+            list_place integer
+        )"""),
+        ("CurrentTask", """CREATE TABLE IF NOT EXISTS CurrentTask(
+            task_name text,
+            task_time text,
+            task_weight text,
+            task_id integer,
+            task_start_date text,
+            task_end_date text,
+            task_description text,
+            task_weight_type text,
+            task_tags text)
+        """),
+        ("CompletedTasks", """CREATE TABLE IF NOT EXISTS CompletedTasks (
+            task_name text,
+            task_time text,
+            task_weight text,
+            task_id integer PRIMARY KEY,
+            completion_date text,
+            total_duration text,
+            start_date text,
+            task_tags text,
+            task_weight_type text,
+            task_description text)
+        """),
+        ("ArchivedTasks", """CREATE TABLE IF NOT EXISTS ArchivedTasks (
+            task_name text,
+            task_time text,
+            task_weight text,
+            task_id integer PRIMARY KEY,
+            completion_date text,
+            total_duration text,
+            archive_date text,
+            task_tags text,
+            task_weight_type text,
+            task_description text)
+        """)
+    ]
 
-#Table for Completed database
-c.execute("""CREATE TABLE if not exists CompletedTasks (
-          task_name text,
-          task_time text,
-          task_weight text,
-          task_id integer,
-          completion_date text,
-          total_duration text,
-          start_date text,
-          task_tags text,
-          task_weight_type text,
-          task_description text,
-          PRIMARY KEY (task_id)
-)""")
+    # Execute each table creation statement with detailed error handling
+    for table_name, table_creation in table_creations:
+        try:
+            c.execute(table_creation)
+            print(f"Successfully created or verified {table_name} table")
+        except sqlite3.Error as table_error:
+            print(f"Error creating {table_name} table: {table_error}")
 
-# Table for Archive database
-c.execute("""CREATE TABLE if not exists ArchivedTasks (
-          task_name text,
-          task_time text,
-          task_weight text,
-          task_id integer,
-          completion_date text,
-          total_duration text,
-          archive_date text,
-          task_tags text,
-          task_weight_type text,
-          task_description text,
-          PRIMARY KEY (task_id)
-)""")
+    # Commit changes
+    conn.commit()
+    print("Database initialization complete")
 
+except sqlite3.Error as e:
+    print(f"Critical database initialization error: {e}")
+    import tkinter.messagebox as messagebox
+    messagebox.showerror("Database Error", f"Could not initialize database: {e}")
 
-#Commit Changes
-conn.commit()
-conn.close()
+finally:
+    if 'conn' in locals():
+        conn.close()
 
 class App:
     def __init__(self, root):
@@ -139,10 +156,10 @@ class App:
 
       # Font Tuples for Use on pages
       self.fonts = {
-            "Title_Tuple": tkfont.Font(family ="SF Pro Display", size =24, weight ="bold"),
-            "Body_Tuple": tkfont.Font(family = "SF Pro Display", size = 12, weight = "bold"),
-            "Description_Tuple": tkfont.Font(family = "Sf Pro Text", size = 12)
-        }
+        "Title_Tuple": tkfont.Font(family=FONTS["title"][0], size=24, weight="bold"),
+        "Body_Tuple": tkfont.Font(family=FONTS["body"][0], size=12, weight="bold"),
+        "Description_Tuple": tkfont.Font(family=FONTS["description"][0], size=12)
+    }
 
       #Set Background color
       self.root.configure(bg = background_color)
@@ -982,16 +999,16 @@ class App:
                 self.create_tasklist_again()
                 self.create_currenttask_again()
                 self.create_task_history_again()
-                #self.create_completed_tasks_again()
+                self.create_completed_tasks_again()
                 self.set_current_task()
 
-    """def create_completed_tasks_again():
+    def create_completed_tasks_again():
         # Create a database or connect to one that exists
         conn = sqlite3.connect(path)
 
         # Create a cursor instance
         c = conn.cursor()
-        c.execute(CREATE TABLE if not exists CompletedTasks (
+        c.execute("""CREATE TABLE if not exists CompletedTasks (
           task_name text,
           task_time text,
           task_weight text,
@@ -1003,13 +1020,13 @@ class App:
           task_weight_type text,
           task_description text,
           PRIMARY KEY (task_id)
-            ))
+            )""")
         # Commit changes
         conn.commit()
 
         # Close our connection
         conn.close()
-        """
+        
     def create_tasklist_again(self):
         # Create a database or connect to one that exists
         conn = sqlite3.connect(path)
