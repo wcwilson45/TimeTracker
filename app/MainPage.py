@@ -1264,11 +1264,12 @@ class App:
         self.small_overlay_stop_button.config(state=stop_state)
 
     def import_Tasks(self):
+        """Import tasks from a CSV file with proper tag handling"""
         global data
         # Ask user for the file
         file_path = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
-        # If file has been selected cont
+        # If file has been selected continue
         if file_path:
             # Open file and read from file
             with open(file_path, "r", encoding="utf-8-sig") as file:
@@ -1306,20 +1307,84 @@ class App:
             tasks_skipped = 0
             skipped_tasks = []
 
+            # Get the tags database path
+            tags_path = str(path).replace('task_list.db', 'tags.db')
+            
+            # Connect to tags database to get valid tags
+            tags_conn = sqlite3.connect(tags_path)
+            tags_c = tags_conn.cursor()
+            
+            # Get all valid tag names
+            tags_c.execute("SELECT tag_name FROM tags")
+            valid_tags = [row[0] for row in tags_c.fetchall()]
+            tags_conn.close()
+
             # Filter out tasks with names that already exist in the database
             filtered_data = []
             for task in data:
+                if len(task) < 6:
+                    # Skip tasks with incomplete data
+                    tasks_skipped += 1
+                    if task and len(task) > 0:
+                        skipped_tasks.append(task[0])
+                    continue
+                    
                 if task[0] not in existing_tasks:  # task[0] is the task name
-                    filtered_data.append(task)
+                    # Process the task tags (index 5) to ensure they're in the correct format
+                    tag_text = task[5].strip()
+                    
+                    # Split tags if they're comma-separated
+                    if ',' in tag_text:
+                        tag_list = [t.strip() for t in tag_text.split(',')]
+                    else:
+                        tag_list = [t.strip() for t in tag_text.split() if t.strip()]  # Split by whitespace if no commas
+                    
+                    # Only keep valid tags that exist in the tags database
+                    valid_task_tags = [tag for tag in tag_list if tag in valid_tags]
+                    
+                    # Format tags as newline-separated list (the format used by the app)
+                    formatted_tags = '\n'.join(valid_task_tags)
+                    
+                    # Update the task data with formatted tags
+                    task_with_formatted_tags = list(task)
+                    task_with_formatted_tags[5] = formatted_tags
+                    
+                    filtered_data.append(task_with_formatted_tags)
                     tasks_imported += 1
                 else:
                     tasks_skipped += 1
                     skipped_tasks.append(task[0])
 
-            # Insert filtered data into the table
+            # Get the max list_place value
+            c.execute("SELECT COALESCE(MAX(list_place), 0) FROM TaskList")
+            max_list_place = c.fetchone()[0] or 0
+            
+            # Insert filtered data into the table with proper list_place values
             if filtered_data:
-                c.executemany("""INSERT INTO TaskList (task_name, task_weight, task_start_date, task_description,
-                            task_weight_type, task_tags) VALUES (?, ?, ?, ?, ?, ?)""", filtered_data)
+                for i, task_data in enumerate(filtered_data):
+                    # Add a default task time
+                    task_time = "00:00:00"
+                    
+                    # Set end date to None (can be updated later)
+                    task_end_date = None
+                    
+                    # Use prepared statement
+                    c.execute("""
+                        INSERT INTO TaskList (
+                            task_name, task_weight, task_start_date, task_description,
+                            task_weight_type, task_tags, task_time, task_end_date, list_place
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        task_data[0],  # task_name
+                        task_data[1],  # task_weight
+                        task_data[2],  # task_start_date
+                        task_data[3],  # task_description
+                        task_data[4],  # task_weight_type
+                        task_data[5],  # task_tags (properly formatted)
+                        task_time,     # default task_time
+                        task_end_date, # default task_end_date (None)
+                        max_list_place + i + 1  # increment list_place for each task
+                    ))
 
             # Commit the changes and close the connection
             conn.commit()
@@ -1329,12 +1394,12 @@ class App:
             if tasks_imported > 0 and tasks_skipped > 0:
                 messagebox.showinfo("Import Results", 
                                 f"Successfully imported {tasks_imported} tasks.\n"
-                                f"Skipped {tasks_skipped} tasks with duplicate names found in TaskList, CurrentTask, or CompletedTasks.")
+                                f"Skipped {tasks_skipped} tasks with duplicate names or missing data.")
                 
                 # If there are many skipped tasks, offer to show them in a separate dialog
                 if tasks_skipped > 5:
                     show_details = messagebox.askyesno("Show Details", 
-                                                    "Would you like to see the list of skipped tasks?")
+                                                    f"Would you like to see the list of skipped tasks?")
                     if show_details:
                         skipped_list = "\n".join(skipped_tasks[:20])
                         if len(skipped_tasks) > 20:
@@ -1345,7 +1410,7 @@ class App:
                 messagebox.showinfo("Import Complete", f"Successfully imported {tasks_imported} tasks.")
             elif tasks_skipped > 0:
                 messagebox.showwarning("Import Failed", 
-                                    f"All {tasks_skipped} tasks already exist in the database. No new tasks were imported.")
+                                    f"All {tasks_skipped} tasks could not be imported due to duplicates or missing data.")
             else:
                 messagebox.showinfo("Import Notice", "No tasks were found to import.")
 
