@@ -273,6 +273,7 @@ class CompletedTasksWindow(tk.Tk):
 
                 # Delete from TaskList
                 c.execute("DELETE FROM TaskList WHERE task_id = ?", (self.task_id,))
+                c.execute("DELETE FROM CurrentTask WHERE task_id = ?", (self.task_id,))
 
                 conn.commit()
                 messagebox.showinfo("Success", "Task completed successfully!")

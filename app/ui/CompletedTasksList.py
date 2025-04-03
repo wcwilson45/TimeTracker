@@ -129,7 +129,7 @@ class CompletedTasksList(tk.Frame):
 
         delete_button = tk.Button(button_frame, text="Delete",
                                 bg="#e99e56", command=self.delete_selected_task)
-        delete_button.pack(side='right', padx=5)
+        delete_button.pack(side='right')
 
         export_button = tk.Button(button_frame, text="Export",
                                 bg="#b2fba5", command=self.export_tasks)
@@ -141,12 +141,12 @@ class CompletedTasksList(tk.Frame):
 
         undo_button = tk.Button(button_frame, text="Undo Commit",
                             bg="#b2fba5", command=self.undo_task_completion)
-        undo_button.pack(side="left", padx=6)
+        undo_button.pack(side="left")
 
         # View details button
         details_button = tk.Button(button_frame, text="View Details",
                                 bg="#b2fba5", command=self.open_selected_task_details)
-        details_button.pack(side="left", padx=6)
+        details_button.pack(side="left")
 
         # Bind selection event
         self.completed_list.bind('<<TreeviewSelect>>', self.on_task_select)
@@ -469,7 +469,7 @@ class CompletedTasksList(tk.Frame):
             conn.close()
 
     def export_tasks(self):
-        """Export completed tasks to CSV file"""
+        """Export completed tasks to CSV file and commit history to a separate file"""
         # Check if there are tasks to export
         if not self.completed_list.get_children():
             messagebox.showinfo("No Tasks", "There are no completed tasks to export.")
@@ -479,30 +479,83 @@ class CompletedTasksList(tk.Frame):
             # Create Completed Tasks directory if it doesn't exist
             export_dir = pathlib.Path(__file__).parent / "Completed Tasks"
             export_dir.mkdir(exist_ok=True)
+            
+            # Create Tasks Commit History directory if it doesn't exist
+            history_dir = pathlib.Path(__file__).parent / "Tasks Commit History"
+            history_dir.mkdir(exist_ok=True)
 
             # Create filename with timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = export_dir / f"completed_tasks_{timestamp}.csv"
+            tasks_filename = export_dir / f"completed_tasks_{timestamp}.csv"
+            history_filename = history_dir / f"tasks_commit_history_{timestamp}.csv"
 
             # Get all tasks from the treeview
             tasks = []
             headers = self.completed_list['columns']
             tasks.append(headers)  # Add headers as first row
 
+            # Keep track of all task IDs to export their history
+            task_ids = []
+
             for item in self.completed_list.get_children():
                 values = self.completed_list.item(item)['values']
                 tasks.append(values)
+                # Get the task ID (at index 3)
+                task_ids.append(values[3])
 
-            # Write to CSV
-            with open(filename, 'w', newline='') as csvfile:
+            # Write tasks to CSV
+            with open(tasks_filename, 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerows(tasks)
 
-            messagebox.showinfo("Success", f"Tasks exported successfully to:\n{filename}")
+            # Get and write commit history for all tasks
+            history_rows = []
+            # Create headers for history file
+            history_headers = ["Task ID", "Task Name", "Change Date", "Field Changed", "Old Value", "New Value"]
+            history_rows.append(history_headers)
+
+            # Get task information to include with history
+            conn = sqlite3.connect(path)
+            c = conn.cursor()
+            
+            try:
+                for task_id in task_ids:
+                    # Get task name for reference
+                    c.execute("SELECT task_name FROM CompletedTasks WHERE task_id = ?", (task_id,))
+                    result = c.fetchone()
+                    task_name = result[0] if result else "Unknown Task"
+                    
+                    # Get task history
+                    history_entries = self.history_db.get_task_history(task_id)
+                    
+                    # Add each history entry to the rows
+                    for entry in history_entries:
+                        change_date, field_changed, old_value, new_value = entry
+                        history_rows.append([
+                            task_id,
+                            task_name,
+                            change_date,
+                            field_changed,
+                            old_value,
+                            new_value
+                        ])
+            except sqlite3.Error as e:
+                messagebox.showerror("Database Error", f"Error retrieving task history: {str(e)}")
+            finally:
+                conn.close()
+
+            # Write history to CSV
+            with open(history_filename, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerows(history_rows)
+
+            messagebox.showinfo("Success", 
+                            f"Tasks exported successfully to:\n{tasks_filename}\n\n"
+                            f"Task history exported to:\n{history_filename}")
 
         except Exception as e:
-            messagebox.showerror("Export Error", f"Error exporting tasks: {str(e)}")
-
+            messagebox.showerror("Export Error", f"Error exporting data: {str(e)}")
+    
     def sort_completed_tasks(self, col):
         """Sort completed tasks by column."""
         try:

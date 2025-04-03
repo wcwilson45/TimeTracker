@@ -254,7 +254,7 @@ class App:
         elif page_name == "Archive":  
             self.current_page = self.archive_page
             self.page_title.config(text="Archived Tasks", background=background_color)
-            self.root.geometry("650x600")
+            self.root.geometry("650x515")
             self.archive_page.load_archive_tasks()
         # elif page_name == "Commit History":
         #     self.current_page = self.commit_page
@@ -298,6 +298,12 @@ class App:
                                                 command=self.stop_timer)
         self.small_overlay_stop_button.grid(row=2, column=0, sticky=W, padx=45, pady=5)
         self.small_overlay_stop_button.config(state=DISABLED)
+
+        self.small_overlay_complete_button = tk.Button(self.smalloverlay_page,
+                                          text="Complete",
+                                          background="#4682B4",
+                                          command=self.complete_current_task)
+        self.small_overlay_complete_button.grid(row=2, column=0, sticky=W, padx=90, pady=5)
    
     def update_timer_boxes(self, timer_text):
       """Update the timer display in both timer boxes."""
@@ -396,7 +402,8 @@ class App:
         self.full_page_stop_button.pack(side=LEFT)
         self.full_page_stop_button.config(state=DISABLED)
 
-
+        self.full_page_complete_button = tk.Button(time_controls_frame, text="Complete", background="#4682B4", command=self.complete_current_task)
+        self.full_page_complete_button.pack(side=LEFT, padx=(5, 0))
 
         #Change color when a item is selected
         style.map("Treeview",
@@ -1244,6 +1251,60 @@ class App:
             
             # Update button states
             self.disable_buttons(start_disabled=False)
+    
+    def complete_current_task(self):
+        """Complete the current active task"""
+        # Stop the timer if it's running
+        if self.timer_running:
+            self.stop_timer()
+        
+        # Check if there is a current task
+        if not self.task_id_label.cget("text") or self.task_id_label.cget("text") == "-":
+            messagebox.showwarning("No Task", "There is no current task to complete.")
+            return
+        
+        # Get current task details from labels and text boxes
+        task_id = self.task_id_label.cget("text")
+        task_name = self.task_name_label.cget("text")
+        
+        # Get task time from the time box
+        self.time_box_full.config(state=NORMAL)
+        task_time = self.time_box_full.get("1.0", tk.END).strip()
+        self.time_box_full.config(state=DISABLED)
+        
+        # Get description from the description box
+        self.description_box.config(state=NORMAL)
+        task_description = self.description_box.get("1.0", tk.END).strip()
+        self.description_box.config(state=DISABLED)
+        
+        # Fetch additional task details from the database
+        conn = sqlite3.connect(path)
+        c = conn.cursor()
+        
+        try:
+            c.execute("SELECT task_weight, task_start_date, task_tags, task_weight_type FROM CurrentTask WHERE task_id = ?", (task_id,))
+            result = c.fetchone()
+            
+            if result:
+                task_weight, start_date, task_tags, task_weight_type = result
+                
+                # Open CompletedTasksWindow with all the data
+                self.task_window = CompletedTasksWindow(
+                    task_name=task_name,
+                    task_time=task_time,
+                    task_weight=task_weight,
+                    task_id=task_id,
+                    task_description=task_description,
+                    start_date=start_date,
+                    refresh_callback=self.set_current_task
+                )
+                self.task_window.grab_set()
+            else:
+                messagebox.showerror("Error", "Could not find current task details in the database.")
+        except sqlite3.Error as e:
+            messagebox.showerror("Database Error", f"Error retrieving task details: {str(e)}")
+        finally:
+            conn.close()
 
     def disable_buttons(self, start_disabled):
         """Enable/disable timer control buttons"""
