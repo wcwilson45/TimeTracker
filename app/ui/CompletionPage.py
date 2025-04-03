@@ -139,7 +139,7 @@ class CommitHistoryWindow(tk.Toplevel):
             "Treeview", 
             background="#d3d3d3",
             foreground="black",  # Text color - black for readability
-            rowheight=25,
+            rowheight=20,
             fieldbackground="#d3d3d3"  # Field background color
         )
         
