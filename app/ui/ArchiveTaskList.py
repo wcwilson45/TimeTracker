@@ -259,25 +259,47 @@ class ArchiveTasksList(tk.Frame):
             conn.close()
 
     def load_archive_tasks(self):
-        """Loads archived tasks from SQLite database into Treeview."""
-        for item in self.archive_list.get_children():
-            self.archive_list.delete(item)
-
-        conn = sqlite3.connect(path)
-        c = conn.cursor()
-
         try:
+            # Connect to the database
+            conn = sqlite3.connect(path)
+            c = conn.cursor()
+            
+            # Check if ArchivedTasks table exists before querying
+            c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ArchivedTasks'")
+            if not c.fetchone():
+                print("ArchivedTasks table does not exist yet. It will be created when needed.")
+                return  # Exit early if table doesn't exist
+            
+            # Clear existing data in Treeview
+            if hasattr(self, 'archive_tasks_list'):
+                for record in self.archive_tasks_list.get_children():
+                    self.archive_tasks_list.delete(record)
+            
+            # Fetch data from ArchivedTasks table
             c.execute("SELECT * FROM ArchivedTasks ORDER BY archive_date DESC")
-            tasks = c.fetchall()
-
-            for i, task in enumerate(tasks):
-                tag = ('evenrow' if i % 2 == 0 else 'oddrow')
-                self.archive_list.insert('', 'end', values=task, tags=tag)
-
+            archived_data = c.fetchall()
+            
+            # Insert data into Treeview
+            for count, record in enumerate(archived_data):
+                tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
+                self.archive_tasks_list.insert('', 'end', iid=count, values=(
+                    record[0],  # task_name
+                    record[1],  # task_time
+                    record[2],  # task_weight
+                    record[3],  # task_id
+                    record[4],  # completion_date
+                    record[5],  # total_duration
+                    record[6],  # archive_date
+                    record[7],  # task_tags
+                ), tags=tags)
+                
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error loading archived tasks: {str(e)}")
+            print(f"Database error in load_archive_tasks: {e}")
+        except Exception as e:
+            print(f"Unexpected error in load_archive_tasks: {e}")
         finally:
-            conn.close()
+            if 'conn' in locals():
+                conn.close()
 
     def export_tasks(self):
         """Export archived tasks to CSV file"""

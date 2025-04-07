@@ -449,25 +449,29 @@ class CompletedTasksList(tk.Frame):
 
     def load_completed_tasks(self):
         try:
+            # Connect to the database
             conn = sqlite3.connect(path)
             c = conn.cursor()
             
-            # Clear existing items
-            for record in self.completed_list.get_children():
-                self.completed_list.delete(record)
-
-            # Fetch completed tasks
+            # Check if CompletedTasks table exists before querying
+            c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='CompletedTasks'")
+            if not c.fetchone():
+                print("CompletedTasks table does not exist yet. It will be created when needed.")
+                return  # Exit early if table doesn't exist
+            
+            # Clear existing data in Treeview
+            if hasattr(self, 'completed_tasks_list'):
+                for record in self.completed_tasks_list.get_children():
+                    self.completed_tasks_list.delete(record)
+            
+            # Fetch data from CompletedTasks table
             c.execute("SELECT * FROM CompletedTasks ORDER BY completion_date DESC")
             completed_data = c.fetchall()
             
-            # If no data, just return without error
-            if not completed_data:
-                return
-
-            # Populate the treeview
+            # Insert data into Treeview
             for count, record in enumerate(completed_data):
                 tags = ('evenrow',) if count % 2 == 0 else ('oddrow',)
-                self.completed_list.insert('', 'end', iid=count, values=(
+                self.completed_tasks_list.insert('', 'end', iid=count, values=(
                     record[0],  # task_name
                     record[1],  # task_time
                     record[2],  # task_weight
@@ -477,12 +481,11 @@ class CompletedTasksList(tk.Frame):
                     record[6],  # start_date
                     record[7],  # task_tags
                 ), tags=tags)
-
+                
         except sqlite3.Error as e:
-            print(f"Error loading completed tasks: {e}")
-            # Optionally show a non-blocking message
-            import tkinter.messagebox as messagebox
-            messagebox.showwarning("Database Warning", "Could not load completed tasks.")
+            print(f"Database error in load_completed_tasks: {e}")
+        except Exception as e:
+            print(f"Unexpected error in load_completed_tasks: {e}")
         finally:
             if 'conn' in locals():
                 conn.close()

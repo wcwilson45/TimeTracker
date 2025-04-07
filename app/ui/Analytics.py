@@ -13,9 +13,15 @@ background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
 frame_bg_color = "#dcdcdc"
 
-global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("Analytics.py", '') + '\\Databases' + '\\task_list.db'
+# Import the path from config instead of hardcoding it
+from config import DB_PATH
+global path
+path = DB_PATH
+
+# Initialize global variables
+global values, complexity
+values = []
+complexity = []
 
 class AnalyticsPage(tk.Frame):
     def __init__(self, parent):
@@ -26,22 +32,30 @@ class AnalyticsPage(tk.Frame):
         # Set the main window 
         self.configure(bg=background_color)
 
-        # Create fonts
-        self.fonts = {
-            'header': tkfont.Font(family="SF Pro Display", size=14, weight="bold"),
-            'subheader': tkfont.Font(family="SF Pro Display", size=10, weight="bold"),
-            'body': tkfont.Font(family="SF Pro Text", size=10)
-        }
+        # Create fonts with fallback options
+        try:
+            self.fonts = {
+                'header': tkfont.Font(family="SF Pro Display", size=14, weight="bold"),
+                'subheader': tkfont.Font(family="SF Pro Display", size=10, weight="bold"),
+                'body': tkfont.Font(family="SF Pro Text", size=10)
+            }
+        except:
+            # Fallback to system fonts if SF Pro is not available
+            self.fonts = {
+                'header': tkfont.Font(family="Arial", size=14, weight="bold"),
+                'subheader': tkfont.Font(family="Arial", size=10, weight="bold"),
+                'body': tkfont.Font(family="Arial", size=10)
+            }
 
         # Style configurations
         style = ttk.Style(self)
         style.theme_use("alt")  
-        style.configure('Input.TEntry', fieldbackground=background_color, font=("SF Pro Text", 10))
-        style.configure('TLabel', background=frame_bg_color, font=("SF Pro Text", 10))  
-        style.configure('TButton', background=background_color, font=("SF Pro Text", 10))
+        style.configure('Input.TEntry', fieldbackground=background_color, font=("Arial", 10))
+        style.configure('TLabel', background=frame_bg_color, font=("Arial", 10))  
+        style.configure('TButton', background=background_color, font=("Arial", 10))
         style.configure('MainFrame.TFrame', background=background_color)
         style.configure('TLabelframe', background=frame_bg_color)
-        style.configure('TLabelframe.Label', background=frame_bg_color, font=("SF Pro Display", 10, "bold"))
+        style.configure('TLabelframe.Label', background=frame_bg_color, font=("Arial", 10, "bold"))
 
         # Main container
         main_frame = tk.Frame(self, bg=background_color)
@@ -147,7 +161,7 @@ class AnalyticsPage(tk.Frame):
         self.graph_combo.set("Select Graph")
 
         # Plot button
-        self.graphs_btn = tk.Button(graph_frame, font=("SF Pro Text", 10), text="Plot Graph", 
+        self.graphs_btn = tk.Button(graph_frame, font=("Arial", 10), text="Plot Graph", 
                                     command=self.plot_graph, bg=green_btn_color)
         self.graphs_btn.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky='ew')
 
@@ -168,7 +182,7 @@ class AnalyticsPage(tk.Frame):
         self.model_combo.set("Select Model")
 
         # Plot button
-        self.model_btn = tk.Button(model_frame, font=("SF Pro Text", 10), text="Plot Model", 
+        self.model_btn = tk.Button(model_frame, font=("Arial", 10), text="Plot Model", 
                                     bg=green_btn_color)
         self.model_btn.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky='ew')
 
@@ -525,10 +539,17 @@ class AnalyticsPage(tk.Frame):
         return total
     
     def update_total_time(self):
-        self.load_data()
-        total = self.total_Time(values)
-        self.total_time_value.configure(text=total)
-
+        try:
+            self.load_data()
+            # Check if 'values' is defined and has data
+            if 'values' in globals() and values:
+                total = self.total_Time(values)
+                self.total_time_value.configure(text=total)
+            else:
+                self.total_time_value.configure(text="00:00:00")
+        except Exception as e:
+            print(f"Error updating total time: {e}")
+            self.total_time_value.configure(text="00:00:00")
 
     def update_values(self, event=None):
         # Reload data 
@@ -670,21 +691,39 @@ class AnalyticsPage(tk.Frame):
 
     def load_data(self):
         # DATABASE SECTION ####################################################
-        conn = sqlite3.connect(path)
-        c = conn.cursor()
-
+        global values
+        global complexity
+        
+        # Initialize with empty lists in case of database errors
+        values = []
+        complexity = []
+        
         try:
+            # Check if the database file exists
+            import os
+            if not os.path.exists(path):
+                print(f"Database file does not exist: {path}")
+                return
+                
+            conn = sqlite3.connect(path)
+            c = conn.cursor()
+
+            # Check if CompletedTasks table exists
+            c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='CompletedTasks'")
+            if not c.fetchone():
+                print("CompletedTasks table does not exist in the database")
+                conn.close()
+                return
+
             # --- Fetch task_time values ---
             c.execute("SELECT task_time FROM CompletedTasks")
             times = c.fetchall()
-            global values
-            values = [time[0] for time in times]
+            values = [time[0] for time in times] if times else []
 
             # --- Fetch task_weight values ---
             c.execute("SELECT task_weight FROM CompletedTasks")
             comps = c.fetchall()
-            global complexity
-            complexity = [comp[0] for comp in comps]
+            complexity = [comp[0] for comp in comps] if comps else []
 
             # --- Update the completed_tasks_list Treeview ---
             if hasattr(self, 'completed_tasks_list'):
@@ -713,12 +752,14 @@ class AnalyticsPage(tk.Frame):
                     ), tags=tags)
 
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
-            messagebox.showerror("Database Error", "Failed to load data from CompletedTasks.")
+            print(f"Database error in load_data: {e}")
+        except Exception as e:
+            print(f"Unexpected error in load_data: {e}")
         finally:
-            conn.commit()
-            conn.close()
-        # END OF DATABASE SECTION ##############################################
-
-
-            
+            if 'conn' in locals():
+                try:
+                    conn.commit()
+                    conn.close()
+                except:
+                    pass
+    # END OF DATABASE SECTION ##############################################
