@@ -1,3 +1,4 @@
+            
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
@@ -6,31 +7,64 @@ import tkinter as tk
 import tkinter.font as tkfont
 import sqlite3
 from datetime import datetime
-from config import DB_PATH, COLORS, FONTS
 import pathlib
 import csv
 import threading
 import os
-import threading
 import time
 import sys
 import shutil
-from ui import (
-    CompletedTasksWindow,
-    EditTaskWindow,
-    AddTaskWindow,
-    CurrentTaskWindow,
-    TagsDB,
-    CompletedTasksList,
-    AnalyticsPage,
-    ArchiveTasksList
-)
-from ui.CommitHistoryPage import CommitHistoryWindow
-#MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
-#DATABASE IS CALLED task_list.db
-#IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
+import logging
 
-#Global Variables
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('TimeTracker')
+
+# Add the parent directory to the path if needed
+if __name__ == "__main__":
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import config after setting up the path
+from config import DB_PATH, COLORS, FONTS, DB_DIR
+
+# Import UI components
+try:
+    from ui import (
+        CompletedTasksWindow,
+        EditTaskWindow,
+        AddTaskWindow,
+        CurrentTaskWindow,
+        TagsDB,
+        CompletedTasksList,
+        AnalyticsPage,
+        ArchiveTasksList
+    )
+    from ui.CommitHistoryPage import CommitHistoryWindow
+except ImportError as e:
+    logger.error(f"Error importing UI components: {e}")
+    # Fall back to relative imports if absolute imports fail
+    try:
+        from .ui import (
+            CompletedTasksWindow,
+            EditTaskWindow,
+            AddTaskWindow,
+            CurrentTaskWindow,
+            TagsDB,
+            CompletedTasksList,
+            AnalyticsPage,
+            ArchiveTasksList
+        )
+        from .ui.CommitHistoryPage import CommitHistoryWindow
+    except ImportError as e2:
+        logger.error(f"Both absolute and relative imports failed: {e2}")
+        messagebox.showerror("Import Error", 
+                           "Could not import UI components. Check your installation.")
+        sys.exit(1)
+
+# Global Variables
 background_color = COLORS["background_color"]
 grey_button_color = COLORS["grey_button_color"]
 green_button_color = COLORS["green_button_color"]
@@ -39,22 +73,25 @@ scroll_trough_color = COLORS["scroll_trough_color"]
 main_btn_color = COLORS["main_btn_color"]
 del_btn_color = COLORS["del_btn_color"]
 
-# Print current script location and working directory
-print("Current script location:", os.path.abspath(__file__))
-print("Current working directory:", os.getcwd())
-print("Python path:", sys.path)
+# Print diagnostic information
+logger.info(f"Current working directory: {os.getcwd()}")
+logger.info(f"__file__ value: {__file__ if '__file__' in globals() else 'Not available'}")
+logger.info(f"Config detected DB_DIR: {DB_DIR}")
+logger.info(f"Config detected DB_PATH: {DB_PATH}")
+logger.info(f"DB_DIR exists: {os.path.exists(DB_DIR)}")
+logger.info(f"DB_PATH exists: {os.path.exists(os.path.dirname(DB_PATH))}")
+logger.info(f"DB_DIR is writable: {os.access(DB_DIR, os.W_OK) if os.path.exists(DB_DIR) else 'Directory doesn\'t exist'}")
 
-global path 
-path = DB_PATH
-      
+# Use pathlib for database path
+db_path = pathlib.Path(DB_PATH)
 
-#Create a database or connect to an existing database
+# Ensure database directory exists
+db_path.parent.mkdir(parents=True, exist_ok=True)
+
+# Create a database or connect to an existing database
 try:
-    # Ensure the database directory exists
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-
-    # Connect to the database
-    conn = sqlite3.connect(path)
+    # Connect to the database - SQLite needs string paths
+    conn = sqlite3.connect(str(db_path))
     c = conn.cursor()
 
     # List of table creation statements with more verbose error handling
@@ -112,22 +149,25 @@ try:
     for table_name, table_creation in table_creations:
         try:
             c.execute(table_creation)
-            print(f"Successfully created or verified {table_name} table")
+            logger.info(f"Successfully created or verified {table_name} table")
         except sqlite3.Error as table_error:
-            print(f"Error creating {table_name} table: {table_error}")
+            logger.error(f"Error creating {table_name} table: {table_error}")
 
     # Commit changes
     conn.commit()
-    print("Database initialization complete")
+    logger.info("Database initialization complete")
 
 except sqlite3.Error as e:
-    print(f"Critical database initialization error: {e}")
-    import tkinter.messagebox as messagebox
+    logger.error(f"Database error: {e}")
     messagebox.showerror("Database Error", f"Could not initialize database: {e}")
 
 finally:
     if 'conn' in locals():
         conn.close()
+
+# Set global path variable - use string for SQLite compatibility
+global path
+path = str(db_path)
 
 class App:
     def __init__(self, root):
@@ -149,10 +189,16 @@ class App:
      # Set initial inactivity timer
       self.reset_inactivity_timer()
 
-      base_dir = os.path.dirname(os.path.abspath(__file__))
-      image_path = os.path.join(base_dir, "image.png")
-      icon = tk.PhotoImage(file=image_path)
-      self.root.iconphoto(True, icon)
+      from pathlib import Path
+
+      base_dir = Path(__file__).parent
+      image_path = base_dir / "image.png"
+
+      if image_path.exists():
+          icon = tk.PhotoImage(file=str(image_path))
+          self.root.iconphoto(True, icon)
+      else:
+          print(f"Warning: Image file not found at {image_path}")
 
       # Font Tuples for Use on pages
       self.fonts = {
