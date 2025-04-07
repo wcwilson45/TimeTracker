@@ -27,7 +27,6 @@ from ui import (
     HelpPage
 )
 from ui.CommitHistoryPage import CommitHistoryWindow
-from ui import CompletedTaskDetailsPage as CTDW
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
 #IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
@@ -418,6 +417,9 @@ class App:
 
         self.full_page_complete_button = tk.Button(time_controls_frame, text="Complete", background="#4682B4", command=self.complete_current_task)
         self.full_page_complete_button.pack(side=LEFT, padx=(5, 0))
+
+        self.full_page_commit_history_button = tk.Button(time_controls_frame, text = "Commit History", background= main_btn_color, command = self.commit_history_current)
+        self.full_page_commit_history_button.pack(side = LEFT, padx = (5,0))
 
         #Change color when a item is selected
         style.map("Treeview",
@@ -979,7 +981,8 @@ class App:
 
 
     def remove_all(self):
-        response = messagebox.askyesno("Are you sure you want to delete everything?              ")
+        response = messagebox.askyesno("Remove Everything?",
+                                       "Warning!! This will remove everything from the TaskList, Current Task, and all of the Task History for all tasks.")
 
         if response == 1:
             for record in self.task_list.get_children():
@@ -1001,34 +1004,8 @@ class App:
                 self.create_tasklist_again()
                 self.create_currenttask_again()
                 self.create_task_history_again()
-                #self.create_completed_tasks_again()
                 self.set_current_task()
 
-    """def create_completed_tasks_again():
-        # Create a database or connect to one that exists
-        conn = sqlite3.connect(path)
-
-        # Create a cursor instance
-        c = conn.cursor()
-        c.execute(CREATE TABLE if not exists CompletedTasks (
-          task_name text,
-          task_time text,
-          task_weight text,
-          task_id integer,
-          completion_date text,
-          total_duration text,
-          start_date text,
-          task tags text,
-          task_weight_type text,
-          task_description text,
-          PRIMARY KEY (task_id)
-            ))
-        # Commit changes
-        conn.commit()
-
-        # Close our connection
-        conn.close()
-        """
     def create_tasklist_again(self):
         # Create a database or connect to one that exists
         conn = sqlite3.connect(path)
@@ -1111,9 +1088,8 @@ class App:
         task = self.ti_entry.get()
         if task:
             if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
-                # self.commit_button.config(state=tk.DISABLED)  # Disable the button
-                self.commithistory_window = CTDW.CompletedTaskDetailsWindow(task_id=task, compFlag=False)
-                # self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=False)  # Pass self to allow callback
+                self.commit_button.config(state=tk.DISABLED)  # Disable the button
+                self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=False)  # Pass self to allow callback
             else:
                 self.commithistory_window.deiconify()
                 self.commithistory_window.lift()
@@ -1324,6 +1300,30 @@ class App:
         finally:
             conn.close()
 
+    def commit_history_current(self):
+        """Open commit history window for the current task"""
+        # Get the task ID from the current task label
+        task_id = self.task_id_label.cget("text")
+        
+        # Check if there is a current task
+        if not task_id or task_id == "-":
+            messagebox.showwarning("No Current Task", "There is no current task selected.")
+            return
+        
+        # Open the commit history window for the current task
+        try:
+            if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
+                self.commit_button.config(state=tk.DISABLED)  # Disable the button
+                self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task_id, compFlag=False)
+            else:
+                self.commithistory_window.deiconify()
+                self.commithistory_window.lift()
+        except Exception as e:
+            messagebox.showerror("Error", f"Error opening history window: {str(e)}")
+            print(f"Exception details: {e}")
+            # Re-enable the button if there was an error
+            self.commit_button.config(state=tk.NORMAL)
+
     def disable_buttons(self, start_disabled):
         """Enable/disable timer control buttons"""
         start_state = DISABLED if start_disabled else NORMAL
@@ -1360,37 +1360,66 @@ class App:
                         data = data[1:]
 
             tags_path = str(path).replace('task_list.db', 'tags.db')
-            tag = []
-            for tags in data:
-                tag.append(tags[5])
+            
+            # First extract all unique tags from the CSV
+            all_tags = set()
+            
+            # First pass: extract all tags from the CSV
+            for task_row in data:
+                if len(task_row) >= 6:  # Ensure we have a task tags column
+                    tag_text = task_row[5].strip()
+                    
+                    # Process tags with multiple possible separators
+                    tag_list = []
+                    # Check for pipe separator
+                    if '|' in tag_text:
+                        tag_list = [t.strip() for t in tag_text.split('|') if t.strip()]
+                    # Check for comma separator as fallback
+                    elif ',' in tag_text:
+                        tag_list = [t.strip() for t in tag_text.split(',') if t.strip()]
+                    # Use whitespace as last resort if no other separators found
+                    elif tag_text and not any(sep in tag_text for sep in ['|', ',']):
+                        tag_list = [t.strip() for t in tag_text.split() if t.strip()]
+                    # If there are no separators but text exists, it's a single tag
+                    elif tag_text:
+                        tag_list = [tag_text]
+                    
+                    # Add individual tags to our set of all tags
+                    all_tags.update(tag_list)
             
             # Fetch existing tag names from the database
             conn = sqlite3.connect(tags_path)
             c = conn.cursor()
             c.execute("SELECT tag_name FROM tags")
-            existing_tags = [tag[0] for tag in c.fetchall()]  # List of tag names already in the DB
+            existing_tags = [tag[0].lower() for tag in c.fetchall()]  # List of lowercase tag names for comparison
+            existing_tags_original = {tag[0].lower(): tag[0] for tag in c.execute("SELECT tag_name FROM tags").fetchall()}  # Map lowercase to original case
             conn.close()
 
-            # Insert new tags into the database if they do not exist
+            # Insert new unique tags into the database
             conn = sqlite3.connect(tags_path)
             c = conn.cursor()
 
-            for new_tag in tag:
-                if new_tag not in existing_tags:
+            # Add each new tag to the database
+            for new_tag in all_tags:
+                if new_tag and new_tag.lower() not in existing_tags:
                     try:
                         # Insert the new tag into the 'tags' table
                         c.execute("INSERT INTO tags (tag_name) VALUES (?)", (new_tag,))
+                        # Update our tracking of existing tags
+                        existing_tags.append(new_tag.lower())
+                        existing_tags_original[new_tag.lower()] = new_tag
                     except sqlite3.Error as e:
                         print(f"Error inserting tag '{new_tag}': {str(e)}")
 
             # Commit the changes and close the connection
             conn.commit()
             conn.close()
-            # Connect to the SQLite database
+            
+            # Connect to the SQLite database for tasks
             conn = sqlite3.connect(path)
             c = conn.cursor()
 
-            # Get existing task names from all three tables: TaskList, CurrentTask, and CompletedTasks
+            # Get existing task names from all three tables
             c.execute("SELECT task_name FROM TaskList")
             tasklist_names = {row[0] for row in c.fetchall()}
             
@@ -1408,16 +1437,16 @@ class App:
             tasks_skipped = 0
             skipped_tasks = []
 
-            # Get the tags database path
-            tags_path = str(path).replace('task_list.db', 'tags.db')
-            
-            # Connect to tags database to get valid tags
+            # Refresh valid tags list from the database
             tags_conn = sqlite3.connect(tags_path)
             tags_c = tags_conn.cursor()
             
-            # Get all valid tag names
+            # Get all valid tag names (including newly added ones)
             tags_c.execute("SELECT tag_name FROM tags")
             valid_tags = [row[0] for row in tags_c.fetchall()]
+            
+            # Create a case-insensitive lookup dictionary
+            valid_tags_lookup = {tag.lower(): tag for tag in valid_tags}
             tags_conn.close()
 
             # Filter out tasks with names that already exist in the database
@@ -1434,14 +1463,28 @@ class App:
                     # Process the task tags (index 5) to ensure they're in the correct format
                     tag_text = task[5].strip()
                     
-                    # Split tags if they're comma-separated
-                    if ',' in tag_text:
-                        tag_list = [t.strip() for t in tag_text.split(',')]
-                    else:
-                        tag_list = [t.strip() for t in tag_text.split() if t.strip()]  # Split by whitespace if no commas
+                    # Process tags with multiple possible separators
+                    tag_list = []
+                    # Check for pipe separator
+                    if '|' in tag_text:
+                        tag_list = [t.strip() for t in tag_text.split('|') if t.strip()]
+                    # Check for comma separator as fallback
+                    elif ',' in tag_text:
+                        tag_list = [t.strip() for t in tag_text.split(',') if t.strip()]
+                    # Use whitespace as last resort if no other separators found
+                    elif tag_text and not any(sep in tag_text for sep in ['|', ',']):
+                        tag_list = [t.strip() for t in tag_text.split() if t.strip()]
+                    # If there are no separators but text exists, it's a single tag
+                    elif tag_text:
+                        tag_list = [tag_text]
                     
-                    # Only keep valid tags that exist in the tags database
-                    valid_task_tags = [tag for tag in tag_list if tag in valid_tags]
+                    # Filter and standardize tags
+                    valid_task_tags = []
+                    for tag in tag_list:
+                        # Check if the tag exists (case-insensitive)
+                        if tag.lower() in valid_tags_lookup:
+                            # Use the version from the database to maintain consistent casing
+                            valid_task_tags.append(valid_tags_lookup[tag.lower()])
                     
                     # Format tags as newline-separated list (the format used by the app)
                     formatted_tags = '\n'.join(valid_task_tags)
@@ -1516,6 +1559,7 @@ class App:
                 messagebox.showinfo("Import Notice", "No tasks were found to import.")
 
             self.query_database()
+
 
     def search_Task(self, event):
 
