@@ -8,6 +8,7 @@ import tkinter.font as tkfont
 import pathlib
 import sqlite3
 from datetime import date
+from config import DB_PATH, COLORS, FONTS
 from .TaskHistory import TaskHistoryDB
 
 main_btn_color = "#b2fba5"
