@@ -106,12 +106,13 @@ class TaskHistoryDB:
         
         return entry
 class CommitHistoryWindow(tk.Toplevel):
-    def __init__(self, task_id, selected_date=None, selected_field=None):
+    def __init__(self, task_id, compFlag, selected_date=None, selected_field=None):
         super().__init__()
         self.task_id = task_id
         self.selected_date = selected_date
         self.selected_field = selected_field
         self.history_db = TaskHistoryDB()
+        self.compFlag = compFlag
         
         # Window setup
         self.title("Task History")
@@ -325,8 +326,9 @@ class CommitHistoryWindow(tk.Toplevel):
         self.new_value_text.config(state="disabled")
 
 class CompletedTaskDetailsWindow(tk.Toplevel):
-    def __init__(self, task_id=None, parent=None):
+    def __init__(self, compFlag, task_id=None, parent=None):
         super().__init__(parent)
+        self.compFlag = compFlag
         self.task_id = task_id
         self.parent = parent
         self.commit_history_window = None
@@ -358,8 +360,12 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
         c = conn.cursor()
         
         try:
-            c.execute("SELECT * FROM CompletedTasks WHERE task_id = ?", (self.task_id,))
+            if self.compFlag:
+                c.execute("SELECT * FROM CompletedTasks WHERE task_id = ?", (self.task_id,))
+            else:
+                c.execute("SELECT * FROM TaskList WHERE task_id = ?", (self.task_id,))
             task = c.fetchone()
+            print(task)
             
             if task:
                 self.task_name = task[0]

@@ -27,6 +27,7 @@ from ui import (
     HelpPage
 )
 from ui.CommitHistoryPage import CommitHistoryWindow
+from ui import CompletedTaskDetailsPage as CTDW
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
 #IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
@@ -1110,8 +1111,9 @@ class App:
         task = self.ti_entry.get()
         if task:
             if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
-                self.commit_button.config(state=tk.DISABLED)  # Disable the button
-                self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=False)  # Pass self to allow callback
+                # self.commit_button.config(state=tk.DISABLED)  # Disable the button
+                self.commithistory_window = CTDW.CompletedTaskDetailsWindow(task_id=task, compFlag=False)
+                # self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=False)  # Pass self to allow callback
             else:
                 self.commithistory_window.deiconify()
                 self.commithistory_window.lift()
