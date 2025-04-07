@@ -98,3 +98,66 @@ for font_type, font_list in preferred_fonts.items():
 # Check if database directory is writable
 if not os.access(DB_DIR, os.W_OK):
     logger.error(f"No write permission for database directory: {DB_DIR}")
+
+# Determine the best theme based on platform
+def get_best_theme():
+    """Select the most appropriate ttk theme for the current platform"""
+    import platform
+    system = platform.system()
+    
+    # Import ttk to check available themes
+    try:
+        import tkinter.ttk as ttk
+        available_themes = ttk.Style().theme_names()
+        logger.info(f"Available themes: {available_themes}")
+    except Exception as e:
+        logger.error(f"Error getting available themes: {e}")
+        return None  # Let the application use the default theme
+        
+    # Select best theme by platform
+    if system == 'Linux':
+        preferred_themes = ['clam', 'alt', 'default']
+    elif system == 'Windows':
+        preferred_themes = ['vista', 'winnative', 'xpnative', 'default']
+    elif system == 'Darwin':  # macOS
+        preferred_themes = ['aqua', 'clam', 'default']
+    else:
+        preferred_themes = ['default', 'clam', 'alt']
+    
+    # Return the first preferred theme that's available
+    for theme in preferred_themes:
+        if theme in available_themes:
+            logger.info(f"Selected theme: {theme} for {system}")
+            return theme
+            
+    # If none of the preferred themes are available, return None
+    # to let the application use the default theme
+    return None
+
+# Get the best theme
+THEME = get_best_theme()
+
+# Platform-specific adjustments
+import platform
+if platform.system() == 'Linux':
+    FONT_ADJUSTMENT = 1  # Make fonts slightly larger on Linux
+    PADDING_ADJUSTMENT = 2  # Extra padding for widgets on Linux
+    WINDOW_SIZE = {
+        "main": "550x650",
+        "completed": "620x420",
+        "small": "250x180",
+        "tags": "550x620",
+        "analytics": "1020x1020",
+        "archive": "650x620"
+    }
+else:
+    FONT_ADJUSTMENT = 0
+    PADDING_ADJUSTMENT = 0
+    WINDOW_SIZE = {
+        "main": "488x650",
+        "completed": "600x400",
+        "small": "230x160",
+        "tags": "530x610",
+        "analytics": "1000x1000",
+        "archive": "650x600"
+    }

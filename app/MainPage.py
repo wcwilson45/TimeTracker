@@ -28,7 +28,11 @@ if __name__ == "__main__":
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import config after setting up the path
-from config import DB_PATH, COLORS, FONTS, DB_DIR
+from config import DB_PATH, COLORS, FONTS, DB_DIR, THEME, FONT_ADJUSTMENT, PADDING_ADJUSTMENT, WINDOW_SIZE
+
+if THEME:
+    style = ttk.Style()
+    style.theme_use(THEME)
 
 # Import UI components
 try:
@@ -173,7 +177,7 @@ class App:
     def __init__(self, root):
       self.root = root
       self.root.title("Task Manager")
-      self.root.geometry("550x650")
+      self.root.geometry(WINDOW_SIZE["main"])
       root.resizable(width = 0, height = 0)
 
       self.addtask_window = None
@@ -191,20 +195,30 @@ class App:
 
       from pathlib import Path
 
-      base_dir = Path(__file__).parent
-      image_path = base_dir / "image.png"
-
-      if image_path.exists():
-          icon = tk.PhotoImage(file=str(image_path))
-          self.root.iconphoto(True, icon)
-      else:
-          print(f"Warning: Image file not found at {image_path}")
+      # Update this section in your App.__init__ method
+      try:
+          base_dir = os.path.dirname(os.path.abspath(__file__))
+          image_path = os.path.join(base_dir, "image.png")
+        
+          # Check if file exists
+          if os.path.exists(image_path):
+              try:
+                  icon = tk.PhotoImage(file=image_path)
+                  self.root.iconphoto(True, icon)
+              except tk.TclError as e:
+                  print(f"Warning: Could not load icon image: {e}")
+                  # Continue without setting icon - app will still work
+          else:
+              print(f"Warning: Icon image not found at {image_path}")
+      except Exception as e:
+          print(f"Error setting application icon: {e}")
+          # Continue without the icon
 
       # Font Tuples for Use on pages
       self.fonts = {
-        "Title_Tuple": tkfont.Font(family=FONTS["title"][0], size=24, weight="bold"),
-        "Body_Tuple": tkfont.Font(family=FONTS["body"][0], size=12, weight="bold"),
-        "Description_Tuple": tkfont.Font(family=FONTS["description"][0], size=12)
+        "Title_Tuple": tkfont.Font(family=FONTS["title"][0], size=24+FONT_ADJUSTMENT, weight="bold"),
+        "Body_Tuple": tkfont.Font(family=FONTS["body"][0], size=12+FONT_ADJUSTMENT, weight="bold"),
+        "Description_Tuple": tkfont.Font(family=FONTS["description"][0], size=12+FONT_ADJUSTMENT)
     }
 
       #Set Background color
@@ -212,7 +226,7 @@ class App:
 
       #Main Container
       self.main_container = tk.Frame(root, background= background_color)
-      self.main_container.pack(expand = False, fill = "both")
+      self.main_container.pack(expand = True, fill = "both")
       
       #Menu Button Dropdown
       self.menu_frame = tk.Frame(self.main_container, background= background_color)
@@ -320,34 +334,34 @@ class App:
         if page_name == "Time Tracker":
             self.current_page = self.full_page
             self.page_title.config(text="Time Tracker", background= background_color)
-            self.root.geometry("488x650")
+            self.root.geometry(WINDOW_SIZE["main"])
             self.query_database()
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background= background_color)
-            self.root.geometry("600x400")
+            self.root.geometry(WINDOW_SIZE["completed"])
             self.query_database()
             self.completedtasks_page.load_completed_tasks()
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background=background_color)
-            self.root.geometry("230x160")
+            self.root.geometry(WINDOW_SIZE["small"])
             self.query_database()
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  
             self.page_title.config(text="Tags Database", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("530x610")
+            self.root.geometry(WINDOW_SIZE["tags"])
             self.query_database()
         elif page_name == "Analytics":
             self.current_page = self.analytics_page  
             self.page_title.config(text="Analytics", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("1000x1000")
+            self.root.geometry(WINDOW_SIZE["analytics"])
             self.query_database()
             self.analytics_page.update_total_time()  
         elif page_name == "Archive":  
             self.current_page = self.archive_page
             self.page_title.config(text="Archived Tasks", background=background_color)
-            self.root.geometry("650x600")
+            self.root.geometry(WINDOW_SIZE["archive"])
             self.archive_page.load_archive_tasks()
         # elif page_name == "Commit History":
         #     self.current_page = self.commit_page
@@ -452,6 +466,8 @@ class App:
         description_frame = tk.Frame(self.full_page, bg = background_color)
         description_frame.pack(pady = 5, fill = "x")
 
+        description_frame.columnconfigure(0, weight=1)
+
         Label(description_frame, text="Description:",
                font=self.fonts['Body_Tuple'],background = background_color).grid(row=0, column=0,sticky=W, pady=2)
 
@@ -462,7 +478,7 @@ class App:
                                 height=5,
                                     width=50,border = 1, font=self.fonts['Description_Tuple'],
                                     background="#dcdcdc")
-        self.description_box.grid(row = 1, column = 0)
+        self.description_box.grid(row = 1, column = 0, sticky="ew")
 
         #Insert Current Task Description
         description_scroll.config(command = self.description_box.yview)
@@ -503,6 +519,7 @@ class App:
         #Put the task list inside a frame
         tasklist_frame = tk.Frame(self.full_page, bg = background_color)
         tasklist_frame.pack(pady=0, fill = "x")
+        tasklist_frame.columnconfigure(0, weight=1)  # Make columns expand with window
 
         #Buttons for Underneath Description Box + Above TaskList
 
@@ -537,10 +554,11 @@ class App:
 
         #Format columns
         self.task_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", "Start Date", "End Date", "Description")
+        self.task_list.configure(height=8) #set fixed height
         self.task_list.column("#0", width = 0, stretch=NO)
-        self.task_list.column('Task Name', anchor = W, width = 250)
-        self.task_list.column('Task Time', anchor = CENTER, width = 100)
-        self.task_list.column('Task Weight', anchor = CENTER, width =100)
+        self.task_list.column('Task Name', width = 250, stretch=YES)
+        self.task_list.column('Task Time', width = 100, stretch=NO)
+        self.task_list.column('Task Weight', width =100, stretch=NO)
         self.task_list.column('Task ID',anchor = CENTER, width = 0, stretch = NO)
         self.task_list.column('Start Date', anchor = CENTER, width = 0, stretch = NO)
         self.task_list.column('End Date', anchor = CENTER, width = 0, stretch = NO)
