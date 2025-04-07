@@ -173,7 +173,7 @@ class App:
     def __init__(self, root):
       self.root = root
       self.root.title("Task Manager")
-      self.root.geometry("488x650")
+      self.root.geometry("550x650")
       root.resizable(width = 0, height = 0)
 
       self.addtask_window = None
@@ -260,22 +260,50 @@ class App:
       self.query_database()
 
     def on_close(self):
+        """Handle proper application shutdown"""
         confirm = messagebox.askyesno("Confirm Exit", "Are you sure you want to exit the program?")
-        if self.inactivity_timer:
-            self.inactivity_timer.cancel()
-
+        
         if confirm:
-            if self.addtask_window:
-                self.addtask_window.destroy()
-            if self.edittask_window:
-                self.edittask_window.destroy()
-            if self.commithistory_window:
-                self.commithistory_window.destroy()
-            root.destroy()
+            # Cancel any active timers
+            if hasattr(self, 'inactivity_timer') and self.inactivity_timer:
+                self.inactivity_timer.cancel()
+                
+            # Stop the timer if it's running
+            if hasattr(self, 'timer_running') and self.timer_running:
+                self.stop_timer()
+                
+            # Close any open windows
+            for window_name in ['addtask_window', 'edittask_window', 'commithistory_window']:
+                if hasattr(self, window_name) and getattr(self, window_name) is not None:
+                    try:
+                        getattr(self, window_name).destroy()
+                    except:
+                        pass
+                        
+            # Set a flag to indicate we're shutting down (to prevent any new processes)
+            self.shutting_down = True
+            
+            # Force exit all threads if needed
+            import threading
+            for thread in threading.enumerate():
+                if thread != threading.main_thread():
+                    # Print debug info
+                    print(f"Killing thread: {thread.name}")
+                    
+            # Destroy the root window which will terminate the mainloop
+            try:
+                self.root.quit()  # Quit the mainloop
+                self.root.destroy()  # Destroy the window
+            except:
+                pass
+                
+            # Force exit if needed
+            import os, sys
+            os._exit(0)  # Force exit the program
         else:
+            # If user cancels, bring the app window back to focus
             self.root.lift()
             self.root.focus_force()
-            return
 
     def show_menu(self):
         try:

@@ -75,9 +75,9 @@ def get_available_fonts():
 
 # Define cross-platform fonts based on availability
 preferred_fonts = {
-    "title": ["sf pro display", "arial", "dejavu sans", "liberation sans", "sans-serif"],
-    "body": ["sf pro display", "arial", "dejavu sans", "liberation sans", "sans-serif"],
-    "description": ["sf pro text", "arial", "dejavu sans", "liberation sans", "sans-serif"]
+    "title": ["sf pro display", "Arial", "dejavu sans", "liberation sans", "sans-serif"],
+    "body": ["sf pro display", "Arial", "dejavu sans", "liberation sans", "sans-serif"],
+    "description": ["sf pro text", "Arial", "dejavu sans", "liberation sans", "sans-serif"]
 }
 
 # Find available fonts
