@@ -1,3 +1,4 @@
+
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
@@ -14,20 +15,18 @@ import threading
 import time
 import sys
 import shutil
-#from ctypes import windll
-from app.ui import (
+from ui import (
     CompletedTasksWindow,
     EditTaskWindow,
     AddTaskWindow,
-    CurrentTaskWindow,
     TagsDB,
     CompletedTasksList,
     AnalyticsPage,
-    ArchiveTasksList,
+    ArchiveTasksList, 
+    SettingsPage,
     HelpPage
 )
 from ui.CommitHistoryPage import CommitHistoryWindow
-from ui import CompletedTaskDetailsPage as CTDW
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
 #IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
@@ -38,8 +37,6 @@ grey_button_color = "#d3d3d3"
 green_button_color = "#77DD77"
 red_button_color = "#FF7276"
 scroll_trough_color = "#E0E0E0"
-
-#windll.shcore.SetProcessDpiAwareness(1)
 
 main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
@@ -176,6 +173,7 @@ class App:
       self.analytics_page = AnalyticsPage(self.main_container)
       self.archive_page = ArchiveTasksList(self.main_container, self)
       self.help_page = HelpPage(self.main_container, self)
+      self.settings_page = SettingsPage(self.main_container, self)
 
       #Show main page at start-up
       self.current_page = self.full_page
@@ -189,7 +187,7 @@ class App:
       self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
       self.popup_menu.add_command(label="Analytics", command=lambda: self.switch_page("Analytics"))
       self.popup_menu.add_command(label="Archive", command=lambda: self.switch_page("Archive"))
-      self.popup_menu.add_command(label="Help", command=lambda: self.switch_page("Help"))
+      self.popup_menu.add_command(label="Help and Documentation", command=lambda: self.switch_page("Help and Documentation"))
       # self.popup_menu.add_command(label="Commit History", command=lambda: self.switch_page("Commit History"))
       self.popup_menu.configure(bg= background_color)
 
@@ -265,9 +263,9 @@ class App:
             self.page_title.config(text="Archived Tasks", background=background_color)
             self.root.geometry("650x515")
             self.archive_page.load_archive_tasks()
-        elif page_name == "Help":
+        elif page_name == "Help and Documentation":
             self.current_page = self.help_page
-            self.page_title.config(text = "Help", background=background_color)
+            self.page_title.config(text = "Help and Documentation", background=background_color)
             self.root.geometry("650x600")
             self.query_database()
             
@@ -414,9 +412,8 @@ class App:
         self.full_page_complete_button = tk.Button(time_controls_frame, text="Complete", background="#4682B4", command=self.complete_current_task)
         self.full_page_complete_button.pack(side=LEFT, padx=(5, 0))
 
-        self.full_page_commit_history_button = tk.Button(time_controls_frame, text = "Commit History", background= main_btn_color, command = self.commit_history_current)
+        self.full_page_commit_history_button = tk.Button(time_controls_frame, text = "Commit History", background= main_btn_color, command= self.commit_history_current)
         self.full_page_commit_history_button.pack(side = LEFT, padx = (5,0))
-
         #Change color when a item is selected
         style.map("Treeview",
         background = [('selected', "#4169E1")], 
@@ -1085,9 +1082,7 @@ class App:
         if task:
             if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
                 self.commit_button.config(state=tk.DISABLED)  # Disable the button
-                self.commithistory_window = CTDW.CompletedTaskDetailsWindow(task_id=task, compFlag=False)
-
-                # Pass self to allow callback
+                self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=False)  # Pass self to allow callback
             else:
                 self.commithistory_window.deiconify()
                 self.commithistory_window.lift()
@@ -1112,10 +1107,6 @@ class App:
                 self.edittask_window.lift()
         else:
             messagebox.showwarning("Selection Required", "Please select a task to complete.")
-
-    def open_CurrentTaskWindow(self):
-        self.task_window = CurrentTaskWindow()
-        self.task_window.grab_set()
     
     def open_CompletionPage(self):
         selected = self.task_list.selection()
