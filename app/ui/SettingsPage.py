@@ -20,7 +20,6 @@ class HelpPage(tk.Frame):
         
         # Create a tab for keyboard shortcuts
         shortcuts_frame = tk.Frame(self.notebook, bg="#d3d3d3")
-        self.notebook.add(shortcuts_frame, text="Keyboard Shortcuts")
         
         # Create a scrollable text widget for the shortcuts
         shortcut_scroll = tk.Scrollbar(shortcuts_frame)
@@ -154,20 +153,3 @@ class HelpPage(tk.Frame):
         header_frame = tk.Frame(self, bg="#A9A9A9")
         header_frame.pack(fill="x", pady=(10, 0))
         
-        title_label = tk.Label(
-            header_frame,
-            text="Help & Documentation",
-            font=("SF Pro Display", 14, "bold"),
-            bg="#A9A9A9"
-        )
-        title_label.pack(pady=5)
-        
-        # Back button (optional - if needed for navigation)
-        back_button = tk.Button(
-            self,
-            text="Back to Main View",
-            command=lambda: controller.show_frame("MainPage"),
-            bg="#e99e56",
-            font=("SF Pro Text", 10)
-        )
-        back_button.pack(pady=10, side="bottom")
