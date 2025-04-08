@@ -1,0 +1,4 @@
+# Basic requirements for TimeTracker application
+tkinter
+matplotlib
+pillow  # For icon conversion

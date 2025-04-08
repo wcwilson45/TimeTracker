@@ -14,7 +14,8 @@ import threading
 import time
 import sys
 import shutil
-from ui import (
+#from ctypes import windll
+from app.ui import (
     CompletedTasksWindow,
     EditTaskWindow,
     AddTaskWindow,
@@ -22,8 +23,7 @@ from ui import (
     TagsDB,
     CompletedTasksList,
     AnalyticsPage,
-    ArchiveTasksList, 
-    SettingsPage,
+    ArchiveTasksList,
     HelpPage
 )
 from ui.CommitHistoryPage import CommitHistoryWindow
@@ -37,6 +37,8 @@ grey_button_color = "#d3d3d3"
 green_button_color = "#77DD77"
 red_button_color = "#FF7276"
 scroll_trough_color = "#E0E0E0"
+
+#windll.shcore.SetProcessDpiAwareness(1)
 
 main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
@@ -173,7 +175,6 @@ class App:
       self.analytics_page = AnalyticsPage(self.main_container)
       self.archive_page = ArchiveTasksList(self.main_container, self)
       self.help_page = HelpPage(self.main_container, self)
-      self.settings_page = SettingsPage(self.main_container, self)
 
       #Show main page at start-up
       self.current_page = self.full_page
@@ -188,7 +189,6 @@ class App:
       self.popup_menu.add_command(label="Analytics", command=lambda: self.switch_page("Analytics"))
       self.popup_menu.add_command(label="Archive", command=lambda: self.switch_page("Archive"))
       self.popup_menu.add_command(label="Help", command=lambda: self.switch_page("Help"))
-      self.popup_menu.add_command(label="Settings", command=lambda: self.switch_page("Settings"))
       # self.popup_menu.add_command(label="Commit History", command=lambda: self.switch_page("Commit History"))
       self.popup_menu.configure(bg= background_color)
 
@@ -267,11 +267,6 @@ class App:
         elif page_name == "Help":
             self.current_page = self.help_page
             self.page_title.config(text = "Help", background=background_color)
-            self.root.geometry("650x600")
-            self.query_database()
-        elif page_name == "Settings":
-            self.current_page = self.settings_page
-            self.page_title.config(text = "Settings", background=background_color)
             self.root.geometry("650x600")
             self.query_database()
             

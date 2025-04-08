@@ -3,11 +3,6 @@ from tkinter.ttk import *
 import tkinter as tk
 from tkinter import ttk, messagebox
 import tkinter.font as tkfont
-
-class SettingsPage(tk.Frame):
-    def __init__(self, parent, app):
-        super().__init__(parent)  # Ensure proper initialization
-        self.app = app  # Store reference to the app if needed
     
 class HelpPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -17,81 +12,6 @@ class HelpPage(tk.Frame):
         # Create a notebook for tabbed help content
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
-        
-        # Create a tab for keyboard shortcuts
-        shortcuts_frame = tk.Frame(self.notebook, bg="#d3d3d3")
-        self.notebook.add(shortcuts_frame, text="Keyboard Shortcuts")
-        
-        # Create a scrollable text widget for the shortcuts
-        shortcut_scroll = tk.Scrollbar(shortcuts_frame)
-        shortcut_scroll.pack(side="right", fill="y")
-        
-        shortcut_text = tk.Text(shortcuts_frame, yscrollcommand=shortcut_scroll.set, bg="#d3d3d3", wrap="word")
-        shortcut_text.pack(side="left", fill="both", expand=True, padx=5, pady=5)
-        
-        shortcut_scroll.config(command=shortcut_text.yview)
-        
-        # Add shortcut information
-        shortcut_text.tag_configure("heading", font=("SF Pro Display", 12, "bold"))
-        shortcut_text.tag_configure("subheading", font=("SF Pro Display", 10, "bold"))
-        shortcut_text.tag_configure("shortcut", font=("SF Pro Text", 9, "bold"))
-        
-        shortcut_text.insert(tk.END, "Keyboard Shortcuts\n\n", "heading")
-        
-        shortcut_text.insert(tk.END, "Global Shortcuts\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+Q: ", "shortcut")
-        shortcut_text.insert(tk.END, "Exit application\n")
-        shortcut_text.insert(tk.END, "F1: ", "shortcut")
-        shortcut_text.insert(tk.END, "Show this help\n")
-        shortcut_text.insert(tk.END, "Ctrl+P: ", "shortcut")
-        shortcut_text.insert(tk.END, "Preferences\n\n")
-        
-        shortcut_text.insert(tk.END, "Navigation\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+1: ", "shortcut")
-        shortcut_text.insert(tk.END, "Time Tracker\n")
-        shortcut_text.insert(tk.END, "Ctrl+2: ", "shortcut")
-        shortcut_text.insert(tk.END, "Completed Tasks\n")
-        shortcut_text.insert(tk.END, "Ctrl+3: ", "shortcut")
-        shortcut_text.insert(tk.END, "Small Overlay\n")
-        shortcut_text.insert(tk.END, "Ctrl+4: ", "shortcut")
-        shortcut_text.insert(tk.END, "Tags Database\n")
-        shortcut_text.insert(tk.END, "Ctrl+5: ", "shortcut")
-        shortcut_text.insert(tk.END, "Analytics\n")
-        shortcut_text.insert(tk.END, "Ctrl+6: ", "shortcut")
-        shortcut_text.insert(tk.END, "Archive\n\n")
-        
-        shortcut_text.insert(tk.END, "Task Management\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+N: ", "shortcut")
-        shortcut_text.insert(tk.END, "Add new task\n")
-        shortcut_text.insert(tk.END, "Ctrl+E: ", "shortcut")
-        shortcut_text.insert(tk.END, "Edit selected task\n")
-        shortcut_text.insert(tk.END, "Ctrl+H: ", "shortcut")
-        shortcut_text.insert(tk.END, "View task history\n")
-        shortcut_text.insert(tk.END, "Ctrl+Delete: ", "shortcut")
-        shortcut_text.insert(tk.END, "Delete selected task\n\n")
-        
-        shortcut_text.insert(tk.END, "Timer Controls\n", "subheading")
-        shortcut_text.insert(tk.END, "F5: ", "shortcut")
-        shortcut_text.insert(tk.END, "Start timer\n")
-        shortcut_text.insert(tk.END, "F6: ", "shortcut")
-        shortcut_text.insert(tk.END, "Stop timer\n\n")
-        
-        shortcut_text.insert(tk.END, "List Operations\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+A: ", "shortcut")
-        shortcut_text.insert(tk.END, "Select all items\n")
-        shortcut_text.insert(tk.END, "Ctrl+F: ", "shortcut")
-        shortcut_text.insert(tk.END, "Search\n")
-        shortcut_text.insert(tk.END, "Escape: ", "shortcut")
-        shortcut_text.insert(tk.END, "Deselect all items\n\n")
-        
-        shortcut_text.insert(tk.END, "Data Management\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+B: ", "shortcut")
-        shortcut_text.insert(tk.END, "Backup database\n")
-        shortcut_text.insert(tk.END, "Ctrl+R: ", "shortcut")
-        shortcut_text.insert(tk.END, "Restore database\n")
-        
-        # Make the text widget read-only
-        shortcut_text.config(state="disabled")
         
         # Create a tab for general help
         general_frame = tk.Frame(self.notebook, bg="#d3d3d3")
@@ -161,13 +81,3 @@ class HelpPage(tk.Frame):
             bg="#A9A9A9"
         )
         title_label.pack(pady=5)
-        
-        # Back button (optional - if needed for navigation)
-        back_button = tk.Button(
-            self,
-            text="Back to Main View",
-            command=lambda: controller.show_frame("MainPage"),
-            bg="#e99e56",
-            font=("SF Pro Text", 10)
-        )
-        back_button.pack(pady=10, side="bottom")
