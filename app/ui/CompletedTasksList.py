@@ -183,13 +183,13 @@ class CompletedTasksList(tk.Frame):
     def open_task_details_window(self, task_id):
         """Open a task details window for the given task ID"""
         if self.task_details_window is None or not tk.Toplevel.winfo_exists(self.task_details_window):
-            self.task_details_window = CompletedTaskDetailsWindow(task_id=task_id, parent=self)
+            self.task_details_window = CompletedTaskDetailsWindow(task_id=task_id, parent=self, compFlag=True)
             self.task_details_window.grab_set()  # Make window modal
         else:
             # If window already exists, try to close it and open a new one
             try:
                 self.task_details_window.destroy()
-                self.task_details_window = CompletedTaskDetailsWindow(task_id=task_id, parent=self)
+                self.task_details_window = CompletedTaskDetailsWindow(task_id=task_id, parent=self, compFlag=True)
                 self.task_details_window.grab_set()
             except:
                 messagebox.showinfo("Info", "Please close the existing details window first.")
