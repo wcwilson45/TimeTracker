@@ -361,7 +361,7 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
         c = conn.cursor()
         
         try:
-            if self.compFlag:
+            if self.compFlag == 0:  # 0 for MainPage, 1 for completed tasks page, 2 for current task page
                 c.execute("SELECT * FROM CompletedTasks WHERE task_id = ?", (self.task_id,))
                 task = c.fetchone()
                 print(task)
@@ -385,8 +385,33 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
                     self.task_tags = ""
                     self.task_weight_type = "N/A"
                     self.task_description = "Task details could not be loaded."
-            else:
+            elif self.compFlag == 1:
                 c.execute("SELECT * FROM TaskList WHERE task_id = ?", (self.task_id,))
+                task = c.fetchone()
+                print(task)
+                if task:
+                    self.task_name = task[0]
+                    self.task_time = task[1]
+                    self.task_weight = task[2]
+                    self.completion_date = "Not applicable"
+                    self.total_duration = task[5]
+                    # self.start_date = task[6] if len(task) > 6 else None
+                    self.start_date = task[4]
+                    self.task_tags = task[8] if len(task) > 8 else None
+                    self.task_weight_type = task[7] if len(task) > 7 else None
+                    self.task_description = task[6] if len(task) > 6 else ""
+                else:
+                    self.task_name = "Task Not Found"
+                    self.task_time = "00:00:00"
+                    self.task_weight = "N/A"
+                    self.completion_date = "N/A"
+                    self.total_duration = "00:00:00"
+                    self.start_date = "N/A"
+                    self.task_tags = ""
+                    self.task_weight_type = "N/A"
+                    self.task_description = "Task details could not be loaded."
+            elif self.compFlag == 2:
+                c.execute("SELECT * FROM CurrentTask WHERE task_id = ?", (self.task_id,))
                 task = c.fetchone()
                 print(task)
                 if task:
