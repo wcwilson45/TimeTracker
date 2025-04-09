@@ -27,6 +27,7 @@ from ui import (
     HelpPage
 )
 from ui.CommitHistoryPage import CommitHistoryWindow
+from ui.CompletedTaskDetailsPage import CompletedTaskDetailsWindow as CTDW
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
 #IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
@@ -173,7 +174,7 @@ class App:
       self.analytics_page = AnalyticsPage(self.main_container)
       self.archive_page = ArchiveTasksList(self.main_container, self)
       self.help_page = HelpPage(self.main_container, self)
-      self.settings_page = SettingsPage(self.main_container, self)
+      # self.settings_page = SettingsPage(self.main_container, self)
 
       #Show main page at start-up
       self.current_page = self.full_page
@@ -1081,8 +1082,9 @@ class App:
         task = self.ti_entry.get()
         if task:
             if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
-                self.commit_button.config(state=tk.DISABLED)  # Disable the button
-                self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=False)  # Pass self to allow callback
+                # self.commit_button.config(state=tk.DISABLED)  # Disable the button
+                # self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=False)  # Pass self to allow callback
+                self.commithistory_window = CTDW(task_id=task, compFlag=False)
             else:
                 self.commithistory_window.deiconify()
                 self.commithistory_window.lift()
@@ -1302,8 +1304,9 @@ class App:
         # Open the commit history window for the current task
         try:
             if self.commithistory_window is None or not self.commithistory_window.winfo_exists():
-                self.commit_button.config(state=tk.DISABLED)  # Disable the button
-                self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task_id, compFlag=False)
+                # self.commit_button.config(state=tk.DISABLED)  # Disable the button
+                # self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task_id, compFlag=False)
+                self.commithistory_window = CTDW(task_id=task_id, compFlag=False)
             else:
                 self.commithistory_window.deiconify()
                 self.commithistory_window.lift()
