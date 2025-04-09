@@ -137,7 +137,7 @@ class CompletedTasksList(tk.Frame):
         export_button.pack(side="left")
 
         self.commit_button = tk.Button(button_frame, text="Commit History",
-                                  bg="#b2fba5", command=self.open_CommitHistoryWindow)
+                                  bg="#b2fba5", command=self.open_selected_task_details)
         self.commit_button.pack(side="left")
 
         undo_button = tk.Button(button_frame, text="Undo Commit",
