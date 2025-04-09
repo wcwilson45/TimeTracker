@@ -185,14 +185,14 @@ class CompletedTasksList(tk.Frame):
         """Open a task details window for the given task ID"""
         if self.task_details_window is None or not tk.Toplevel.winfo_exists(self.task_details_window):
             # Added the missing compFlag parameter with value True since we're in the CompletedTasksList
-            self.task_details_window = CompletedTaskDetailsWindow(compFlag=True, task_id=task_id, parent=self)
+            self.task_details_window = CompletedTaskDetailsWindow(compFlag=0, task_id=task_id, parent=self)
             self.task_details_window.grab_set()  # Make window modal
         else:
             # If window already exists, try to close it and open a new one
             try:
                 self.task_details_window.destroy()
                 # Also added compFlag=True here
-                self.task_details_window = CompletedTaskDetailsWindow(compFlag=True, task_id=task_id, parent=self)
+                self.task_details_window = CompletedTaskDetailsWindow(compFlag=0, task_id=task_id, parent=self)
                 self.task_details_window.grab_set()
             except:
                 messagebox.showinfo("Info", "Please close the existing details window first.")
@@ -626,6 +626,6 @@ class CompletedTasksList(tk.Frame):
         if not task:
             messagebox.showwarning("Selection Required", "Please select a task to complete.")
         elif self.main_app.commithistory_window is None or not self.main_app.commithistory_window.winfo_exists():
-            self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=True)
+            self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=0)
         else:
             messagebox.showwarning("A commit history window is already open", "Please close it before reopening.")
