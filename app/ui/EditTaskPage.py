@@ -1,4 +1,3 @@
-
 from tkinter import *
 from tkinter.ttk import *
 import tkinter as tk
@@ -8,6 +7,7 @@ import pathlib
 import sqlite3
 from datetime import date
 from .TaskHistory import TaskHistoryDB
+from .utils import get_writable_db_path
 
 main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
@@ -23,12 +23,10 @@ class EditTaskWindow(tk.Tk):
         self.is_current_task = False  # Flag to track if editing current task
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # Define paths
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("EditTaskPage.py", '') + '\\Databases' + '\\task_list.db'
+        # Define path
+        self.path = get_writable_db_path('app/ui/Databases/task_list.db')
 
-        self.tags_path = pathlib.Path(__file__).parent
-        self.tags_path = str(self.tags_path).replace('EditTaskPage.py','') + '\\Databases' + '\\tags.db'
+        self.tags_path = get_writable_db_path('app/ui/Databases/tags.db')
 
         # Initialize task data
         self.edit_task = None

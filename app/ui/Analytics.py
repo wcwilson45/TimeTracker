@@ -8,14 +8,13 @@ import sqlite3
 from matplotlib.figure import Figure 
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,  
 NavigationToolbar2Tk)
+from .utils import get_writable_db_path
+
+path = get_writable_db_path('app/ui/Databases/task_list.db')
 
 background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
 frame_bg_color = "#dcdcdc"
-
-global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("Analytics.py", '') + '\\Databases' + '\\task_list.db'
 
 class AnalyticsPage(tk.Frame):
     def __init__(self, parent):

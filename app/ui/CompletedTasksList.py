@@ -14,11 +14,11 @@ from datetime import datetime
 from .TaskHistory import TaskHistoryDB
 from .CommitHistoryPage import CommitHistoryWindow
 from .CompletedTaskDetailsPage import CompletedTaskDetailsWindow
+from .utils import resource_path
+from .utils import get_writable_db_path
 
-
-global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("CompletedTasksList.py", '') + '\\Databases' + '\\task_list.db'
+# Define the path to the task list database - use writable path
+path = get_writable_db_path('app/ui/Databases/task_list.db')
 
 background_color = "#A9A9A9"
 grey_button_color = "#d3d3d3"
@@ -339,9 +339,7 @@ class CompletedTasksList(tk.Frame):
             conn.close()
 
     def undo_task_completion(self):
-    
         #"""Move selected task from CompletedTasks back to TaskList"""
-
         selected_items = self.completed_list.selection()
         
         if not selected_items:
@@ -359,7 +357,11 @@ class CompletedTasksList(tk.Frame):
         if not messagebox.askyesno("Confirm Undo", f"Move '{task_name}' back to tasks list?"):
             return
 
-        conn = sqlite3.connect(path)
+        # Get a fresh writable path
+        from .utils import get_writable_db_path
+        writable_path = get_writable_db_path('app/ui/Databases/task_list.db')
+        
+        conn = sqlite3.connect(writable_path)
         c = conn.cursor()
 
         try:
@@ -456,7 +458,11 @@ class CompletedTasksList(tk.Frame):
         for item in self.completed_list.get_children():
             self.completed_list.delete(item)
 
-        conn = sqlite3.connect(path)
+        # Get a fresh writable path - this ensures we're using the latest copy
+        from .utils import get_writable_db_path
+        writable_path = get_writable_db_path('app/ui/Databases/task_list.db')
+        
+        conn = sqlite3.connect(writable_path)
         c = conn.cursor()
 
         try:

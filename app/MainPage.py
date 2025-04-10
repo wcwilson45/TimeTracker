@@ -12,28 +12,25 @@ import pathlib
 import csv
 import threading
 import os
-import threading
-import time
-import sys
 import shutil
-from ui import (
+import sys
+from app.ui import (
     CompletedTasksWindow,
     EditTaskWindow,
     AddTaskWindow,
     TagsDB,
     CompletedTasksList,
     AnalyticsPage,
-    ArchiveTasksList, 
-    SettingsPage,
+    ArchiveTasksList,
     HelpPage
 )
-from ui.CommitHistoryPage import CommitHistoryWindow
-from ui.CompletedTaskDetailsPage import CompletedTaskDetailsWindow as CTDW
+from app.ui.CommitHistoryPage import CommitHistoryWindow
+from app.ui.CompletedTaskDetailsPage import CompletedTaskDetailsWindow as CTDW
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
 #IF YOU GET ERRORS MAKE SURE TO DELETE THE DATABASE FILES AND RERUN PROGRAM
 
-#Global Variables
+# Global Variables
 background_color = "#A9A9A9"
 grey_button_color = "#d3d3d3"
 green_button_color = "#77DD77"
@@ -43,78 +40,88 @@ scroll_trough_color = "#E0E0E0"
 main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
 
-global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("MainPage.py", '') + '\\ui' + '\\Databases' + '\\task_list.db'
-      
+def resource_path(relative_path):
+    """ Get absolute path to resource (for PyInstaller compatibility) """
+    try:
+        base_path = sys._MEIPASS  # PyInstaller sets this at runtime
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
-#Create a database or connect to an existing database
-conn = sqlite3.connect(path)
+# Adjust path to database
+db_path = resource_path('app/ui/Databases/task_list.db')
 
-#Create a cursor instance
-c = conn.cursor()
+# If writing to the DB, copy it to user space (optional but recommended)
+user_db_path = os.path.join(os.getenv("APPDATA"), "TimeTracker", "task_list.db")
+os.makedirs(os.path.dirname(user_db_path), exist_ok=True)
+if not os.path.exists(user_db_path):
+    shutil.copyfile(db_path, user_db_path)
 
-#Table for TaskList database
-c.execute("""CREATE TABLE if not exists TaskList (
-          task_name text,
-          task_time text DEFAULT '00:00:00',
-          task_weight text,
-          task_id integer PRIMARY KEY AUTOINCREMENT,
-          task_start_date text,
-          task_end_date text,
-          task_description text,
-          task_weight_type text,
-          task_tags text, 
-          list_place integer
-          )
-""")
-#Table for Current Task
-c.execute("""CREATE TABLE if not exists CurrentTask(
-          task_name text,
-          task_time text,
-          task_weight text,
-          task_id integer,
-          task_start_date text,
-          task_end_date text,
-          task_description text,
-          task_weight_type text,
-          task_tags text)
-""")
+# Create a database or connect to an existing database
+def create_tables():
+    with sqlite3.connect(user_db_path) as conn:
+        c = conn.cursor()
 
-#Table for Completed database
-c.execute("""CREATE TABLE if not exists CompletedTasks (
-          task_name text,
-          task_time text,
-          task_weight text,
-          task_id integer,
-          completion_date text,
-          total_duration text,
-          start_date text,
-          task_tags text,
-          task_weight_type text,
-          task_description text,
-          PRIMARY KEY (task_id)
-)""")
+        # Table for TaskList database
+        c.execute("""CREATE TABLE if not exists TaskList (
+                  task_name text,
+                  task_time text DEFAULT '00:00:00',
+                  task_weight text,
+                  task_id integer PRIMARY KEY AUTOINCREMENT,
+                  task_start_date text,
+                  task_end_date text,
+                  task_description text,
+                  task_weight_type text,
+                  task_tags text, 
+                  list_place integer
+        )""")
 
-# Table for Archive database
-c.execute("""CREATE TABLE if not exists ArchivedTasks (
-          task_name text,
-          task_time text,
-          task_weight text,
-          task_id integer,
-          completion_date text,
-          total_duration text,
-          archive_date text,
-          task_tags text,
-          task_weight_type text,
-          task_description text,
-          PRIMARY KEY (task_id)
-)""")
+        # Table for Current Task
+        c.execute("""CREATE TABLE if not exists CurrentTask(
+                  task_name text,
+                  task_time text,
+                  task_weight text,
+                  task_id integer,
+                  task_start_date text,
+                  task_end_date text,
+                  task_description text,
+                  task_weight_type text,
+                  task_tags text)
+        """)
 
+        # Table for Completed database
+        c.execute("""CREATE TABLE if not exists CompletedTasks (
+                  task_name text,
+                  task_time text,
+                  task_weight text,
+                  task_id integer,
+                  completion_date text,
+                  total_duration text,
+                  start_date text,
+                  task_tags text,
+                  task_weight_type text,
+                  task_description text,
+                  PRIMARY KEY (task_id)
+        )""")
 
-#Commit Changes
-conn.commit()
-conn.close()
+        # Table for Archive database
+        c.execute("""CREATE TABLE if not exists ArchivedTasks (
+                  task_name text,
+                  task_time text,
+                  task_weight text,
+                  task_id integer,
+                  completion_date text,
+                  total_duration text,
+                  archive_date text,
+                  task_tags text,
+                  task_weight_type text,
+                  task_description text,
+                  PRIMARY KEY (task_id)
+        )""")
+
+# Call the function to create tables if not exist
+create_tables()
+
 
 class App:
     def __init__(self, root):
@@ -136,10 +143,9 @@ class App:
      # Set initial inactivity timer
       self.reset_inactivity_timer()
 
-      base_dir = os.path.dirname(os.path.abspath(__file__))
-      image_path = os.path.join(base_dir, "image.png")
-      icon = tk.PhotoImage(file=image_path)
+      icon = tk.PhotoImage(file=resource_path("app/image.png"))
       self.root.iconphoto(True, icon)
+
 
       # Font Tuples for Use on pages
       self.fonts = {
@@ -562,7 +568,7 @@ class App:
         if current_index == 0:  # Already at top
             return
 
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(user_db_path)
         c = conn.cursor()
 
         try:
@@ -614,7 +620,7 @@ class App:
         if current_index == last_index:  # Already at bottom
             return
 
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(user_db_path)
         c = conn.cursor()
 
         try:
@@ -699,7 +705,7 @@ class App:
             self.sd_entry.insert(0, values[4] if len(values) > 4 else "")  # Start Date
             
             # Connect to database to get the full task details including description
-            conn = sqlite3.connect(path)
+            conn = sqlite3.connect(user_db_path)
             c = conn.cursor()
             
             try:
@@ -729,7 +735,7 @@ class App:
             
         task_id = self.ti_entry.get()
 
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(user_db_path)
         c = conn.cursor()
 
         try:
@@ -783,7 +789,7 @@ class App:
         self.query_database()
 
     def set_current_task(self):
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(user_db_path)
         c = conn.cursor()
         
         c.execute("SELECT * FROM CurrentTask")
@@ -845,7 +851,7 @@ class App:
         
     def query_database(self):
         """Refresh all task-related tables in the GUI with the latest database data."""
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(user_db_path)
         c = conn.cursor()
         
         try:
@@ -986,7 +992,7 @@ class App:
             for record in self.task_list.get_children():
                 self.task_list.delete(record)
 
-                conn = sqlite3.connect(path)
+                conn = sqlite3.connect(user_db_path)
                 c = conn.cursor()
 
                 c.execute("DROP TABLE TaskList")
@@ -1006,7 +1012,7 @@ class App:
 
     def create_tasklist_again(self):
         # Create a database or connect to one that exists
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(user_db_path)
 
         # Create a cursor instance
         c = conn.cursor()
@@ -1033,7 +1039,7 @@ class App:
 
     def create_currenttask_again(self):
         # Create a database or connect to one that exists
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(user_db_path)
 
         # Create a cursor instance
         c = conn.cursor()
@@ -1058,7 +1064,7 @@ class App:
 
     def create_task_history_again(self):
         # Create the history table
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(user_db_path)
         c = conn.cursor()
         
         c.execute("""CREATE TABLE IF NOT EXISTS task_history (
@@ -1154,7 +1160,7 @@ class App:
             self.update_timer_boxes(timer_text)
             
             # Update the time in the database for current task
-            conn = sqlite3.connect(path)
+            conn = sqlite3.connect(user_db_path)
             c = conn.cursor()
             
             try:
@@ -1182,7 +1188,7 @@ class App:
         
         if not self.timer_running:
             # Get existing time from database
-            conn = sqlite3.connect(path)
+            conn = sqlite3.connect(user_db_path)
             c = conn.cursor()
             
             try:
@@ -1218,7 +1224,7 @@ class App:
             final_time = self.format_time(self.total_seconds)
             
             # Update database with final time
-            conn = sqlite3.connect(path)
+            conn = sqlite3.connect(user_db_path)
             c = conn.cursor()
             try:
                 c.execute("""
@@ -1267,7 +1273,7 @@ class App:
         self.description_box.config(state=DISABLED)
         
         # Fetch additional task details from the database
-        conn = sqlite3.connect(path)
+        conn = sqlite3.connect(user_db_path)
         c = conn.cursor()
         
         try:
@@ -1373,7 +1379,7 @@ class App:
                     if header == expected_header:
                         data = data[1:]
 
-            tags_path = str(path).replace('task_list.db', 'tags.db')
+            tags_path = str(user_db_path).replace('task_list.db', 'tags.db')
             
             # First extract all unique tags from the CSV
             all_tags = set()
@@ -1430,7 +1436,7 @@ class App:
             conn.close()
             
             # Connect to the SQLite database for tasks
-            conn = sqlite3.connect(path)
+            conn = sqlite3.connect(user_db_path)
             c = conn.cursor()
 
             # Get existing task names from all three tables
@@ -1581,7 +1587,7 @@ class App:
             lookup = self.search_entry.get()
 
             # Create or Connect to the database
-            conn = sqlite3.connect(path)
+            conn = sqlite3.connect(user_db_path)
 
             # Create a cursor instance
             c = conn.cursor()
