@@ -8,10 +8,9 @@ from datetime import datetime
 from tkinter import messagebox
 import sqlite3
 import pathlib
+from .utils import get_writable_db_path
 
-global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("CompletedTaskDetailsPage.py", '') + '\\Databases' + '\\task_list.db'
+path = get_writable_db_path('app/ui/Databases/task_list.db')
 
 
 bad_btn = "#e99e56"
@@ -21,8 +20,7 @@ frame_color = "#dcdcdc"
 
 class TaskHistoryDB:
     def __init__(self):
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = get_writable_db_path('app/ui/Databases/task_list.db')
         
         # Create the history table
         conn = sqlite3.connect(self.path)
@@ -360,80 +358,33 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
         c = conn.cursor()
         
         try:
-            if self.compFlag == 0:  # 0 for MainPage, 1 for completed tasks page, 2 for current task page
+            if self.compFlag:
                 c.execute("SELECT * FROM CompletedTasks WHERE task_id = ?", (self.task_id,))
-                task = c.fetchone()
-                print(task)
-                if task:
-                    self.task_name = task[0]
-                    self.task_time = task[1]
-                    self.task_weight = task[2]
-                    self.completion_date = task[4]
-                    self.total_duration = task[5]
-                    self.start_date = task[6] if len(task) > 6 else None
-                    self.task_tags = task[7] if len(task) > 7 else None
-                    self.task_weight_type = task[8] if len(task) > 8 else None
-                    self.task_description = task[9] if len(task) > 9 else ""
-                else:
-                    self.task_name = "Task Not Found"
-                    self.task_time = "00:00:00"
-                    self.task_weight = "N/A"
-                    self.completion_date = "N/A"
-                    self.total_duration = "00:00:00"
-                    self.start_date = "N/A"
-                    self.task_tags = ""
-                    self.task_weight_type = "N/A"
-                    self.task_description = "Task details could not be loaded."
-            elif self.compFlag == 1:
+            else:
                 c.execute("SELECT * FROM TaskList WHERE task_id = ?", (self.task_id,))
-                task = c.fetchone()
-                print(task)
-                if task:
-                    self.task_name = task[0]
-                    self.task_time = task[1]
-                    self.task_weight = task[2]
-                    self.completion_date = "Not applicable"
-                    self.total_duration = task[5]
-                    # self.start_date = task[6] if len(task) > 6 else None
-                    self.start_date = task[4]
-                    self.task_tags = task[8] if len(task) > 8 else None
-                    self.task_weight_type = task[7] if len(task) > 7 else None
-                    self.task_description = task[6] if len(task) > 6 else ""
-                else:
-                    self.task_name = "Task Not Found"
-                    self.task_time = "00:00:00"
-                    self.task_weight = "N/A"
-                    self.completion_date = "N/A"
-                    self.total_duration = "00:00:00"
-                    self.start_date = "N/A"
-                    self.task_tags = ""
-                    self.task_weight_type = "N/A"
-                    self.task_description = "Task details could not be loaded."
-            elif self.compFlag == 2:
-                c.execute("SELECT * FROM CurrentTask WHERE task_id = ?", (self.task_id,))
-                task = c.fetchone()
-                print(task)
-                if task:
-                    self.task_name = task[0]
-                    self.task_time = task[1]
-                    self.task_weight = task[2]
-                    self.completion_date = "Not applicable"
-                    self.total_duration = task[5]
-                    # self.start_date = task[6] if len(task) > 6 else None
-                    self.start_date = task[4]
-                    self.task_tags = task[8] if len(task) > 8 else None
-                    self.task_weight_type = task[7] if len(task) > 7 else None
-                    self.task_description = task[6] if len(task) > 6 else ""
-                else:
-                    self.task_name = "Task Not Found"
-                    self.task_time = "00:00:00"
-                    self.task_weight = "N/A"
-                    self.completion_date = "N/A"
-                    self.total_duration = "00:00:00"
-                    self.start_date = "N/A"
-                    self.task_tags = ""
-                    self.task_weight_type = "N/A"
-                    self.task_description = "Task details could not be loaded."
+            task = c.fetchone()
+            print(task)
+            
+            if task:
+                self.task_name = task[0]
+                self.task_time = task[1]
+                self.task_weight = task[2]
+                self.completion_date = task[4]
+                self.total_duration = task[5]
+                self.start_date = task[6] if len(task) > 6 else None
+                self.task_tags = task[7] if len(task) > 7 else None
+                self.task_weight_type = task[8] if len(task) > 8 else None
+                self.task_description = task[9] if len(task) > 9 else ""
+            else:
+                self.task_name = "Task Not Found"
+                self.task_time = "00:00:00"
+                self.task_weight = "N/A"
+                self.completion_date = "N/A"
+                self.total_duration = "00:00:00"
+                self.start_date = "N/A"
+                self.task_tags = ""
+                self.task_weight_type = "N/A"
+                self.task_description = "Task details could not be loaded."
         except sqlite3.Error as e:
             print(f"Database error: {e}")
             self.task_name = "Error Loading Task"
@@ -664,7 +615,7 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
         date_label = tk.Label(info_frame, text="Completion Date:", font=self.fonts['Body_Tuple'], bg="#e0e0e0")
         date_label.grid(row=3, column=0, sticky="w", padx=5, pady=5)
         
-        date_value = tk.Label(info_frame, text=self.completion_date, 
+        date_value = tk.Label(info_frame, text=current_time, 
                              font=self.fonts['Description_Tuple'], bg="#e0e0e0")
         date_value.grid(row=3, column=1, sticky="w", padx=5, pady=5)
         

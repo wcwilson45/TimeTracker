@@ -4,14 +4,17 @@ import pathlib
 import tkinter as tk
 from tkinter import ttk, messagebox
 import tkinter.font as tkfont
+import sys
+import os
+from .utils import get_writable_db_path
 
 class TaskHistoryDB:
     def __init__(self):
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("TaskHistory.py", '') + '\\Databases' + '\\task_list.db'
+        # Use resource_path to locate the database file
+        self.task_list_db = get_writable_db_path('app/ui/Databases/task_list.db')
         
         # Create the history table with proper indexing
-        conn = sqlite3.connect(self.path)
+        conn = sqlite3.connect(self.task_list_db)
         c = conn.cursor()
         
         try:
@@ -60,7 +63,7 @@ class TaskHistoryDB:
             if existing_conn:
                 conn = existing_conn
             else:
-                conn = sqlite3.connect(self.path)
+                conn = sqlite3.connect(self.task_list_db)
                 should_close_conn = True
                 
             c = conn.cursor()
@@ -120,7 +123,7 @@ class TaskHistoryDB:
         """
         conn = None
         try:
-            conn = sqlite3.connect(self.path)
+            conn = sqlite3.connect(self.task_list_db)
             c = conn.cursor()
             
             # Ensure task_id is an integer
@@ -161,7 +164,7 @@ class TaskHistoryDB:
         """
         conn = None
         try:
-            conn = sqlite3.connect(self.path)
+            conn = sqlite3.connect(self.task_list_db)
             c = conn.cursor()
             
             # Ensure task_id is an integer
@@ -188,7 +191,7 @@ class TaskHistoryDB:
         """Get unique dates when changes were made to a task"""
         conn = None
         try:
-            conn = sqlite3.connect(self.path)
+            conn = sqlite3.connect(self.task_list_db)
             c = conn.cursor()
             
             # Ensure task_id is an integer
@@ -221,7 +224,7 @@ class TaskHistoryDB:
         """Get all changes for a task on a specific date"""
         conn = None
         try:
-            conn = sqlite3.connect(self.path)
+            conn = sqlite3.connect(self.task_list_db)
             c = conn.cursor()
             
             # Ensure task_id is an integer
@@ -261,7 +264,7 @@ class TaskHistoryDB:
         """
         conn = None
         try:
-            conn = sqlite3.connect(self.path)
+            conn = sqlite3.connect(self.task_list_db)
             c = conn.cursor()
             
             # Ensure task_id is an integer
@@ -305,7 +308,7 @@ class TaskHistoryDB:
         """
         conn = None
         try:
-            conn = sqlite3.connect(self.path)
+            conn = sqlite3.connect(self.task_list_db)
             c = conn.cursor()
             
             # Calculate cutoff date

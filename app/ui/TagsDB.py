@@ -7,6 +7,8 @@ import sqlite3
 import csv
 from tkinter import messagebox
 import pathlib
+import os
+from .utils import get_writable_db_path
 
 background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
@@ -17,36 +19,25 @@ class TagsDB(tk.Frame):
         super().__init__(parent)
         #DATABASE SECTION ############################################
 
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("TagsDB.py", '') + '\\Databases' + '\\tags.db'
+        # Get the path to the resource database
+        self.db_resource_path = get_writable_db_path('app/ui/Databases/task_list.db')
+        
+        # Create user directory path for writable database
+        self.user_db_dir = os.path.join(os.getenv("APPDATA"), "TimeTracker")
+        os.makedirs(self.user_db_dir, exist_ok=True)
+        
+        # Path to user's database file
+        self.path = os.path.join(self.user_db_dir, "tags.db")
+        
+        # Copy the database from resources to user directory if it doesn't exist
+        if not os.path.exists(self.path):
+            import shutil
+            shutil.copyfile(self.db_resource_path, self.path)
 
-        # Create or Connect to the database
+        # Create or Connect to the database (using user's writable copy)
         conn = sqlite3.connect(self.path)
 
         # Create a cursor instance
-        c = conn.cursor()
-
-        c.execute("SELECT tag_name FROM tags")  # Fetch tag_names from tag database
-        tags = c.fetchall()
-        global values
-        values = []
-
-        # Add data to the list
-        for tag in tags:
-            values.append(tag[0])
-
-        # Commit changes
-        conn.commit()
-
-        # Close connection to the database
-        conn.close()
-        
-
-        # Create or Connect to database
-        
-        conn = sqlite3.connect(self.path)
-
-        # Create a cursor instnace
         c = conn.cursor()
 
         c.execute("""
@@ -60,7 +51,16 @@ class TagsDB(tk.Frame):
         # Commit changes
         conn.commit()
 
-        # Close connection to database
+        c.execute("SELECT tag_name FROM tags")  # Fetch tag_names from tag database
+        tags = c.fetchall()
+        global values
+        values = []
+
+        # Add data to the list
+        for tag in tags:
+            values.append(tag[0])
+
+        # Close connection to the database
         conn.close()
         
         def query_database():

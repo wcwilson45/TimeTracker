@@ -1,10 +1,40 @@
 import PyInstaller.__main__
 import os
 import sys
+import shutil
+import time
 
 # Get the directory where this script is located
 app_path = os.path.dirname(os.path.abspath(__file__))
 app_icon = os.path.join(app_path, 'app', 'image.png')
+dist_dir = os.path.join(app_path, 'dist', 'TimeTracker')
+build_dir = os.path.join(app_path, 'build')
+
+# Clean up previous build artifacts with better error handling
+def safe_remove_directory(directory):
+    if os.path.exists(directory):
+        print(f"Attempting to remove directory: {directory}")
+        try:
+            shutil.rmtree(directory)
+            print(f"Successfully removed {directory}")
+        except PermissionError:
+            print(f"Permission error when removing {directory}. Waiting for resources to be released...")
+            # Wait a bit and try again
+            time.sleep(3)
+            try:
+                shutil.rmtree(directory)
+                print(f"Successfully removed {directory} after waiting")
+            except Exception as e:
+                print(f"Could not remove directory after waiting: {e}")
+                print("Please close any applications using the files and try again.")
+                user_input = input("Continue anyway? (y/n): ")
+                if user_input.lower() != 'y':
+                    sys.exit(1)
+
+# Clean up previous build artifacts
+print("Cleaning up previous build artifacts...")
+safe_remove_directory(dist_dir)
+safe_remove_directory(build_dir)
 
 # Convert icon to .ico format if it's not already
 icon_path = os.path.join(app_path, 'app_icon.ico')
@@ -55,4 +85,10 @@ args = [
 ]
 
 # Run PyInstaller
-PyInstaller.__main__.run(args)
+print("Starting PyInstaller build process...")
+try:
+    PyInstaller.__main__.run(args)
+    print("Build completed successfully!")
+except Exception as e:
+    print(f"Build failed with error: {e}")
+    sys.exit(1)

@@ -24,6 +24,12 @@ def check_requirements():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "Pillow"])
         print("✓ Pillow installed successfully")
     
+    # Install application dependencies from requirements.txt
+    if os.path.exists('requirements.txt'):
+        print("Installing application dependencies...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        print("✓ Dependencies installed successfully")
+    
     # Check for Inno Setup
     inno_paths = [
         r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe",

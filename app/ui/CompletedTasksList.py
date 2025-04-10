@@ -1,5 +1,3 @@
-
-
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import ttk
@@ -14,11 +12,11 @@ from datetime import datetime
 from .TaskHistory import TaskHistoryDB
 from .CommitHistoryPage import CommitHistoryWindow
 from .CompletedTaskDetailsPage import CompletedTaskDetailsWindow
+from .utils import resource_path
+from .utils import get_writable_db_path
 
-
-global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("CompletedTasksList.py", '') + '\\Databases' + '\\task_list.db'
+# Define the path to the task list database - use writable path
+path = get_writable_db_path('app/ui/Databases/task_list.db')
 
 background_color = "#A9A9A9"
 grey_button_color = "#d3d3d3"
@@ -138,7 +136,7 @@ class CompletedTasksList(tk.Frame):
         export_button.pack(side="left")
 
         self.commit_button = tk.Button(button_frame, text="Commit History",
-                                  bg="#b2fba5", command=self.open_selected_task_details)
+                                  bg="#b2fba5", command=self.open_CommitHistoryWindow)
         self.commit_button.pack(side="left")
 
         undo_button = tk.Button(button_frame, text="Undo Commit",
@@ -185,15 +183,13 @@ class CompletedTasksList(tk.Frame):
     def open_task_details_window(self, task_id):
         """Open a task details window for the given task ID"""
         if self.task_details_window is None or not tk.Toplevel.winfo_exists(self.task_details_window):
-            # Added the missing compFlag parameter with value True since we're in the CompletedTasksList
-            self.task_details_window = CompletedTaskDetailsWindow(compFlag=0, task_id=task_id, parent=self)
+            self.task_details_window = CompletedTaskDetailsWindow(task_id=task_id, parent=self)
             self.task_details_window.grab_set()  # Make window modal
         else:
             # If window already exists, try to close it and open a new one
             try:
                 self.task_details_window.destroy()
-                # Also added compFlag=True here
-                self.task_details_window = CompletedTaskDetailsWindow(compFlag=0, task_id=task_id, parent=self)
+                self.task_details_window = CompletedTaskDetailsWindow(task_id=task_id, parent=self)
                 self.task_details_window.grab_set()
             except:
                 messagebox.showinfo("Info", "Please close the existing details window first.")
@@ -339,9 +335,7 @@ class CompletedTasksList(tk.Frame):
             conn.close()
 
     def undo_task_completion(self):
-    
         #"""Move selected task from CompletedTasks back to TaskList"""
-
         selected_items = self.completed_list.selection()
         
         if not selected_items:
@@ -359,7 +353,11 @@ class CompletedTasksList(tk.Frame):
         if not messagebox.askyesno("Confirm Undo", f"Move '{task_name}' back to tasks list?"):
             return
 
-        conn = sqlite3.connect(path)
+        # Get a fresh writable path
+        from .utils import get_writable_db_path
+        writable_path = get_writable_db_path('app/ui/Databases/task_list.db')
+        
+        conn = sqlite3.connect(writable_path)
         c = conn.cursor()
 
         try:
@@ -456,7 +454,11 @@ class CompletedTasksList(tk.Frame):
         for item in self.completed_list.get_children():
             self.completed_list.delete(item)
 
-        conn = sqlite3.connect(path)
+        # Get a fresh writable path - this ensures we're using the latest copy
+        from .utils import get_writable_db_path
+        writable_path = get_writable_db_path('app/ui/Databases/task_list.db')
+        
+        conn = sqlite3.connect(writable_path)
         c = conn.cursor()
 
         try:
@@ -627,6 +629,6 @@ class CompletedTasksList(tk.Frame):
         if not task:
             messagebox.showwarning("Selection Required", "Please select a task to complete.")
         elif self.main_app.commithistory_window is None or not self.main_app.commithistory_window.winfo_exists():
-            self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=0)
+            self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=True)
         else:
             messagebox.showwarning("A commit history window is already open", "Please close it before reopening.")
