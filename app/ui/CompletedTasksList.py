@@ -78,48 +78,23 @@ class CompletedTasksList(tk.Frame):
                                       "Completion Date", "Total Duration")
 
         self.completed_list.column("#0", width=0, stretch=tk.NO)
-        self.completed_list.column('Task Name', anchor=tk.W, width=140)
-        self.completed_list.column('Task Time', anchor=tk.CENTER, width=77)
-        self.completed_list.column('Task Weight', anchor=tk.CENTER, width=77)
+        self.completed_list.column('Task Name', anchor=tk.W, width=200)
+        self.completed_list.column('Task Time', anchor=tk.CENTER, width=120)
+        self.completed_list.column('Task Weight', anchor=tk.CENTER, width=90)
         self.completed_list.column('Task ID', anchor=tk.CENTER, width=0,stretch=tk.NO)
-        self.completed_list.column('Completion Date', anchor=tk.CENTER, width=140)
-        self.completed_list.column('Total Duration', anchor=tk.CENTER, width=110)
+        self.completed_list.column('Completion Date', anchor=tk.CENTER, width=160)
+        self.completed_list.column('Total Duration', anchor=tk.CENTER, width=120)
 
         # Configure headings
         for col in self.completed_list['columns']:
             self.completed_list.heading(col, text=col, anchor=tk.CENTER,
                                     command=lambda c=col: self.sort_completed_tasks(c))
 
-        self.completed_list.tag_configure('oddrow', background="white")
+        self.completed_list.tag_configure('oddrow', background="#A9A9A9")
         self.completed_list.tag_configure('evenrow', background="#d3d3d3")
 
         # Bind double-click to open task details
         self.completed_list.bind("<Double-1>", self.open_task_details)
-
-        # Right side - History view
-        self.history_frame = tk.Frame(self.main_container, bg="#A9A9A9", width=400)
-        self.history_frame.pack(side="right", fill="both", padx=5, pady=5)
-        
-        # History title
-        self.history_title = tk.Label(self.history_frame, 
-                                    text="Task History", 
-                                    font=("SF Pro Display", 14, "bold"),
-                                    bg="#A9A9A9")
-        self.history_title.pack(pady=(0, 5))
-
-        # Previous state frame
-        self.prev_frame = ttk.LabelFrame(self.history_frame, text="Previous State")
-        self.prev_frame.pack(fill="both", expand=True, pady=5)
-        
-        self.prev_text = tk.Text(self.prev_frame, height=10, wrap="word", bg="#d3d3d3")
-        self.prev_text.pack(fill="both", expand=True, padx=5, pady=5)
-
-        # Changed state frame
-        self.new_frame = ttk.LabelFrame(self.history_frame, text="Changed State")
-        self.new_frame.pack(fill="both", expand=True, pady=5)
-        
-        self.new_text = tk.Text(self.new_frame, height=10, wrap="word", bg="#d3d3d3")
-        self.new_text.pack(fill="both", expand=True, padx=5, pady=5)
 
         # Button frame
         button_frame = tk.Frame(self.tasks_frame, bg="#A9A9A9")

@@ -251,13 +251,13 @@ class App:
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background= background_color)
-            self.root.geometry("700x500")
+            self.root.geometry("800x420")
             self.query_database()
             self.completedtasks_page.load_completed_tasks()
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background=background_color)
-            self.root.geometry("330x190")
+            self.root.geometry("330x170")
             self.query_database()
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  

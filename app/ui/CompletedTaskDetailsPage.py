@@ -113,7 +113,7 @@ class CommitHistoryWindow(tk.Toplevel):
         self.compFlag = compFlag
         
         # Window setup
-        self.title("Task History")
+        self.title("")
         self.geometry("800x480")
         self.configure(bg="#A9A9A9")
         self.resizable(width=0, height=0)
