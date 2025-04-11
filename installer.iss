@@ -1,7 +1,7 @@
 ; --- TimeTracker Windows Installer Script ---
 #define MyAppName "TimeTracker"
 #define MyAppVersion "1.0"
-#define MyAppPublisher "Your Name"
+#define MyAppPublisher "Tennessee Tech Capstone Project"
 #define MyAppURL "https://yourwebsite.com/"
 #define MyAppExeName "TimeTracker.exe"
 
