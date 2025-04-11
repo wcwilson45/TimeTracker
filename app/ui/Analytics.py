@@ -213,7 +213,7 @@ class AnalyticsPage(tk.Frame):
                 avgTimeSec.append(h * 3600 + m * 60 + s)
             
             # Create the figure
-            fig = Figure(figsize=(5, 4), dpi=100, facecolor='none')
+            fig = Figure(figsize=(4, 3.8), dpi=100, facecolor='none')
             
             # Adding the subplot
             plot1 = fig.add_subplot(111)
@@ -250,7 +250,7 @@ class AnalyticsPage(tk.Frame):
                 avgTimeSec.append(h * 3600 + m * 60 + s)
             
             # Create the figure
-            fig = Figure(figsize=(5, 4), dpi=100, facecolor='none')
+            fig = Figure(figsize=(4, 3.8), dpi=100, facecolor='none')
             
             # Adding the subplot
             plot1 = fig.add_subplot(111)
@@ -281,7 +281,7 @@ class AnalyticsPage(tk.Frame):
                 time_data.append([self.time_to_seconds(t) for t in time_arrays[weight]])
             
             # Create the figure
-            fig = Figure(figsize=(5, 4), dpi=100, facecolor='none')
+            fig = Figure(figsize=(4, 3.8), dpi=100, facecolor='none')
             
             # Adding the subplot
             plot1 = fig.add_subplot(111)
@@ -312,7 +312,7 @@ class AnalyticsPage(tk.Frame):
                 time_data.append([self.time_to_seconds(t) for t in time_arrays[size]])
             
             # Create the figure
-            fig = Figure(figsize=(6, 4), dpi=100, facecolor='none')
+            fig = Figure(figsize=(4, 3.8), dpi=100, facecolor='none')
             
             # Adding the subplot
             plot1 = fig.add_subplot(111)
@@ -327,7 +327,7 @@ class AnalyticsPage(tk.Frame):
 
         elif selected_graph == "Pie Chart - Fibonacci":
             # Create the figure
-            fig = Figure(figsize=(5, 4), dpi=100, facecolor='none')
+            fig = Figure(figsize=(4, 3.8), dpi=100, facecolor='none')
             
             # New pie chart for Fibonacci weights
             total_times = self.get_total_time_by_fibonacci()
@@ -374,7 +374,7 @@ class AnalyticsPage(tk.Frame):
 
         elif selected_graph == "Pie Chart - T-Shirt Size":
             # Create the figure
-            fig = Figure(figsize=(5, 4), dpi=100, facecolor='none')
+            fig = Figure(figsize=(4, 3.8), dpi=100, facecolor='none')
             
             # New pie chart for T-shirt size weights
             total_times = self.get_total_time_by_tshirt()
@@ -425,13 +425,6 @@ class AnalyticsPage(tk.Frame):
         # Place the canvas in the frame with proper padding
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         canvas.get_tk_widget().configure(bg='#dcdcdc')
-        
-        # Add the Matplotlib toolbar
-        toolbar_frame = tk.Frame(graph_container)
-        toolbar_frame.pack(fill=tk.X, padx=10, pady=(0, 5))
-        
-        toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
-        toolbar.update()
     
     def get_fibonacci_time_data(self):
         """Helper method to get time data for each Fibonacci weight"""

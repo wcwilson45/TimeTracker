@@ -262,12 +262,12 @@ class App:
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  
             self.page_title.config(text="Tags Database", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("740x680")
+            self.root.geometry("710x500")
             self.query_database()
         elif page_name == "Analytics":
             self.current_page = self.analytics_page  
             self.page_title.config(text="Analytics", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("1200x800")
+            self.root.geometry("1050x600")
             self.query_database()
             self.analytics_page.update_total_time()  
         elif page_name == "Archive":  
