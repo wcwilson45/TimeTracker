@@ -7,6 +7,8 @@ import sqlite3
 import csv
 from tkinter import messagebox
 import pathlib
+import os
+from .utils import get_writable_db_path
 
 background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
@@ -17,36 +19,25 @@ class TagsDB(tk.Frame):
         super().__init__(parent)
         #DATABASE SECTION ############################################
 
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("TagsDB.py", '') + '\\Databases' + '\\tags.db'
+        # Get the path to the resource database
+        self.db_resource_path = get_writable_db_path('app/ui/Databases/task_list.db')
+        
+        # Create user directory path for writable database
+        self.user_db_dir = os.path.join(os.getenv("APPDATA"), "TimeTracker")
+        os.makedirs(self.user_db_dir, exist_ok=True)
+        
+        # Path to user's database file
+        self.path = os.path.join(self.user_db_dir, "tags.db")
+        
+        # Copy the database from resources to user directory if it doesn't exist
+        if not os.path.exists(self.path):
+            import shutil
+            shutil.copyfile(self.db_resource_path, self.path)
 
-        # Create or Connect to the database
+        # Create or Connect to the database (using user's writable copy)
         conn = sqlite3.connect(self.path)
 
         # Create a cursor instance
-        c = conn.cursor()
-
-        c.execute("SELECT tag_name FROM tags")  # Fetch tag_names from tag database
-        tags = c.fetchall()
-        global values
-        values = []
-
-        # Add data to the list
-        for tag in tags:
-            values.append(tag[0])
-
-        # Commit changes
-        conn.commit()
-
-        # Close connection to the database
-        conn.close()
-        
-
-        # Create or Connect to database
-        
-        conn = sqlite3.connect(self.path)
-
-        # Create a cursor instnace
         c = conn.cursor()
 
         c.execute("""
@@ -60,7 +51,16 @@ class TagsDB(tk.Frame):
         # Commit changes
         conn.commit()
 
-        # Close connection to database
+        c.execute("SELECT tag_name FROM tags")  # Fetch tag_names from tag database
+        tags = c.fetchall()
+        global values
+        values = []
+
+        # Add data to the list
+        for tag in tags:
+            values.append(tag[0])
+
+        # Close connection to the database
         conn.close()
         
         def query_database():
@@ -220,6 +220,8 @@ class TagsDB(tk.Frame):
 
         # Remove Tag
         def del_Tag():
+            global values  # Move this to the top of the function
+            
             # Get the selected item from the Treeview
             selected = my_tree.selection()[0]
             my_tree.delete(selected)
@@ -236,16 +238,23 @@ class TagsDB(tk.Frame):
                 c.execute("DELETE FROM tags WHERE rowid = ?", (tag_id,))
 
                 conn.commit()
+                
+                # Update the global values list
+                c.execute("SELECT tag_name FROM tags")
+                tags = c.fetchall()
+                values = [tag[0] for tag in tags]
+                
                 conn.close()
 
                 # Clear entry boxes
                 n_entry.delete(0, END)
                 desc_text.delete("1.0", END)
                 id_display.configure(text="")
-            
 
         # Remove all Tags
         def remove_all_Tags():
+            global values  # Move this to the top of the function
+            
             # Add a little message box for fun
             response = messagebox.askyesno("Delete All Tags", "This Will Delete EVERYTHING from the database.\nAre You Sure?")
 
@@ -272,11 +281,12 @@ class TagsDB(tk.Frame):
                     )
                 """)
                             
-
-
                 # Commit changes
                 conn.commit()
-
+                
+                # Update the global values list
+                values = []
+                
                 # Close our connection
                 conn.close()
 
@@ -285,13 +295,10 @@ class TagsDB(tk.Frame):
                 desc_text.delete("1.0", END)
                 id_display.configure(text="")
 
-
-
-                
-
         # Add Tag to db
         def add_Tag():
-
+            global values  # Move this to the top of the function
+            
             if n_entry.get() not in values:
                 #Create db connection
                 conn = sqlite3.connect(self.path)
@@ -305,6 +312,12 @@ class TagsDB(tk.Frame):
                 })
 
                 conn.commit()
+                
+                # Update the global values list
+                c.execute("SELECT tag_name FROM tags")
+                tags = c.fetchall()
+                values = [tag[0] for tag in tags]
+                
                 conn.close()
 
                 # Clear entry boxes
@@ -326,6 +339,8 @@ class TagsDB(tk.Frame):
 
         # Update Tag
         def update_Tag():
+            global values  # Move this to the top of the function
+            
             # Grab the tag number
             selected = my_tree.focus()
 
@@ -348,6 +363,12 @@ class TagsDB(tk.Frame):
             )
 
             conn.commit()
+            
+            # Update the global values list
+            c.execute("SELECT tag_name FROM tags")
+            tags = c.fetchall()
+            values = [tag[0] for tag in tags]
+            
             conn.close()
 
             # Clear entry boxes
@@ -403,94 +424,125 @@ class TagsDB(tk.Frame):
 
 
         def import_Tags():
-            # Ask user for the file
-            file_path = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+            global values  # Move this to the top of the function
+            
+            try:
+                # Ask user for the file
+                file_path = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
-            # If file has been selected, proceed
-            if file_path:
-                # Open the file and read from it
-                with open(file_path, "r", encoding="utf-8-sig") as file:
-                    csv_reader = csv.reader(file)
-                    data = list(csv_reader)
+                # If file has been selected, proceed
+                if file_path:
+                    # Open the file and read from it
+                    with open(file_path, "r", encoding="utf-8-sig") as file:
+                        csv_reader = csv.reader(file)
+                        data = list(csv_reader)
 
-                    # Check if the first row is a header (by comparing column names)
-                    if data:
-                        header = data[0]
-                        expected_header = ["Tag Name", "Description"]
+                        # Check if the first row is a header (by comparing column names)
+                        if data:
+                            header = data[0]
+                            expected_header = ["Tag Name", "Description"]
 
-                        # If the first row matches the header, remove it
-                        if header == expected_header:
-                            data = data[1:]
+                            # If the first row matches the header, remove it
+                            if header == expected_header:
+                                data = data[1:]
 
-                # Fetch existing tag names from the database
-                conn = sqlite3.connect(self.path)
-                c = conn.cursor()
-                c.execute("SELECT tag_name FROM tags")
-                existing_tags = [tag[0] for tag in c.fetchall()]  # List of tag names already in the DB
-                conn.close()
-
-                # Import tags from CSV to the database
-                for tag in data:
-                    tag_name = tag[0]
-                    description = tag[1]
-
-                    # Check if the tag already exists in the database
-                    if tag_name not in existing_tags:
-                        # Connect to the SQLite database
-                        conn = sqlite3.connect(self.path)
-                        c = conn.cursor()
-
-                        print(f"Inserting tag: {tag_name}, {description}")
-                        # Insert data into the table
-                        c.execute("INSERT INTO tags (tag_name, description) VALUES (?, ?)", (tag_name, description))
-
-                        # Commit the changes and close the connection
-                        conn.commit()
-                        conn.close()
-
-                        # Clear Treeview table
-                        my_tree.delete(*my_tree.get_children())
-
-                        # Query the database to update the Treeview with new data
-                        query_database()
-
-                    else:
-                        # Show a warning if the tag already exists
-                        messagebox.showwarning("Warning", f"The Tag '{tag_name}' you are trying to import already exists")
-                        self.lift()
-                        self.focus_force()
-                        return
+                    # Fetch existing tag names from the database
+                    conn = sqlite3.connect(self.path)
+                    c = conn.cursor()
+                    c.execute("SELECT tag_name FROM tags")
+                    existing_tags = [tag[0] for tag in c.fetchall()]  # List of tag names already in the DB
+                    
+                    # Track successful imports and failures
+                    imported_count = 0
+                    duplicates = []
+                    
+                    # Import tags from CSV to the database
+                    for tag in data:
+                        tag_name = tag[0]
+                        description = tag[1]
+                        
+                        # Check if the tag already exists in the database
+                        if tag_name not in existing_tags:
+                            # Insert data into the table
+                            c.execute("INSERT INTO tags (tag_name, description) VALUES (?, ?)", (tag_name, description))
+                            existing_tags.append(tag_name)  # Update our local list
+                            imported_count += 1
+                        else:
+                            duplicates.append(tag_name)
+                    
+                    # Commit all changes at once
+                    conn.commit()
+                    
+                    # Update the global values list
+                    c.execute("SELECT tag_name FROM tags")
+                    tags = c.fetchall()
+                    values = [tag[0] for tag in tags]
+                    
+                    conn.close()
+                    
+                    # Report the results
+                    if duplicates:
+                        messagebox.showwarning("Import Results", 
+                            f"Imported {imported_count} tags successfully.\n"
+                            f"Skipped {len(duplicates)} duplicate tags: {', '.join(duplicates[:5])}"
+                            f"{'...' if len(duplicates) > 5 else ''}")
+                    elif imported_count > 0:
+                        messagebox.showinfo("Import Success", f"Successfully imported {imported_count} tags.")
+                    
+                    # Clear Treeview table
+                    my_tree.delete(*my_tree.get_children())
+                    
+                    # Query the database to update the Treeview with new data
+                    query_database()
+            except Exception as e:
+                messagebox.showerror("Import Error", f"An error occurred during import: {str(e)}")
+                # Ensure we lift and focus after error
+                self.lift()
+                self.focus_force()
 
         def export_Tags():
-            # Connect to the database
-            conn = sqlite3.connect(self.path)
-            c = conn.cursor()
-
-            # Fetch all tags
-            c.execute("SELECT tag_name, description FROM tags")
-            tags = c.fetchall()
-
-            # Ask user where to save the file
-            file_path = tk.filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
-
-            if file_path:  # Only proceed if the user selected a file path
+            try:
+                # Connect to the database
+                conn = sqlite3.connect(self.path)
+                c = conn.cursor()
+                
+                # Fetch all tags
+                c.execute("SELECT tag_name, description FROM tags")
+                tags = c.fetchall()
+                
+                if not tags:
+                    messagebox.showinfo("Export Info", "There are no tags to export.")
+                    return
+                    
+                # Ask user where to save the file
+                file_path = tk.filedialog.asksaveasfilename(
+                    defaultextension=".csv", 
+                    filetypes=[("CSV Files", "*.csv")]
+                )
+                
+                if not file_path:  # User canceled the save dialog
+                    return
+                    
                 # Open the CSV file for writing
                 with open(file_path, "w", newline='', encoding='utf-8') as file:
                     csv_writer = csv.writer(file)
-
+                    
                     # Write the header
                     csv_writer.writerow(["Tag Name", "Description"])
-
+                    
                     # Write data rows
                     for tag in tags:
                         csv_writer.writerow(tag)
-
+                        
+                messagebox.showinfo("Export Success", f"Successfully exported {len(tags)} tags to {file_path}")
+                
+            except Exception as e:
+                messagebox.showerror("Export Error", f"An error occurred during export: {str(e)}")
+            finally:
                 # Close the database connection
-                conn.close()
+                if 'conn' in locals():
+                    conn.close()
             
-
-
-                    
         #END OF FUNCTION SECTION ########################################
 
         # Search Bar

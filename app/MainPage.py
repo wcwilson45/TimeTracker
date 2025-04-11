@@ -1,3 +1,9 @@
+import ctypes
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+except AttributeError:
+    ctypes.windll.user32.SetProcessDPIAware()
+
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
@@ -124,8 +130,8 @@ create_tables()
 class App:
     def __init__(self, root):
       self.root = root
-      self.root.title("Task Manager")
-      self.root.geometry("488x650")
+      self.root.title("")
+      self.root.geometry("590x730")
       root.resizable(width = 0, height = 0)
 
       self.addtask_window = None
@@ -240,39 +246,39 @@ class App:
         if page_name == "Time Tracker":
             self.current_page = self.full_page
             self.page_title.config(text="Time Tracker", background= background_color)
-            self.root.geometry("488x650")
+            self.root.geometry("590x730")
             self.query_database()
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background= background_color)
-            self.root.geometry("600x400")
+            self.root.geometry("700x500")
             self.query_database()
             self.completedtasks_page.load_completed_tasks()
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background=background_color)
-            self.root.geometry("230x160")
+            self.root.geometry("330x190")
             self.query_database()
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  
             self.page_title.config(text="Tags Database", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("640x580")
+            self.root.geometry("740x680")
             self.query_database()
         elif page_name == "Analytics":
             self.current_page = self.analytics_page  
             self.page_title.config(text="Analytics", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("1000x1000")
+            self.root.geometry("1200x800")
             self.query_database()
             self.analytics_page.update_total_time()  
         elif page_name == "Archive":  
             self.current_page = self.archive_page
             self.page_title.config(text="Archived Tasks", background=background_color)
-            self.root.geometry("650x515")
+            self.root.geometry("750x615")
             self.archive_page.load_archive_tasks()
         elif page_name == "Help and Documentation":
             self.current_page = self.help_page
             self.page_title.config(text = "Help and Documentation", background=background_color)
-            self.root.geometry("650x600")
+            self.root.geometry("750x650")
             self.query_database()
             
 
@@ -422,7 +428,7 @@ class App:
         self.full_page_commit_history_button.pack(side = LEFT, padx = (5,0))
 
         self.full_page_edit_button = tk.Button(time_controls_frame, text = "Edit", background= main_btn_color, command = self.edit_current_task)
-        self.full_page_edit_button.pack(side = LEFT, padx = (5,0))
+        self.full_page_edit_button.pack(side = LEFT, padx = (5,0), ipadx=10)
         #Change color when a item is selected
         style.map("Treeview",
         background = [('selected', "#4169E1")], 
@@ -470,9 +476,9 @@ class App:
         #Format columns
         self.task_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", "Start Date", "End Date", "Description")
         self.task_list.column("#0", width = 0, stretch=NO)
-        self.task_list.column('Task Name', anchor = W, width = 250)
-        self.task_list.column('Task Time', anchor = CENTER, width = 100)
-        self.task_list.column('Task Weight', anchor = CENTER, width =100)
+        self.task_list.column('Task Name', anchor = W, width = 270)
+        self.task_list.column('Task Time', anchor = CENTER, width = 140)
+        self.task_list.column('Task Weight', anchor = CENTER, width =140)
         self.task_list.column('Task ID',anchor = CENTER, width = 0, stretch = NO)
         self.task_list.column('Start Date', anchor = CENTER, width = 0, stretch = NO)
         self.task_list.column('End Date', anchor = CENTER, width = 0, stretch = NO)

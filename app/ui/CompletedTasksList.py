@@ -486,13 +486,18 @@ class CompletedTasksList(tk.Frame):
             return
 
         try:
-            # Create Completed Tasks directory if it doesn't exist
-            export_dir = pathlib.Path(__file__).parent / "Completed Tasks"
-            export_dir.mkdir(exist_ok=True)
+            # Ask user for directory to save files
+            export_directory = tk.filedialog.askdirectory(title="Select directory to save exported files")
+            if not export_directory:  # User canceled
+                return
+                
+            # Create directory paths
+            export_dir = pathlib.Path(export_directory) / "Completed Tasks"
+            history_dir = pathlib.Path(export_directory) / "Tasks Commit History"
             
-            # Create Tasks Commit History directory if it doesn't exist
-            history_dir = pathlib.Path(__file__).parent / "Tasks Commit History"
-            history_dir.mkdir(exist_ok=True)
+            # Create directories if they don't exist
+            export_dir.mkdir(exist_ok=True, parents=True)
+            history_dir.mkdir(exist_ok=True, parents=True)
 
             # Create filename with timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -501,7 +506,7 @@ class CompletedTasksList(tk.Frame):
 
             # Get all tasks from the treeview
             tasks = []
-            headers = self.completed_list['columns']
+            headers = list(self.completed_list['columns'])  # Convert to list to be safe
             tasks.append(headers)  # Add headers as first row
 
             # Keep track of all task IDs to export their history
@@ -514,7 +519,7 @@ class CompletedTasksList(tk.Frame):
                 task_ids.append(values[3])
 
             # Write tasks to CSV
-            with open(tasks_filename, 'w', newline='') as csvfile:
+            with open(tasks_filename, 'w', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerows(tasks)
 
@@ -555,7 +560,7 @@ class CompletedTasksList(tk.Frame):
                 conn.close()
 
             # Write history to CSV
-            with open(history_filename, 'w', newline='') as csvfile:
+            with open(history_filename, 'w', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerows(history_rows)
 
@@ -563,8 +568,14 @@ class CompletedTasksList(tk.Frame):
                             f"Tasks exported successfully to:\n{tasks_filename}\n\n"
                             f"Task history exported to:\n{history_filename}")
 
+        except PermissionError:
+            messagebox.showerror("Permission Error", 
+                            "Unable to write to the selected location. Please check folder permissions.")
         except Exception as e:
             messagebox.showerror("Export Error", f"Error exporting data: {str(e)}")
+            # Print the error for debugging
+            import traceback
+            traceback.print_exc()
     
     def sort_completed_tasks(self, col):
         """Sort completed tasks by column."""
