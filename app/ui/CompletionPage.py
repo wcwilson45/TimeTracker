@@ -579,8 +579,8 @@ class CompletedTasksWindow(tk.Tk):
                             background="#e0e0e0",
                             fieldbackground="#e0e0e0")
         self.style.map('Treeview',
-                    background=[('selected', '#4a6984')],
-                    foreground=[('selected', 'white')])
+                    background=[('selected', '#4169E1')],
+                    foreground=[('selected', '#000000')])
 
         # Configure main layout - 2 columns, 2 rows
         self.grid_columnconfigure(0, weight=1)  # Left side
@@ -733,8 +733,8 @@ class CompletedTasksWindow(tk.Tk):
         history_scroll.config(command=self.history_tree.yview)
         
         # Configure row appearance
-        self.history_tree.tag_configure('oddrow', background="#d0d0d0")  # Darker gray for odd rows
-        self.history_tree.tag_configure('evenrow', background="#e0e0e0")  # Light gray for even rows
+        self.history_tree.tag_configure('oddrow', background="#A9A9A9")  # Darker gray for odd rows
+        self.history_tree.tag_configure('evenrow', background="#dcdcdc")  # Light gray for even rows
         
         # Bind double-click event to open detailed history view
         self.history_tree.bind("<Double-1>", lambda e: self.open_commit_history_page())

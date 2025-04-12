@@ -3,100 +3,58 @@ from tkinter.ttk import *
 import tkinter as tk
 from tkinter import ttk, messagebox
 import tkinter.font as tkfont
-    
+
+background_color = "#A9A9A9"
+grey_button_color = "#d3d3d3"
+main_btn_color = "#b2fba5"
+del_btn_color = "#e99e56"
+
 class HelpPage(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent, bg="#A9A9A9")
+        tk.Frame.__init__(self, parent, bg=background_color)
         self.controller = controller
+        
+        # Configure style to match ArchiveTasksList
+        style = ttk.Style()
+        style.theme_use('default')
+        style.configure("Treeview",
+                        background="#d3d3d3",
+                        foreground="black",
+                        rowheight=25,
+                        fieldbackground="#d3d3d3")
+
+        style.map("Treeview", background=[('selected', "347083")])
         
         # Create a notebook for tabbed help content
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # Create a tab for keyboard shortcuts
-        shortcuts_frame = tk.Frame(self.notebook, bg="#d3d3d3")
-        
-        # Create a scrollable text widget for the shortcuts
-        shortcut_scroll = tk.Scrollbar(shortcuts_frame)
-        shortcut_scroll.pack(side="right", fill="y")
-        
-        shortcut_text = tk.Text(shortcuts_frame, yscrollcommand=shortcut_scroll.set, bg="#d3d3d3", wrap="word")
-        shortcut_text.pack(side="left", fill="both", expand=True, padx=5, pady=5)
-        
-        shortcut_scroll.config(command=shortcut_text.yview)
-        
-        # Add shortcut information
-        shortcut_text.tag_configure("heading", font=("SF Pro Display", 12, "bold"))
-        shortcut_text.tag_configure("subheading", font=("SF Pro Display", 10, "bold"))
-        shortcut_text.tag_configure("shortcut", font=("SF Pro Text", 9, "bold"))
-        
-        shortcut_text.insert(tk.END, "Keyboard Shortcuts\n\n", "heading")
-        
-        shortcut_text.insert(tk.END, "Global Shortcuts\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+Q: ", "shortcut")
-        shortcut_text.insert(tk.END, "Exit application\n")
-        shortcut_text.insert(tk.END, "F1: ", "shortcut")
-        shortcut_text.insert(tk.END, "Show this help\n")
-        shortcut_text.insert(tk.END, "Ctrl+P: ", "shortcut")
-        shortcut_text.insert(tk.END, "Preferences\n\n")
-        
-        shortcut_text.insert(tk.END, "Navigation\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+1: ", "shortcut")
-        shortcut_text.insert(tk.END, "Time Tracker\n")
-        shortcut_text.insert(tk.END, "Ctrl+2: ", "shortcut")
-        shortcut_text.insert(tk.END, "Completed Tasks\n")
-        shortcut_text.insert(tk.END, "Ctrl+3: ", "shortcut")
-        shortcut_text.insert(tk.END, "Small Overlay\n")
-        shortcut_text.insert(tk.END, "Ctrl+4: ", "shortcut")
-        shortcut_text.insert(tk.END, "Tags Database\n")
-        shortcut_text.insert(tk.END, "Ctrl+5: ", "shortcut")
-        shortcut_text.insert(tk.END, "Analytics\n")
-        shortcut_text.insert(tk.END, "Ctrl+6: ", "shortcut")
-        shortcut_text.insert(tk.END, "Archive\n\n")
-        
-        shortcut_text.insert(tk.END, "Task Management\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+N: ", "shortcut")
-        shortcut_text.insert(tk.END, "Add new task\n")
-        shortcut_text.insert(tk.END, "Ctrl+E: ", "shortcut")
-        shortcut_text.insert(tk.END, "Edit selected task\n")
-        shortcut_text.insert(tk.END, "Ctrl+H: ", "shortcut")
-        shortcut_text.insert(tk.END, "View task history\n")
-        shortcut_text.insert(tk.END, "Ctrl+Delete: ", "shortcut")
-        shortcut_text.insert(tk.END, "Delete selected task\n\n")
-        
-        shortcut_text.insert(tk.END, "Timer Controls\n", "subheading")
-        shortcut_text.insert(tk.END, "F5: ", "shortcut")
-        shortcut_text.insert(tk.END, "Start timer\n")
-        shortcut_text.insert(tk.END, "F6: ", "shortcut")
-        shortcut_text.insert(tk.END, "Stop timer\n\n")
-        
-        shortcut_text.insert(tk.END, "List Operations\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+A: ", "shortcut")
-        shortcut_text.insert(tk.END, "Select all items\n")
-        shortcut_text.insert(tk.END, "Ctrl+F: ", "shortcut")
-        shortcut_text.insert(tk.END, "Search\n")
-        shortcut_text.insert(tk.END, "Escape: ", "shortcut")
-        shortcut_text.insert(tk.END, "Deselect all items\n\n")
-        
-        shortcut_text.insert(tk.END, "Data Management\n", "subheading")
-        shortcut_text.insert(tk.END, "Ctrl+B: ", "shortcut")
-        shortcut_text.insert(tk.END, "Backup database\n")
-        shortcut_text.insert(tk.END, "Ctrl+R: ", "shortcut")
-        shortcut_text.insert(tk.END, "Restore database\n")
-        
-        # Make the text widget read-only
-        shortcut_text.config(state="disabled")
-        
-        # Create a tab for general help
-        general_frame = tk.Frame(self.notebook, bg="#d3d3d3")
+        # General help tab
+        general_frame = tk.Frame(self.notebook, bg=grey_button_color)
         self.notebook.add(general_frame, text="General Help")
         
-        # Create a scrollable text widget for general help
-        general_scroll = tk.Scrollbar(general_frame)
-        general_scroll.pack(side="right", fill="y")
+        # Make the general frame expand to fill the notebook tab
+        general_frame.pack_propagate(False)
         
-        general_text = tk.Text(general_frame, yscrollcommand=general_scroll.set, bg="#d3d3d3", wrap="word")
-        general_text.pack(side="left", fill="both", expand=True, padx=5, pady=5)
+        # Set a minimum height for the general frame
+        general_frame.config(height=500)  # Set the frame height to 500 pixels
+        
+        # Create a frame for scrollable content - explicitly fill all available space
+        general_content_frame = tk.Frame(general_frame, bg=grey_button_color)
+        general_content_frame.pack(fill="both", expand=True, pady=5, padx=0)
+        
+        # Create a scrollable text widget with matching style
+        general_scroll = Scrollbar(general_content_frame)
+        general_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        general_text = tk.Text(general_content_frame, 
+                             yscrollcommand=general_scroll.set, 
+                             bg=grey_button_color, 
+                             wrap="word",
+                             bd=0,
+                             highlightthickness=0,
+                             height=30)  # Set a tall height for the text widget
+        general_text.pack(side=tk.LEFT, fill="both", expand=True)
         
         general_scroll.config(command=general_text.yview)
         
@@ -131,20 +89,19 @@ class HelpPage(tk.Frame):
         general_text.config(state="disabled")
         
         # About tab
-        about_frame = tk.Frame(self.notebook, bg="#d3d3d3")
+        about_frame = tk.Frame(self.notebook, bg=grey_button_color)
         self.notebook.add(about_frame, text="About")
         
-        # About content
+        # Set a minimum height for the about frame too
+        about_frame.config(height=500)  # Set the frame height to 500 pixels
+        about_frame.pack_propagate(False)  # Prevent the frame from shrinking
+        
+        # About content with matching style
         about_label = tk.Label(
             about_frame,
             text="Task Manager\nVersion 1.0\n\nA simple task management application with time tracking capabilities.",
             font=("SF Pro Display", 10),
-            bg="#d3d3d3",
+            bg=grey_button_color,
             justify="center"
         )
         about_label.pack(pady=20)
-        
-        # Header
-        header_frame = tk.Frame(self, bg="#A9A9A9")
-        header_frame.pack(fill="x", pady=(10, 0))
-        

@@ -91,7 +91,7 @@ class CompletedTasksList(tk.Frame):
                                     command=lambda c=col: self.sort_completed_tasks(c))
 
         self.completed_list.tag_configure('oddrow', background="#A9A9A9")
-        self.completed_list.tag_configure('evenrow', background="#d3d3d3")
+        self.completed_list.tag_configure('evenrow', background="#dcdcdc")
 
         # Bind double-click to open task details
         self.completed_list.bind("<Double-1>", self.open_task_details)
@@ -454,37 +454,30 @@ class CompletedTasksList(tk.Frame):
             conn.close()
 
     def export_tasks(self):
-        """Export completed tasks to CSV file and commit history to a separate file"""
+        """Export completed tasks to CSV file and optionally commit history to a separate file"""
         # Check if there are tasks to export
         if not self.completed_list.get_children():
             messagebox.showinfo("No Tasks", "There are no completed tasks to export.")
             return
 
         try:
-            # Ask user for directory to save files
-            export_directory = tk.filedialog.askdirectory(title="Select directory to save exported files")
-            if not export_directory:  # User canceled
+            # Ask user for file name and location for completed tasks
+            tasks_file_path = tk.filedialog.asksaveasfilename(
+                title="Save Completed Tasks As",
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                initialfile="completed_tasks.csv"
+            )
+            
+            if not tasks_file_path:  # User canceled
                 return
                 
-            # Create directory paths
-            export_dir = pathlib.Path(export_directory) / "Completed Tasks"
-            history_dir = pathlib.Path(export_directory) / "Tasks Commit History"
-            
-            # Create directories if they don't exist
-            export_dir.mkdir(exist_ok=True, parents=True)
-            history_dir.mkdir(exist_ok=True, parents=True)
-
-            # Create filename with timestamp
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            tasks_filename = export_dir / f"completed_tasks_{timestamp}.csv"
-            history_filename = history_dir / f"tasks_commit_history_{timestamp}.csv"
-
             # Get all tasks from the treeview
             tasks = []
             headers = list(self.completed_list['columns'])  # Convert to list to be safe
             tasks.append(headers)  # Add headers as first row
 
-            # Keep track of all task IDs to export their history
+            # Keep track of all task IDs for potential history export
             task_ids = []
 
             for item in self.completed_list.get_children():
@@ -494,54 +487,71 @@ class CompletedTasksList(tk.Frame):
                 task_ids.append(values[3])
 
             # Write tasks to CSV
-            with open(tasks_filename, 'w', newline='', encoding='utf-8') as csvfile:
+            with open(tasks_file_path, 'w', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerows(tasks)
-
-            # Get and write commit history for all tasks
-            history_rows = []
-            # Create headers for history file
-            history_headers = ["Task ID", "Task Name", "Change Date", "Field Changed", "Old Value", "New Value"]
-            history_rows.append(history_headers)
-
-            # Get task information to include with history
-            conn = sqlite3.connect(path)
-            c = conn.cursor()
+                
+            # Show success message for tasks export
+            messagebox.showinfo("Success", f"Tasks exported successfully to:\n{tasks_file_path}")
             
-            try:
-                for task_id in task_ids:
-                    # Get task name for reference
-                    c.execute("SELECT task_name FROM CompletedTasks WHERE task_id = ?", (task_id,))
-                    result = c.fetchone()
-                    task_name = result[0] if result else "Unknown Task"
+            # Ask if user wants to export commit history as well
+            export_history = messagebox.askyesno("Export History", 
+                                                "Would you like to export the task commit history as well?")
+            
+            if export_history:
+                # Ask user for file name and location for history
+                history_file_path = tk.filedialog.asksaveasfilename(
+                    title="Save Task History As",
+                    defaultextension=".csv",
+                    filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                    initialfile="tasks_commit_history.csv"
+                )
+                
+                if not history_file_path:  # User canceled
+                    return
                     
-                    # Get task history
-                    history_entries = self.history_db.get_task_history(task_id)
-                    
-                    # Add each history entry to the rows
-                    for entry in history_entries:
-                        change_date, field_changed, old_value, new_value = entry
-                        history_rows.append([
-                            task_id,
-                            task_name,
-                            change_date,
-                            field_changed,
-                            old_value,
-                            new_value
-                        ])
-            except sqlite3.Error as e:
-                messagebox.showerror("Database Error", f"Error retrieving task history: {str(e)}")
-            finally:
-                conn.close()
+                # Get and write commit history for all tasks
+                history_rows = []
+                # Create headers for history file
+                history_headers = ["Task ID", "Task Name", "Change Date", "Field Changed", "Old Value", "New Value"]
+                history_rows.append(history_headers)
 
-            # Write history to CSV
-            with open(history_filename, 'w', newline='', encoding='utf-8') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerows(history_rows)
+                # Get task information to include with history
+                conn = sqlite3.connect(path)
+                c = conn.cursor()
+                
+                try:
+                    for task_id in task_ids:
+                        # Get task name for reference
+                        c.execute("SELECT task_name FROM CompletedTasks WHERE task_id = ?", (task_id,))
+                        result = c.fetchone()
+                        task_name = result[0] if result else "Unknown Task"
+                        
+                        # Get task history
+                        history_entries = self.history_db.get_task_history(task_id)
+                        
+                        # Add each history entry to the rows
+                        for entry in history_entries:
+                            change_date, field_changed, old_value, new_value = entry
+                            history_rows.append([
+                                task_id,
+                                task_name,
+                                change_date,
+                                field_changed,
+                                old_value,
+                                new_value
+                            ])
+                except sqlite3.Error as e:
+                    messagebox.showerror("Database Error", f"Error retrieving task history: {str(e)}")
+                finally:
+                    conn.close()
 
-            messagebox.showinfo("Success", 
-                            f"Tasks exported successfully to:\n{tasks_filename}\n\n"
-                            f"Task history exported to:\n{history_filename}")
+                # Write history to CSV
+                with open(history_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerows(history_rows)
+
+                messagebox.showinfo("Success", f"Task history exported successfully to:\n{history_file_path}")
 
         except PermissionError:
             messagebox.showerror("Permission Error", 

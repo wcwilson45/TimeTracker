@@ -52,17 +52,17 @@ class ArchiveTasksList(tk.Frame):
         archivelist_scroll.config(command=self.archive_list.yview)
 
         # Column configuration
-        self.archive_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", 
-                                         "Completion Date", "Total Duration", "Archive Date")
+        self.archive_list['columns'] = ("Task Name", "Task Time", "Task Weight", 
+                                         "Completion Date", "Archive Date")
 
         self.archive_list.column("#0", width=0, stretch=tk.NO)
-        self.archive_list.column('Task Name', anchor=tk.CENTER, width=100)
-        self.archive_list.column('Task Time', anchor=tk.CENTER, width=75)
-        self.archive_list.column('Task Weight', anchor=tk.CENTER, width=50)
-        self.archive_list.column('Task ID', anchor=tk.CENTER, width=0, stretch=tk.NO)  # Hidden but available
-        self.archive_list.column('Completion Date', anchor=tk.CENTER, width=100)
-        self.archive_list.column('Total Duration', anchor=tk.CENTER, width=100)
-        self.archive_list.column('Archive Date', anchor=tk.CENTER, width=155)
+        self.archive_list.column('Task Name', anchor=tk.CENTER, width=250)
+        self.archive_list.column('Task Time', anchor=tk.CENTER, width=95)
+        self.archive_list.column('Task Weight', anchor=tk.CENTER, width=80)
+        #self.archive_list.column('Task ID', anchor=tk.CENTER, width=0, stretch=tk.NO)  # Hidden but available
+        self.archive_list.column('Completion Date', anchor=tk.CENTER, width=160)
+        #self.archive_list.column('Total Duration', anchor=tk.CENTER, width=0, stretch=tk.NO)
+        self.archive_list.column('Archive Date', anchor=tk.CENTER, width=160)
 
         # Headings
         self.archive_list.heading("#0", text="", anchor=tk.W)
@@ -72,16 +72,15 @@ class ArchiveTasksList(tk.Frame):
                                    command=lambda: self.sort_archive_tasks("Task Time"))
         self.archive_list.heading("Task Weight", text="Weight", anchor=tk.CENTER,
                                    command=lambda: self.sort_archive_tasks("Task Weight"))
-        self.archive_list.heading("Task ID", text="", anchor=tk.CENTER)  # Empty header for hidden column
+        #self.archive_list.heading("Task ID", text="", anchor=tk.CENTER)  # Empty header for hidden column
         self.archive_list.heading("Completion Date", text="Completed On", anchor=tk.CENTER,
                                    command=lambda: self.sort_archive_tasks("Completion Date"))
-        self.archive_list.heading("Total Duration", text="Total Time", anchor=tk.CENTER,
-                                   command=lambda: self.sort_archive_tasks("Total Duration"))
+        #self.archive_list.heading("Total Duration", text="", anchor=tk.CENTER)
         self.archive_list.heading("Archive Date", text="Archived On", anchor=tk.CENTER,
                                    command=lambda: self.sort_archive_tasks("Archive Date"))
 
-        self.archive_list.tag_configure('oddrow', background="white")
-        self.archive_list.tag_configure('evenrow', background="#d3d3d3")
+        self.archive_list.tag_configure('oddrow', background="#A9A9A9")
+        self.archive_list.tag_configure('evenrow', background="#dcdcdc")
 
         # Button frame
         bottom_frame = tk.Frame(self, bg=background_color)
@@ -279,17 +278,13 @@ class ArchiveTasksList(tk.Frame):
             conn.close()
 
     def export_tasks(self):
-        """Export archived tasks to CSV file"""
+        """Export archived tasks to CSV file with custom filename and location"""
         # Check if there are tasks to export
         if not self.archive_list.get_children():
             messagebox.showinfo("No Tasks", "There are no archived tasks to export.")
             return
 
         try:
-            # Create Archives directory if it doesn't exist
-            export_dir = pathlib.Path(__file__).parent / "Archives"
-            export_dir.mkdir(exist_ok=True)
-            
             # Get all tasks from the treeview
             tasks = []
             headers = self.archive_list['columns']
@@ -305,7 +300,6 @@ class ArchiveTasksList(tk.Frame):
                 tasks.append(values)
                 
                 # Get completion date and archive date from the row
-                # Based on column positions: Completion Date at index 4, Archive Date at index 6
                 completion_date = values[4]
                 archive_date = values[6]
                 
@@ -324,12 +318,27 @@ class ArchiveTasksList(tk.Frame):
                     # Handle case where date format is different
                     pass
             
-            # Format dates for filename - using dashes instead of slashes to avoid filename errors
+            # Format dates for suggested filename
             start_date_str = earliest_completion.strftime("%m-%d-%y") if earliest_completion else "unknown"
             end_date_str = latest_archive.strftime("%m-%d-%y") if latest_archive else "unknown"
             
-            # Create filename with date range
-            filename = export_dir / f"archive_list_{start_date_str}_to_{end_date_str}.csv"
+            # Create suggested filename with date range
+            suggested_filename = f"archive_list_{start_date_str}_to_{end_date_str}.csv"
+            
+            # Import filedialog
+            from tkinter import filedialog
+            
+            # Show file save dialog
+            filename = filedialog.asksaveasfilename(
+                initialdir=os.path.dirname(path),  # Start in database directory
+                initialfile=suggested_filename,
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+            )
+            
+            # If user cancels the dialog, filename will be empty
+            if not filename:
+                return
             
             # Write to CSV
             with open(filename, 'w', newline='') as csvfile:
@@ -337,9 +346,28 @@ class ArchiveTasksList(tk.Frame):
                 writer.writerows(tasks)
 
             messagebox.showinfo("Success", f"Tasks exported successfully to:\n{filename}")
+            
+            # Try to open the containing directory for the user
+            try:
+                import platform
+                directory = os.path.dirname(filename)
+                if platform.system() == "Windows":
+                    os.startfile(directory)
+                elif platform.system() == "Darwin":  # macOS
+                    import subprocess
+                    subprocess.Popen(["open", directory])
+                else:  # Linux
+                    import subprocess
+                    subprocess.Popen(["xdg-open", directory])
+            except Exception:
+                # If opening the directory fails, just continue silently
+                pass
 
         except Exception as e:
             messagebox.showerror("Export Error", f"Error exporting tasks: {str(e)}")
+            # Add more detailed error information for debugging
+            import traceback
+            traceback.print_exc()
 
     def sort_archive_tasks(self, col):
         """Sort archived tasks by column."""

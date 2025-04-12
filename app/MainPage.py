@@ -273,12 +273,12 @@ class App:
         elif page_name == "Archive":  
             self.current_page = self.archive_page
             self.page_title.config(text="Archived Tasks", background=background_color)
-            self.root.geometry("750x615")
+            self.root.geometry("805x530")
             self.archive_page.load_archive_tasks()
         elif page_name == "Help and Documentation":
             self.current_page = self.help_page
             self.page_title.config(text = "Help and Documentation", background=background_color)
-            self.root.geometry("750x650")
+            self.root.geometry("720x620")
             self.query_database()
             
 
