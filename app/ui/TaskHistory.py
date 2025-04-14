@@ -4,11 +4,17 @@ import pathlib
 import tkinter as tk
 from tkinter import ttk, messagebox
 import tkinter.font as tkfont
+import sys
+import os
+
+# Import DB_PATH from config
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import DB_PATH
 
 class TaskHistoryDB:
     def __init__(self):
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("TaskHistory.py", '') + '\\Databases' + '\\task_list.db'
+        # Use the correct DB_PATH from config
+        self.path = DB_PATH
         
         # Create the history table with proper indexing
         conn = sqlite3.connect(self.path)
@@ -309,7 +315,8 @@ class TaskHistoryDB:
             c = conn.cursor()
             
             # Calculate cutoff date
-            cutoff_date = (datetime.now() - datetime.timedelta(days=days_to_keep)).strftime("%Y-%m-%d")
+            from datetime import timedelta
+            cutoff_date = (datetime.now() - timedelta(days=days_to_keep)).strftime("%Y-%m-%d")
             
             # Get count before deletion for return value
             c.execute("SELECT COUNT(*) FROM task_history WHERE change_date < ?", (cutoff_date,))
