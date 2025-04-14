@@ -264,6 +264,7 @@ class App:
       self.popup_menu.configure(bg= background_color)
 
       self.setup_smalloverlay_page()
+      self.smalloverlay_page.pack_forget()
       self.setup_full_page()
       self.completedtasks_page.pack_forget()
 
