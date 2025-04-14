@@ -16,24 +16,34 @@ background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
 org_btn_color = "#e99e56"
 
-class AddTaskWindow(tk.Tk):
+class AddTaskWindow(tk.Toplevel):
     def __init__(self, main_app):
-        super().__init__()
+        # Initialize Toplevel first, then do other operations
+        tk.Toplevel.__init__(self, main_app.root)
+        
+        # Store references
         self.main_app = main_app
         self.main_app.addtask_window = self
+        
+        # Set the main window properties
+        self.title("Add Task")
+        self.geometry("500x500")
+        self.configure(bg=background_color)
+        self.transient(main_app.root)
+        self.grab_set()
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Define path for main database
         self.path = DB_PATH
+        self.tags_path = DB_PATH
         
-        # For tags database, we need to use the correct path
-        # This should point to a tags database file, not a directory
-        self.tags_path = DB_PATH  # Use the same main database for now
+        # Create global values list for tags
+        global values
+        values = []
         
         # Create or Connect to the database
         try:
             conn = sqlite3.connect(self.tags_path)
-            
-            # Create a cursor instance
             c = conn.cursor()
             
             # Check if tags table exists
@@ -50,205 +60,154 @@ class AddTaskWindow(tk.Tk):
             
             c.execute("SELECT tag_name FROM tags")  # Fetch tag_names from tag database
             tags = c.fetchall()
-            global values
-            values = []
-
+            
             # Add data to the list
             for tag in tags:
                 values.append(tag[0])
 
-            # Commit changes
-            conn.commit()
-
         except sqlite3.Error as e:
             messagebox.showerror("Database Error", f"Error connecting to tags database: {e}")
-            values = []  # Initialize with empty list to prevent errors
         finally:
             # Close connection to the database
             if 'conn' in locals():
                 conn.close()
 
-        self.grab_set()
-        self.protocol("WM_DELETE_WINDOW", self.on_close)
-
-        # Set the main window properties
-        self.geometry("400x390")
-        self.title("Add Task")
-        self.configure(bg=background_color)
-
-        # Create fonts with fallbacks
-        avail_fonts = tkfont.families()
-        header_font = "SF Pro Display" if "SF Pro Display" in avail_fonts else "Arial"
-        body_font = "SF Pro Text" if "SF Pro Text" in avail_fonts else "Arial"
-        
+        # Create fonts with fallbacks - MUST use simple tuples for Linux compatibility
         self.fonts = {
-            'header': tkfont.Font(family=header_font, size=24, weight="bold"),
-            'subheader': tkfont.Font(family=header_font, size=12, weight="bold"),
-            'body': tkfont.Font(family=body_font, size=12)
+            'header': ('Arial', 18, 'bold'),
+            'subheader': ('Arial', 12, 'bold'),
+            'body': ('Arial', 12)
         }
 
+        # Create the main content frame
+        main_frame = tk.Frame(self, bg=background_color)
+        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Task Name label and entry
+        task_name_frame = tk.Frame(main_frame, bg=background_color)
+        task_name_frame.pack(fill="x", pady=5)
+        
+        tk.Label(task_name_frame, text="Task Name:", font=self.fonts['subheader'], 
+                bg=background_color).pack(side="left")
+                
+        self.task_name_entry = tk.Entry(task_name_frame, bg="#d3d3d3", width=40)
+        self.task_name_entry.pack(side="left", padx=5, fill="x", expand=True)
+
+        # Create a frame for main content with two columns
+        content_frame = tk.Frame(main_frame, bg=background_color)
+        content_frame.pack(fill="both", expand=True, pady=5)
+        
+        # Left column
+        left_frame = tk.Frame(content_frame, bg=background_color)
+        left_frame.pack(side="left", fill="both", expand=True, padx=(0, 5))
+        
+        # Description label and text area
+        tk.Label(left_frame, text="Description:", font=self.fonts['subheader'], 
+               bg=background_color).pack(anchor="w")
+               
+        desc_frame = tk.Frame(left_frame, bg=background_color)
+        desc_frame.pack(fill="both", expand=True, pady=5)
+        
+        desc_scroll = tk.Scrollbar(desc_frame)
+        desc_scroll.pack(side="right", fill="y")
+        
+        self.desc_text = tk.Text(desc_frame, height=7, width=30, bg="#d3d3d3", 
+                               relief="solid", bd=1, yscrollcommand=desc_scroll.set)
+        self.desc_text.pack(side="left", fill="both", expand=True)
+        desc_scroll.config(command=self.desc_text.yview)
+        
+        # Time Complexity
+        tk.Label(left_frame, text="Time Complexity:", font=self.fonts['subheader'], 
+               bg=background_color).pack(anchor="w", pady=(10, 0))
+               
+        complexity_frame = tk.Frame(left_frame, bg=background_color)
+        complexity_frame.pack(fill="x", pady=5)
+        
         # Complexity options
         self.complexity_types = ["T-Shirt Size", "Fibonacci"]
         self.tshirt_sizes = ["XXS", "XS", "S", "M", "L", "XL", "XXL"]
         self.fibonacci = ["1", "2", "3", "5", "7", "11", "13"]
-
-        # Style configurations
-        self.style = ttk.Style(self)
-        try:
-            self.style.theme_use("clam")  # Better for Linux
-        except:
-            self.style.theme_use("alt")  # Fallback
-            
-        self.style.configure('MainFrame.TFrame', background=background_color) 
-        self.style.configure('Input.TEntry', background='d3d3d3', fieldbackground='#d3d3d3', font=(body_font, 10))
-        self.style.configure('TLabel', background=background_color, font=(body_font, 8)) 
-
-        # Main container
-        main_frame = ttk.Frame(self, style='MainFrame.TFrame')
-        main_frame.grid(row=0, column=0, padx=10, pady=5, sticky='nsew')
-
-        # Configure grid weights for proper resizing
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        main_frame.grid_columnconfigure(0, weight=1)
-        main_frame.grid_columnconfigure(1, weight=1)
-
-        # Header frame
-        header_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
-        header_frame.grid(row=0, column=0, columnspan=2, pady=(0, 6), sticky='ew')
-        header_frame.grid_columnconfigure(1, weight=1)  # Make entry expand
-
-        # Task Name
-        label = ttk.Label(header_frame, text="Task Name:", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=0, column=0, padx=(0, 10), sticky='w')
-        self.task_name_entry = ttk.Entry(header_frame, style='Input.TEntry', width=40)
-        self.task_name_entry.grid(row=0, column=1, sticky='ew')
-
-        # Content container
-        content_frame = ttk.Frame(main_frame, style='MainFrame.TFrame')
-        content_frame.grid(row=1, column=0, columnspan=2, sticky='nsew')
-        main_frame.grid_rowconfigure(1, weight=1)  # Allow content to expand
-
-        # Left column
-        left_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
-        left_frame.grid(row=0, column=0, padx=(0, 8), sticky='nsew')
-        left_frame.grid_columnconfigure(0, weight=1)  # Allow horizontal expansion
-
-        # Description
-        label = ttk.Label(left_frame, text="Description:", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=0, column=0, sticky='w')
-
-        desc_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        desc_frame.grid(row=1, column=0, pady=(3, 6), sticky='nsew')
-        desc_frame.grid_columnconfigure(0, weight=1)
-        desc_frame.grid_rowconfigure(0, weight=1)
-
-        desc_scrollbar = ttk.Scrollbar(desc_frame, orient='vertical')
-        desc_scrollbar.grid(row=0, column=1, sticky='ns')
-
-        self.desc_text = tk.Text(
-            desc_frame, height=7, width=30, bg='#d3d3d3', relief="solid", bd=1, font=(body_font, 10),
-            yscrollcommand=desc_scrollbar.set
-        )
-        self.desc_text.grid(row=0, column=0, sticky='nsew')
-        desc_scrollbar.config(command=self.desc_text.yview)
-
-        button_width = 9
-
-        # Button frame
-        button_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        button_frame.grid(row=7, column=0, pady=(10, 6), sticky='ew')
-
-        cancel_btn = tk.Button(button_frame, font=(body_font, 10), text="Cancel", command=self.cancel_action, bg=org_btn_color)
-        cancel_btn.grid(row=0, column=1)
-
-        confirm_btn = tk.Button(button_frame, text="Confirm", font=(body_font, 10), command=self.confirm_action, bg=green_btn_color)
-        confirm_btn.grid(row=0, column=0, padx=(0, 6))
-
-        # Right column
-        right_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
-        right_frame.grid(row=0, column=1, sticky='nsew')
-        right_frame.grid_columnconfigure(0, weight=1)
-
-        # Tags
-        label = ttk.Label(right_frame, text="Task Tags:", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=0, column=0, sticky='w')
         
-        # Create the tag text frame
-        tag_frame = ttk.Frame(right_frame)
-        tag_frame.grid(row=1, column=0, pady=(3, 4), sticky='w')
-        tag_frame.grid_rowconfigure(0, weight=1)
-
-        # Add a scrollbar for tag_text
-        tag_scrollbar = ttk.Scrollbar(tag_frame, orient='vertical')
-        tag_scrollbar.grid(row=0, column=1, sticky='ns')
-
-        # Create the Text widget for tags
-        self.tag_text = tk.Text(tag_frame, height=7, width=12, bg='#d3d3d3', relief="solid", bd=1, font=(body_font, 10),
-                               yscrollcommand=tag_scrollbar.set)  # Link scrollbar to the Text widget
-        self.tag_text.grid(row=0, column=0, sticky='nsew')
-
-        # Configure the scrollbar to control tag_text
-        tag_scrollbar.config(command=self.tag_text.yview)
+        self.type_combo = ttk.Combobox(complexity_frame, values=self.complexity_types, state='readonly')
+        self.type_combo.pack(fill="x", pady=(0, 3))
+        self.type_combo.set("Select Type")
         
-        # New frame specifically for Listbox and Scrollbar
-        listbox_frame = ttk.Frame(right_frame, style='MainFrame.TFrame')
-        listbox_frame.grid(row=3, column=0, pady=(3, 6), sticky='w')
-        listbox_frame.grid_rowconfigure(0, weight=1)
-
-        label = ttk.Label(right_frame, text="Choose Tags:", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=2, column=0, sticky='w', pady=(3, 1))
-
-        # Add a vertical scrollbar for the Listbox
-        list_scrollbar = ttk.Scrollbar(listbox_frame, orient='vertical')
-        list_scrollbar.grid(row=0, column=1, sticky='ns')  # Scrollbar placed next to the Listbox
-
-        # Create the Listbox and link it to the scrollbar
-        self.tag_listbox = tk.Listbox(listbox_frame, selectmode="multiple", exportselection=0, width=14, height=8, 
-                                      bg="#d3d3d3", relief='solid', yscrollcommand=list_scrollbar.set)
-        self.tag_listbox.grid(row=0, column=0, pady=(1, 6), sticky='nsew')
-
-        # Configure the scrollbar to control the Listbox
-        list_scrollbar.config(command=self.tag_listbox.yview)
-
-        # Bind the Listbox selection to update the tag_text
+        self.value_combo = ttk.Combobox(complexity_frame, state='readonly')
+        self.value_combo.pack(fill="x")
+        self.value_combo.set("Select Value")
+        
+        self.type_combo.bind('<<ComboboxSelected>>', self.update_values)
+        
+        # Date field
+        tk.Label(left_frame, text="Start Date (MM-DD-YYYY):", font=self.fonts['subheader'], 
+               bg=background_color).pack(anchor="w", pady=(10, 0))
+               
+        self.date_entry = tk.Entry(left_frame, bg="#d3d3d3")
+        self.date_entry.pack(fill="x", pady=5)
+        
+        # Right column for tags
+        right_frame = tk.Frame(content_frame, bg=background_color)
+        right_frame.pack(side="right", fill="both", expand=True, padx=(5, 0))
+        
+        # Tags section
+        tk.Label(right_frame, text="Task Tags:", font=self.fonts['subheader'], 
+               bg=background_color).pack(anchor="w")
+               
+        tag_frame = tk.Frame(right_frame, bg=background_color)
+        tag_frame.pack(fill="x", pady=5)
+        
+        tag_scroll = tk.Scrollbar(tag_frame)
+        tag_scroll.pack(side="right", fill="y")
+        
+        self.tag_text = tk.Text(tag_frame, height=7, width=20, bg="#d3d3d3", 
+                              relief="solid", bd=1, yscrollcommand=tag_scroll.set)
+        self.tag_text.pack(side="left", fill="both", expand=True)
+        tag_scroll.config(command=self.tag_text.yview)
+        
+        # Choose tags section
+        tk.Label(right_frame, text="Choose Tags:", font=self.fonts['subheader'], 
+               bg=background_color).pack(anchor="w", pady=(10, 0))
+               
+        listbox_frame = tk.Frame(right_frame, bg=background_color)
+        listbox_frame.pack(fill="x", pady=5)
+        
+        list_scroll = tk.Scrollbar(listbox_frame)
+        list_scroll.pack(side="right", fill="y")
+        
+        self.tag_listbox = tk.Listbox(listbox_frame, selectmode="multiple", bg="#d3d3d3",
+                                    relief="solid", yscrollcommand=list_scroll.set, 
+                                    exportselection=0, height=8)
+        self.tag_listbox.pack(side="left", fill="both", expand=True)
+        list_scroll.config(command=self.tag_listbox.yview)
+        
+        # Bind tag selection to update tag text
         self.tag_listbox.bind("<<ListboxSelect>>", lambda _: self.update_tag_entry())
-
-        # Adds the tags loaded from the tags table into the listbox
+        
+        # Add tags to listbox
         for value in values:
             self.tag_listbox.insert(tk.END, value)
-
-        # Time Complexity
-        label = ttk.Label(left_frame, text="Time Complexity:", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=3, column=0, sticky='w')
-
-        # Autofill today's date button
-        autofill_date_btn = tk.Button(button_frame, text="Autofill date", command=self.autofill_date,
-                                     bg="#E39ff6", fg="#000000", font=(body_font, 10), 
-                                     activebackground="#800080", activeforeground="#000000", width=button_width)
-        autofill_date_btn.grid(row=0, column=2, padx=(10, 0))
-
-        complexity_frame = ttk.Frame(left_frame, style='MainFrame.TFrame')
-        complexity_frame.grid(row=4, column=0, pady=(3, 6), sticky='ew')
-        complexity_frame.grid_columnconfigure(0, weight=1)
-
-        self.type_combo = ttk.Combobox(complexity_frame, values=self.complexity_types, style='TCombobox', state='readonly')
-        self.type_combo.grid(row=0, column=0, sticky='ew', pady=(0, 3))
-        self.type_combo.set("Select Type")
-
-        self.value_combo = ttk.Combobox(complexity_frame, state='readonly')
-        self.value_combo.grid(row=1, column=0, sticky='ew')
-        self.value_combo.set("Select Value")
-
-        self.type_combo.bind('<<ComboboxSelected>>', self.update_values)
-
-        # Date Completed
-        label = ttk.Label(left_frame, text="Start Date (MM-DD-YYYY):", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=5, column=0, sticky='w')
-
-        self.date_var = tk.StringVar()
-        self.date_entry = ttk.Entry(left_frame, textvariable=self.date_var, style='Input.TEntry')
-        self.date_entry.grid(row=6, column=0, sticky='ew')
+        
+        # Buttons frame at the bottom
+        button_frame = tk.Frame(main_frame, bg=background_color)
+        button_frame.pack(fill="x", pady=10)
+        
+        # Buttons with consistent width
+        button_width = 10
+        
+        confirm_btn = tk.Button(button_frame, text="Confirm", width=button_width, 
+                              bg=green_btn_color, command=self.confirm_action)
+        confirm_btn.pack(side="left", padx=(0, 5))
+        
+        cancel_btn = tk.Button(button_frame, text="Cancel", width=button_width, 
+                             bg=org_btn_color, command=self.cancel_action)
+        cancel_btn.pack(side="left", padx=5)
+        
+        autofill_date_btn = tk.Button(button_frame, text="Autofill date", width=button_width, 
+                                    bg="#E39ff6", command=self.autofill_date)
+        autofill_date_btn.pack(side="left", padx=5)
+        
+        # Set initial focus
+        self.task_name_entry.focus_set()
 
     def update_values(self, event=None):
         selected_type = self.type_combo.get()
@@ -361,9 +320,6 @@ class AddTaskWindow(tk.Tk):
                 # Find the next task_id (1 + max of all task lists)
                 task_id = max(max_tasklist_id, max_completed_id, current_task_id) + 1
 
-                # Get the highest list_place
-                task_id = max(max_tasklist_id, max_completed_id, current_task_id) + 1
-
                 # Then for list_place, explicitly check if this is a new task or a restored task
                 # If it's a new task, use the highest list_place + 1
                 c.execute("SELECT COALESCE(MAX(list_place), 0) FROM TaskList")
@@ -414,6 +370,7 @@ class AddTaskWindow(tk.Tk):
         self.main_app.add_button.config(state=tk.NORMAL)
         self.destroy()
 
-if __name__ == "__main__":
-    app = AddTaskWindow(None)
-    app.mainloop()
+# Don't run as standalone module
+# if __name__ == "__main__":
+#     app = AddTaskWindow(None)
+#     app.mainloop()
