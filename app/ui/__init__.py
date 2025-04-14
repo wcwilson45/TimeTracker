@@ -1,4 +1,4 @@
-from .SmallOverlay import SmallOverlayWindow
+#from .SmallOverlay import SmallOverlayWindow
 from .CompletionPage import CompletedTasksWindow
 from .EditTaskPage import EditTaskWindow
 from .CommitHistoryPage import CommitHistoryWindow
