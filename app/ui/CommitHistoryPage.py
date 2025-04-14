@@ -4,6 +4,7 @@ from tkinter import ttk, messagebox
 import tkinter.font as tkfont
 import sqlite3
 from typing import final
+from config import DB_PATH
 
 
 class CommitHistoryWindow(tk.Tk):
@@ -29,8 +30,7 @@ class CommitHistoryWindow(tk.Tk):
 
         # Header section of the window
         self.create_header()
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("EditTaskPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = DB_PATH
         # Create or Connect to the database
         conn = sqlite3.connect(self.path)
 

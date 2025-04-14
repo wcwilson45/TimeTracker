@@ -9,6 +9,7 @@ import pathlib
 import sqlite3
 from datetime import date
 import re
+from config import DB_PATH, DB_DIR
 
 background_color = "#A9A9A9"
 
@@ -24,11 +25,9 @@ class AddTaskWindow(tk.Tk):
         self.main_app.addtask_window = self
 
         # Define path
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("AddTaskPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = DB_PATH
 
-        self.tags_path = pathlib.Path(__file__).parent
-        self.tags_path = str(self.tags_path).replace('AddTaskPage.py','') + '\\Databases' + '\\tags.db'
+        self.tags_path = DB_DIR
 
         # Create or Connect to the database
         conn = sqlite3.connect(self.tags_path)

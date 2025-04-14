@@ -9,10 +9,10 @@ from tkinter import messagebox
 import pathlib
 import os
 from datetime import datetime
+from config import DB_PATH 
 
 global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("ArchiveTasksList.py", '') + '\\Databases' + '\\task_list.db'
+path = DB_PATH
 
 background_color = "#A9A9A9"
 grey_button_color = "#d3d3d3"

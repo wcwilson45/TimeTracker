@@ -9,11 +9,10 @@ from datetime import datetime
 from tkinter import messagebox
 import sqlite3
 import pathlib
+from config import DB_PATH
 
 global path 
-path = pathlib.Path(__file__).parent
-path = str(path).replace("CompletedTaskDetailsPage.py", '') + '\\Databases' + '\\task_list.db'
-
+path = DB_PATH
 
 bad_btn = "#e99e56"
 good_btn = "#77DD77"
@@ -22,8 +21,7 @@ frame_color = "#dcdcdc"
 
 class TaskHistoryDB:
     def __init__(self):
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = DB_PATH
         
         # Create the history table
         conn = sqlite3.connect(self.path)

@@ -7,6 +7,7 @@ import sqlite3
 import csv
 from tkinter import messagebox
 import pathlib
+from config import DB_PATH, DB_DIR
 
 background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
@@ -17,8 +18,7 @@ class TagsDB(tk.Frame):
         super().__init__(parent)
         #DATABASE SECTION ############################################
 
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("TagsDB.py", '') + '\\Databases' + '\\tags.db'
+        self.path = DB_PATH
         
 
         # Create or Connect to database

@@ -25,11 +25,9 @@ class EditTaskWindow(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Define path
-        self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("EditTaskPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = DB_PATH
 
-        self.tags_path = pathlib.Path(__file__).parent
-        self.tags_path = str(self.tags_path).replace('AddTaskPage.py','') + '\\Databases' + '\\tags.db'
+        self.tags_path = DB_PATH
 
          # Create or Connect to the database
         conn = sqlite3.connect(self.tags_path)
