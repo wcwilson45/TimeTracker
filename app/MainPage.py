@@ -183,9 +183,10 @@ class App:
         # Create a min size to prevent UI elements from being squished
         root.minsize(600, 500)
 
-        self.addtask_window = None
+        
         self.edittask_window = None
         self.commithistory_window = None
+        self.addtask_window = None
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Initialize activity tracking
@@ -210,7 +211,7 @@ class App:
             if os.path.exists(image_path):
                 try:
                     icon = tk.PhotoImage(file=image_path)
-                    self.root.iconphoto(True, icon)
+                    #self.root.iconphoto(True, icon)
                 except tk.TclError as e:
                     print(f"Warning: Could not load icon image: {e}")
                     # Continue without setting icon - app will still work
