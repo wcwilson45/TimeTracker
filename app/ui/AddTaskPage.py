@@ -23,6 +23,8 @@ class AddTaskWindow(tk.Tk):
         super().__init__()
         self.main_app = main_app
         self.main_app.addtask_window = self
+
+        self.resizable(False, False)
         
         # Define paths with writable database paths
         self.path = get_writable_db_path('app/ui/Databases/task_list.db')
@@ -58,8 +60,8 @@ class AddTaskWindow(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         
         # Set the main window properties
-        self.geometry("400x390")
-        self.title("Add Task")
+        self.geometry("470x430")
+        self.title("")
         self.configure(bg=background_color)
         
         # Create fonts
@@ -92,7 +94,7 @@ class AddTaskWindow(tk.Tk):
         # Task Name
         label = ttk.Label(header_frame, text="Task Name:", font=self.fonts['subheader'], style='TLabel')
         label.grid(row=0, column=0, padx=(0, 10), sticky='w')
-        self.task_name_entry = ttk.Entry(header_frame, style='Input.TEntry', width=40)
+        self.task_name_entry = ttk.Entry(header_frame, style='Input.TEntry', width=37)
         self.task_name_entry.grid(row=0, column=1, sticky='ew')
         
         # Content container
@@ -197,7 +199,7 @@ class AddTaskWindow(tk.Tk):
         
         # Date Completed
         label = ttk.Label(left_frame, text="Start Date (MM-DD-YYYY):", font=self.fonts['subheader'], style='TLabel')
-        label.grid(row=5, column=0, sticky='w')
+        label.grid(row=5, column=0, pady=8, sticky='w')
         
         self.date_var = tk.StringVar()
         self.date_entry = ttk.Entry(left_frame, textvariable=self.date_var, style='Input.TEntry')

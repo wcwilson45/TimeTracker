@@ -563,7 +563,7 @@ class CompletedTasksWindow(tk.Tk):
                 )
 
     def setup_ui(self):
-        self.geometry("900x500")
+        self.geometry("1050x520")
         self.title("Task Details")
         self.configure(bg="#A9A9A9")
 
@@ -581,6 +581,9 @@ class CompletedTasksWindow(tk.Tk):
         self.style.map('Treeview',
                     background=[('selected', '#4169E1')],
                     foreground=[('selected', '#000000')])
+        
+        self.style.configure("Info.TLabel", font=("Arial", 10), background='#A9A9A9')
+        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#A9A9A9', padding=2, foreground='black')
 
         # Configure main layout - 2 columns, 2 rows
         self.grid_columnconfigure(0, weight=1)  # Left side
@@ -712,7 +715,8 @@ class CompletedTasksWindow(tk.Tk):
             history_frame,
             yscrollcommand=history_scroll.set,
             selectmode="browse",
-            height=15
+            height=15,
+            style="Treeview"
         )
         self.history_tree.pack(side=LEFT, fill="both", expand=True)
         

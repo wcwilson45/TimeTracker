@@ -23,6 +23,8 @@ class EditTaskWindow(tk.Tk):
         self.is_current_task = False  # Flag to track if editing current task
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        self.resizable(False, False)
+
         # Define path
         self.path = get_writable_db_path('app/ui/Databases/task_list.db')
 
@@ -297,8 +299,8 @@ class EditTaskWindow(tk.Tk):
     #Configure the ui
     def configure_ui(self):
          # Set the main window geometry and title
-        self.geometry("400x430")  # Increased height to accommodate additional fields
-        self.title("Edit Task")
+        self.geometry("500x480")  # Increased height to accommodate additional fields
+        self.title("")
         self.configure(bg=background_color)  # Lighter Blue background
         # Create fonts
         self.fonts = {
@@ -342,7 +344,7 @@ class EditTaskWindow(tk.Tk):
         label.grid(row=0, column=0, sticky='w')
 
         # Task Name Entry
-        self.task_name_entry = ttk.Entry(left_frame, style='Input.TEntry', width=37)
+        self.task_name_entry = ttk.Entry(left_frame, style='Input.TEntry', width=35)
         self.task_name_entry.grid(row=1, column=0, pady=(3, 0), sticky='ew')
 
 

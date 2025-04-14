@@ -584,8 +584,8 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
                 )
 
     def setup_ui(self):
-        self.geometry("900x520")
-        self.title("Task Details")
+        self.geometry("900x540")
+        self.title("")
         self.configure(bg="#A9A9A9")
 
         # Configure styles
