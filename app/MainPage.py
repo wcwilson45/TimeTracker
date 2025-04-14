@@ -1,9 +1,5 @@
-            
-from tkinter import *
-from tkinter.ttk import *
-from tkinter import filedialog
-from tkinter import ttk, messagebox
 import tkinter as tk
+from tkinter import ttk, messagebox, NORMAL, DISABLED, END, W, TOP, BOTTOM, LEFT, RIGHT
 import tkinter.font as tkfont
 import sqlite3
 from datetime import datetime
@@ -175,104 +171,119 @@ path = str(db_path)
 
 class App:
     def __init__(self, root):
-      self.root = root
-      self.root.title("Task Manager")
-      self.root.geometry(WINDOW_SIZE["main"])
-      root.resizable(width = 0, height = 0)
-
-      self.addtask_window = None
-      self.edittask_window = None
-      self.commithistory_window = None
-      self.root.protocol("WM_DELETE_WINDOW", self.on_close)
-
-     # Initialize activity tracking
-      self.inactivity_timer = None
-      self.inactivity_limit = 2 * 60 * 60
-      self.bind_activity_events()
-
-     # Set initial inactivity timer
-      self.reset_inactivity_timer()
-
-      from pathlib import Path
-
-      # Update this section in your App.__init__ method
-      try:
-          base_dir = os.path.dirname(os.path.abspath(__file__))
-          image_path = os.path.join(base_dir, "image.png")
+        self.root = root
+        self.root.title("Task Manager")
         
-          # Check if file exists
-          if os.path.exists(image_path):
-              try:
-                  icon = tk.PhotoImage(file=image_path)
-                  self.root.iconphoto(True, icon)
-              except tk.TclError as e:
-                  print(f"Warning: Could not load icon image: {e}")
-                  # Continue without setting icon - app will still work
-          else:
-              print(f"Warning: Icon image not found at {image_path}")
-      except Exception as e:
-          print(f"Error setting application icon: {e}")
-          # Continue without the icon
+        # Set a specific size that works on Linux
+        self.root.geometry(WINDOW_SIZE["main"])
+        
+        # Allow resizing on Linux for better usability
+        root.resizable(True, True)
+        
+        # Create a min size to prevent UI elements from being squished
+        root.minsize(600, 500)
 
-      # Font Tuples for Use on pages
-      self.fonts = {
-        "Title_Tuple": tkfont.Font(family=FONTS["title"][0], size=24+FONT_ADJUSTMENT, weight="bold"),
-        "Body_Tuple": tkfont.Font(family=FONTS["body"][0], size=12+FONT_ADJUSTMENT, weight="bold"),
-        "Description_Tuple": tkfont.Font(family=FONTS["description"][0], size=12+FONT_ADJUSTMENT)
-    }
+        self.addtask_window = None
+        self.edittask_window = None
+        self.commithistory_window = None
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-      #Set Background color
-      self.root.configure(bg = background_color)
+        # Initialize activity tracking
+        self.inactivity_timer = None
+        self.inactivity_limit = 2 * 60 * 60
+        self.bind_activity_events()
 
-      #Main Container
-      self.main_container = tk.Frame(root, background= background_color)
-      self.main_container.pack(expand = True, fill = "both")
-      
-      #Menu Button Dropdown
-      self.menu_frame = tk.Frame(self.main_container, background= background_color)
-      self.menu_frame.pack(fill = "x", padx = 5, pady = 5)
+        # Set initial inactivity timer
+        self.reset_inactivity_timer()
+        
+        # Create a flag to indicate shutdown state
+        self.shutting_down = False
 
-      #Dropdown Menu
-      self.menu_btn = ttk.Button(self.menu_frame, text = "⋮", width = 3, command = self.show_menu)
-      self.menu_btn.pack(side = "left", padx = 5)
+        from pathlib import Path
 
-      #Page Title Label
-      self.page_title = ttk.Label(self.menu_frame, text="Time Tracker", font=self.fonts['Body_Tuple'], background= background_color)
-      self.page_title.pack(side="left", padx=10)
+        # Update this section in your App.__init__ method
+        try:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            image_path = os.path.join(base_dir, "image.png")
+            
+            # Check if file exists
+            if os.path.exists(image_path):
+                try:
+                    icon = tk.PhotoImage(file=image_path)
+                    self.root.iconphoto(True, icon)
+                except tk.TclError as e:
+                    print(f"Warning: Could not load icon image: {e}")
+                    # Continue without setting icon - app will still work
+            else:
+                print(f"Warning: Icon image not found at {image_path}")
+        except Exception as e:
+            print(f"Error setting application icon: {e}")
+            # Continue without the icon
 
-      #Create pages
-      self.full_page = tk.Frame(self.main_container)
-      self.completedtasks_page = CompletedTasksList(self.main_container, self)
-      self.smalloverlay_page = tk.Frame(self.main_container)
-      self.tags_database_page = TagsDB(self.main_container)
-      self.analytics_page = AnalyticsPage(self.main_container)
-      self.archive_page = ArchiveTasksList(self.main_container, self)
+        # Font Tuples for Use on pages - adjust for Linux
+        # On Linux, use system fonts or common cross-platform ones
+        self.fonts = {
+            "Title_Tuple": tkfont.Font(family="DejaVu Sans" if "DejaVu Sans" in tkfont.families() else FONTS["title"][0], 
+                                      size=20+FONT_ADJUSTMENT, weight="bold"),
+            "Body_Tuple": tkfont.Font(family="DejaVu Sans" if "DejaVu Sans" in tkfont.families() else FONTS["body"][0], 
+                                     size=11+FONT_ADJUSTMENT, weight="bold"),
+            "Description_Tuple": tkfont.Font(family="DejaVu Sans" if "DejaVu Sans" in tkfont.families() else FONTS["description"][0], 
+                                           size=11+FONT_ADJUSTMENT)
+        }
 
-      #Show main page at start-up
-      self.current_page = self.full_page
-      self.full_page.pack(expand=True, fill="both", padx=10, pady=5)
+        # Set Background color
+        self.root.configure(bg=background_color)
 
-      #Create the popup menu
-      self.popup_menu = tk.Menu(root, tearoff=0)
-      self.popup_menu.add_command(label="Time Tracker", command=lambda: self.switch_page("Time Tracker"))
-      self.popup_menu.add_command(label="Completed Tasks", command=lambda: self.switch_page("Completed Tasks"))
-      self.popup_menu.add_command(label="Small Overlay", command=lambda: self.switch_page("Small Overlay"))
-      self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
-      self.popup_menu.add_command(label="Analytics", command=lambda: self.switch_page("Analytics"))
-      self.popup_menu.add_command(label="Archive", command=lambda: self.switch_page("Archive"))
-      # self.popup_menu.add_command(label="Commit History", command=lambda: self.switch_page("Commit History"))
-      self.popup_menu.configure(bg= background_color)
+        # Main Container with proper weight configuration for Linux
+        self.main_container = tk.Frame(root, background=background_color)
+        self.main_container.pack(expand=True, fill="both")
+        
+        # Menu Button Dropdown
+        self.menu_frame = tk.Frame(self.main_container, background=background_color)
+        self.menu_frame.pack(fill="x", padx=5, pady=5)
 
-      self.setup_smalloverlay_page()
-      self.smalloverlay_page.pack_forget()
-      self.setup_full_page()
-      self.completedtasks_page.pack_forget()
+        # Dropdown Menu
+        self.menu_btn = ttk.Button(self.menu_frame, text="⋮", width=3, command=self.show_menu)
+        self.menu_btn.pack(side="left", padx=5)
 
-      #self.initialize_ui_enhancements()
-      
+        # Page Title Label
+        self.page_title = ttk.Label(self.menu_frame, text="Time Tracker", font=self.fonts['Body_Tuple'], background=background_color)
+        self.page_title.pack(side="left", padx=10)
 
-      #Query the database for all information inside
-      self.query_database()
+        # Create pages
+        self.full_page = tk.Frame(self.main_container)
+        self.completedtasks_page = CompletedTasksList(self.main_container, self)
+        self.smalloverlay_page = tk.Frame(self.main_container)
+        self.tags_database_page = TagsDB(self.main_container)
+        self.analytics_page = AnalyticsPage(self.main_container)
+        self.archive_page = ArchiveTasksList(self.main_container, self)
+
+        # Show main page at start-up
+        self.current_page = self.full_page
+        self.full_page.pack(expand=True, fill="both", padx=10, pady=5)
+
+        # Create the popup menu
+        self.popup_menu = tk.Menu(root, tearoff=0)
+        self.popup_menu.add_command(label="Time Tracker", command=lambda: self.switch_page("Time Tracker"))
+        self.popup_menu.add_command(label="Completed Tasks", command=lambda: self.switch_page("Completed Tasks"))
+        self.popup_menu.add_command(label="Small Overlay", command=lambda: self.switch_page("Small Overlay"))
+        self.popup_menu.add_command(label="Tags Database", command=lambda: self.switch_page("Tags Database"))
+        self.popup_menu.add_command(label="Analytics", command=lambda: self.switch_page("Analytics"))
+        self.popup_menu.add_command(label="Archive", command=lambda: self.switch_page("Archive"))
+        self.popup_menu.configure(bg=background_color)
+
+        # Setup pages but don't show small overlay on start
+        self.setup_smalloverlay_page()
+        self.smalloverlay_page.pack_forget()  # Make sure small overlay is not shown on startup
+        
+        self.setup_full_page()
+        self.completedtasks_page.pack_forget()
+
+        # Initialize UI enhancements for better Linux compatibility
+        self.initialize_ui_enhancements()
+
+        # Query the database for all information inside
+        self.query_database()
 
     def on_close(self):
         """Handle proper application shutdown"""
@@ -334,12 +345,12 @@ class App:
 
         if page_name == "Time Tracker":
             self.current_page = self.full_page
-            self.page_title.config(text="Time Tracker", background= background_color)
+            self.page_title.config(text="Time Tracker", background=background_color)
             self.root.geometry(WINDOW_SIZE["main"])
             self.query_database()
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
-            self.page_title.config(text="Completed Tasks", background= background_color)
+            self.page_title.config(text="Completed Tasks", background=background_color)
             self.root.geometry(WINDOW_SIZE["completed"])
             self.query_database()
             self.completedtasks_page.load_completed_tasks()
@@ -350,12 +361,12 @@ class App:
             self.query_database()
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  
-            self.page_title.config(text="Tags Database", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
+            self.page_title.config(text="Tags Database", background=background_color)
             self.root.geometry(WINDOW_SIZE["tags"])
             self.query_database()
         elif page_name == "Analytics":
             self.current_page = self.analytics_page  
-            self.page_title.config(text="Analytics", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
+            self.page_title.config(text="Analytics", background=background_color)
             self.root.geometry(WINDOW_SIZE["analytics"])
             self.query_database()
             self.analytics_page.update_total_time()  
@@ -364,286 +375,384 @@ class App:
             self.page_title.config(text="Archived Tasks", background=background_color)
             self.root.geometry(WINDOW_SIZE["archive"])
             self.archive_page.load_archive_tasks()
-        # elif page_name == "Commit History":
-        #     self.current_page = self.commit_page
-        #     self.page_title.config(text = "Commit History", background=background_color)
-        #     self.root.geometry("650x600")
-        #     self.commit_page.create_main_layout()
-            
 
         self.current_page.pack(expand=True, fill="both", padx=10, pady=5)
 
-
-
     def setup_smalloverlay_page(self):
-        # Button not flat
-        # Entry box grey
+        # Fix layout for Linux compatibility
         self.smalloverlay_page.configure(bg=background_color)
-        style = ttk.Style()
-        style.configure('TLabel', background="#dcdcdc")
-        self.so_task_name_label = ttk.Label(self.smalloverlay_page, text="No Current Task", font=self.fonts['Body_Tuple'], background=background_color)
-        self.so_task_name_label.grid(row = 0, column = 0, pady = 2, sticky = W)
-        # Time label and box
-        Label(self.smalloverlay_page, text="Time: ",
-            font=self.fonts['Body_Tuple'],
-            background=background_color
-        ).grid(row=1, column=0, sticky=W, pady=2)
-        self.time_box_overlay = Text(self.smalloverlay_page, height=1, width=10,
-                                    font=self.fonts['Description_Tuple'],
-                                    background=grey_button_color)
-        self.time_box_overlay.grid(row=1, column=0, padx=50, pady=5, sticky=E)
-        # Timer control buttons
-        self.small_overlay_start_button = tk.Button(self.smalloverlay_page, 
-                                                text="Start",
-                                                # relief="flat",
-                                                background="#77DD77",
-                                                command=self.start_timer)
-        self.small_overlay_start_button.grid(row=2, column=0, sticky=W, padx=0, pady=5)
-        self.small_overlay_stop_button = tk.Button(self.smalloverlay_page, 
+        
+        # Create a frame to contain all elements with proper spacing
+        overlay_frame = tk.Frame(self.smalloverlay_page, bg=background_color)
+        overlay_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Task name with proper padding
+        self.so_task_name_label = ttk.Label(overlay_frame, text="No Current Task", 
+                                          font=self.fonts['Body_Tuple'], 
+                                          background=background_color)
+        self.so_task_name_label.pack(anchor="w", pady=(0, 10))
+        
+        # Time controls in a frame for better layout
+        time_frame = tk.Frame(overlay_frame, bg=background_color)
+        time_frame.pack(fill="x", pady=5)
+        
+        # Time label
+        time_label = ttk.Label(time_frame, text="Time:", 
+                             font=self.fonts['Body_Tuple'],
+                             background=background_color)
+        time_label.pack(side="left")
+        
+        # Time box
+        self.time_box_overlay = tk.Text(time_frame, height=1, width=10,
+                                      font=self.fonts['Description_Tuple'],
+                                      background=grey_button_color)
+        self.time_box_overlay.pack(side="left", padx=10)
+        
+        # Button frame
+        button_frame = tk.Frame(overlay_frame, bg=background_color)
+        button_frame.pack(fill="x", pady=10)
+        
+        # Timer control buttons with uniform size
+        self.small_overlay_start_button = tk.Button(button_frame, 
+                                                 text="Start",
+                                                 background="#77DD77",
+                                                 command=self.start_timer,
+                                                 width=8)
+        self.small_overlay_start_button.pack(side="left", padx=(0,5))
+        
+        self.small_overlay_stop_button = tk.Button(button_frame, 
                                                 text="Stop",
-                                                # relief="flat",
                                                 background="#FF7276",
-                                                command=self.stop_timer)
-        self.small_overlay_stop_button.grid(row=2, column=0, sticky=W, padx=45, pady=5)
-        self.small_overlay_stop_button.config(state=DISABLED)
-   
+                                                command=self.stop_timer,
+                                                width=8)
+        self.small_overlay_stop_button.pack(side="left")
+        self.small_overlay_stop_button.config(state="disabled")
+
     def update_timer_boxes(self, timer_text):
-      """Update the timer display in both timer boxes."""
-          # Update the timer on the Full page
-      if self.time_box_full:
-        self.time_box_full.config(state=NORMAL)
-        self.time_box_full.delete("1.0", tk.END)
-        self.time_box_full.insert("1.0", timer_text)
-        self.time_box_full.config(state=DISABLED)
+        """Update the timer display in both timer boxes."""
+        # Update the timer on the Full page
+        if hasattr(self, 'time_box_full'):
+            self.time_box_full.config(state="normal")
+            self.time_box_full.delete("1.0", tk.END)
+            self.time_box_full.insert("1.0", timer_text)
+            self.time_box_full.config(state="disabled")
 
-          # Update the timer on the Small Overlay page
-      if self.time_box_overlay:
-        self.time_box_overlay.config(state=NORMAL)
-        self.time_box_overlay.delete("1.0", tk.END)
-        self.time_box_overlay.insert("1.0", timer_text)
-        self.time_box_overlay.config(state=DISABLED)
-
+        # Update the timer on the Small Overlay page
+        if hasattr(self, 'time_box_overlay'):
+            self.time_box_overlay.config(state="normal")
+            self.time_box_overlay.delete("1.0", tk.END)
+            self.time_box_overlay.insert("1.0", timer_text)
+            self.time_box_overlay.config(state="disabled")
 
     def setup_full_page(self):
-        self.full_page.configure(background= background_color)
+        self.full_page.configure(background=background_color)
+        
+        # Configure style for Linux compatibility
         style = ttk.Style()
-        style.configure('TLabel', background= "#dcdcdc")
-        style.theme_use('alt')
+        style.configure('TLabel', background="#dcdcdc")
+        
+        # Try to use a theme that works well on Linux
+        try:
+            style.theme_use('clam')  # This is usually available on Linux
+        except:
+            style.theme_use('alt')   # Fallback
+            
         style.configure("Treeview",
-        background = "black",
-        foreground = "black",
-        rowheight = 20,
-        fieldbackground = "#dcdcdc")
+            background="white",
+            foreground="black",
+            rowheight=25,  # Slightly larger for Linux
+            fieldbackground="#dcdcdc")
 
-        #Current Task Frame
-        self.currenttask_frame = tk.LabelFrame(self.full_page, text = f"Current Task", bg="#dcdcdc" )
-        self.currenttask_frame.pack(pady=0, side = TOP, fill = 'x')
+        # Current Task Frame
+        self.currenttask_frame = tk.LabelFrame(self.full_page, text="Current Task", bg="#dcdcdc")
+        self.currenttask_frame.pack(pady=5, padx=5, fill='x')
 
-        #Task Name row
-        task_name_frame = tk.Frame(self.currenttask_frame, bg="#dcdcdc")
-        task_name_frame.grid(row=0, column=0, sticky=W)
+        # Current task layout - improved for Linux
+        current_task_content = tk.Frame(self.currenttask_frame, bg="#dcdcdc")
+        current_task_content.pack(fill="x", padx=10, pady=10)
+        
+        # Task Name row
+        task_name_frame = tk.Frame(current_task_content, bg="#dcdcdc")
+        task_name_frame.pack(fill="x", pady=2)
+        
+        task_name_label = ttk.Label(task_name_frame, text="Task Name:", 
+                                   font=self.fonts['Body_Tuple'])
+        task_name_label.pack(side="left")
+        
+        self.task_name_label = ttk.Label(task_name_frame, text="No Current Task", 
+                                       font=self.fonts['Description_Tuple'])
+        self.task_name_label.pack(side="left", padx=5)
 
-        ttk.Label(task_name_frame, text=f"Task Name:", font=self.fonts['Body_Tuple'], style='TLabel').grid(row=0, column=0, sticky=W)
-        self.task_name_label = ttk.Label(task_name_frame, text="No Current Task", font=self.fonts['Description_Tuple'])
-        self.task_name_label.grid(row=0, column=1, sticky=W, padx=(0, 0))
+        # Task ID Frame
+        task_id_frame = tk.Frame(current_task_content, bg="#dcdcdc")
+        task_id_frame.pack(fill="x", pady=2)
+        
+        task_id_label = ttk.Label(task_id_frame, text="Task ID:", 
+                                 font=self.fonts['Body_Tuple'])
+        task_id_label.pack(side="left")
+        
+        self.task_id_label = ttk.Label(task_id_frame, text="-", 
+                                     font=self.fonts['Description_Tuple'])
+        self.task_id_label.pack(side="left", padx=5)
 
-        # Create a frame for Task ID
-        task_id_frame = tk.Frame(self.currenttask_frame, bg="#dcdcdc")
-        task_id_frame.grid(row=1, column=0, pady=5, sticky=W)
+        # Time controls frame
+        time_controls_frame = tk.Frame(current_task_content, bg="#dcdcdc")
+        time_controls_frame.pack(fill="x", pady=2)
+        
+        # Time label with better alignment
+        time_label = ttk.Label(time_controls_frame, text="Time:", 
+                             font=self.fonts['Body_Tuple'])
+        time_label.pack(side="left")
+        
+        # Create time box
+        self.time_box_full = tk.Text(time_controls_frame, height=1, width=10,
+                                   font=self.fonts['Description_Tuple'],
+                                   background=grey_button_color)
+        self.time_box_full.pack(side="left", padx=5)
+        self.time_box_full.config(state="disabled")
+        
+        # Timer control buttons with better spacing
+        self.full_page_start_button = tk.Button(time_controls_frame, 
+                                              text="Start", 
+                                              background="#77DD77",
+                                              width=8, 
+                                              command=self.start_timer)
+        self.full_page_start_button.pack(side="left", padx=(5,5))
+        
+        self.full_page_stop_button = tk.Button(time_controls_frame, 
+                                             text="Stop", 
+                                             background="#FF7276",
+                                             width=8, 
+                                             command=self.stop_timer)
+        self.full_page_stop_button.pack(side="left")
+        self.full_page_stop_button.config(state="disabled")
 
-        # Task ID Label and Task ID Display inside the frame
-        ttk.Label(task_id_frame, text="Task ID:", font=self.fonts['Body_Tuple']).grid(row=0, column=0, sticky=W, padx=0)
-        self.task_id_label = ttk.Label(task_id_frame, text="-", font=self.fonts['Description_Tuple'])
-        self.task_id_label.grid(row=0, column=1, sticky=W)
-
-        # Create a frame to hold the time label, box and buttons - all on same row
-        time_controls_frame = tk.Frame(self.currenttask_frame, bg="#dcdcdc")
-        time_controls_frame.grid(row=2, column=0, columnspan=2, sticky=W, pady=2)
-
-        # Time label
-        Label(time_controls_frame, text="Time:", font=self.fonts['Body_Tuple']).pack(side=LEFT)
-
-        #Set Description Frame and Box inside the Frame
-        description_frame = tk.Frame(self.full_page, bg = background_color)
-        description_frame.pack(pady = 5, fill = "x")
-
+        # Description Frame
+        description_frame = tk.Frame(self.full_page, bg=background_color)
+        description_frame.pack(pady=5, padx=5, fill="x")
+        
+        # Create a grid layout with appropriate weights
         description_frame.columnconfigure(0, weight=1)
+        
+        # Description label
+        desc_label = ttk.Label(description_frame, text="Description:",
+                             font=self.fonts['Body_Tuple'], 
+                             background=background_color)
+        desc_label.grid(row=0, column=0, sticky="w", pady=2)
+        
+        # Description box with scrollbar
+        description_scroll = ttk.Scrollbar(description_frame)
+        description_scroll.grid(row=1, column=1, sticky="ns")
+        
+        self.description_box = tk.Text(description_frame, 
+                                     yscrollcommand=description_scroll.set,
+                                     height=5, width=50, 
+                                     font=self.fonts['Description_Tuple'],
+                                     background="#dcdcdc")
+        self.description_box.grid(row=1, column=0, sticky="ew")
+        
+        description_scroll.config(command=self.description_box.yview)
 
-        Label(description_frame, text="Description:",
-               font=self.fonts['Body_Tuple'],background = background_color).grid(row=0, column=0,sticky=W, pady=2)
-
-        #Description Scrollbar
-        description_scroll = Scrollbar(description_frame)
-        description_scroll.grid(row = 1, column = 1, sticky = "ns")
-        self.description_box = Text(description_frame, yscrollcommand= description_scroll.set,
-                                height=5,
-                                    width=50,border = 1, font=self.fonts['Description_Tuple'],
-                                    background="#dcdcdc")
-        self.description_box.grid(row = 1, column = 0, sticky="ew")
-
-        #Insert Current Task Description
-        description_scroll.config(command = self.description_box.yview)
-
-        # Add timer-related instance variables
+        # Timer variables
         self.timer_running = False
         self.hours = 0
         self.minutes = 0
         self.seconds = 0
         self.total_seconds = 0
-        
-        # Create time box right next to the label
-        self.time_box_full = Text(time_controls_frame, height=1, width=10,
-                                font=self.fonts['Description_Tuple'],
-                                background=grey_button_color)
-        self.time_box_full.pack(side=LEFT, padx=(5, 5))
-        self.time_box_full.config(state=DISABLED)
-        
-        # Add timer control buttons right next to the time box
-        self.full_page_start_button = tk.Button(time_controls_frame, text="Start", background="#77DD77", command=self.start_timer)
-        self.full_page_start_button.pack(side=LEFT, padx=(0, 5))
 
-        self.full_page_stop_button = tk.Button(time_controls_frame, text="Stop", background="#FF7276", command=self.stop_timer)
-        self.full_page_stop_button.pack(side=LEFT)
-        self.full_page_stop_button.config(state=DISABLED)
-
-
-
-        #Change color when a item is selected
+        # TreeView style configuration for Linux
         style.map("Treeview",
-        background = [('selected', "#4169E1")], 
-        foreground=[('selected', '#000000')])
+                background=[('selected', "#4169E1")], 
+                foreground=[('selected', 'white')])
 
-        #Top Button Frame
-        top_btn_frame = tk.LabelFrame(self.full_page, text = "TaskList", bg="#dcdcdc")
-        top_btn_frame.pack( pady = 5, fill = "x")
-
-        #Put the task list inside a frame
-        tasklist_frame = tk.Frame(self.full_page, bg = background_color)
-        tasklist_frame.pack(pady=0, fill = "x")
-        tasklist_frame.columnconfigure(0, weight=1)  # Make columns expand with window
-
-        #Buttons for Underneath Description Box + Above TaskList
-
-        moveup_button = tk.Button(top_btn_frame, text = "Move Up",bg = main_btn_color, command = self.move_up)
-        moveup_button.grid(row = 0, column = 0, padx = 4, pady =6)
-
-        movedown_button = tk.Button(top_btn_frame, text = "Move Down",bg = main_btn_color, command = self.move_down)
-        movedown_button.grid(row = 0, column = 1, padx = 4, pady = 6)
-
-        complete_task_btn = tk.Button(top_btn_frame, text = "Complete Task", bg = main_btn_color, command = self.open_CompletionPage)
-        complete_task_btn.grid(row = 0, column = 2, padx = 4, pady = 6)
-
-        import_btn = tk.Button(top_btn_frame, text = "Import", bg = main_btn_color, command = self.import_Tasks)
-        import_btn.grid(row = 0, column= 3, padx = 4, pady = 6)
-
-        Label(top_btn_frame, text = "Search:").grid(row = 0, column = 4)
-
-        self.search_entry = tk.Entry(top_btn_frame, bg="#dcdcdc", width = 15)
-        self.search_entry.grid(row = 0, column= 5, padx = 4, pady= 6)
+        # Top Button Frame - task list controls
+        top_btn_frame = tk.LabelFrame(self.full_page, text="TaskList", bg="#dcdcdc")
+        top_btn_frame.pack(pady=5, padx=5, fill="x")
+        
+        # Make the frame use grid properly
+        top_btn_frame.columnconfigure(5, weight=1)  # Make search box expand
+        
+        # Buttons with uniform sizing and better spacing
+        moveup_button = tk.Button(top_btn_frame, text="Move Up", 
+                                bg=main_btn_color, 
+                                command=self.move_up)
+        moveup_button.grid(row=0, column=0, padx=4, pady=6)
+        
+        movedown_button = tk.Button(top_btn_frame, text="Move Down", 
+                                   bg=main_btn_color, 
+                                   command=self.move_down)
+        movedown_button.grid(row=0, column=1, padx=4, pady=6)
+        
+        complete_task_btn = tk.Button(top_btn_frame, text="Complete Task", 
+                                     bg=main_btn_color, 
+                                     command=self.open_CompletionPage)
+        complete_task_btn.grid(row=0, column=2, padx=4, pady=6)
+        
+        import_btn = tk.Button(top_btn_frame, text="Import", 
+                             bg=main_btn_color, 
+                             command=self.import_Tasks)
+        import_btn.grid(row=0, column=3, padx=4, pady=6)
+        
+        # Search label and entry
+        search_label = ttk.Label(top_btn_frame, text="Search:")
+        search_label.grid(row=0, column=4, padx=(10,0), pady=6)
+        
+        self.search_entry = tk.Entry(top_btn_frame, bg="#dcdcdc", width=15)
+        self.search_entry.grid(row=0, column=5, padx=4, pady=6, sticky="we")
         self.search_entry.bind("<KeyRelease>", self.search_Task)
 
-        #Create scrollbar
-        tasklist_scroll = Scrollbar(tasklist_frame)
-        tasklist_scroll.grid(row = 1, column = 1, sticky = "ns")
+        # Task List Frame with better layout
+        tasklist_frame = tk.Frame(self.full_page, bg=background_color)
+        tasklist_frame.pack(pady=5, padx=5, fill="both", expand=True)
+        
+        # Configure column weights
+        tasklist_frame.columnconfigure(0, weight=1)
+        tasklist_frame.rowconfigure(1, weight=1)
+        
+        # Create scrollbar
+        tasklist_scroll = ttk.Scrollbar(tasklist_frame)
+        tasklist_scroll.grid(row=1, column=1, sticky="ns")
+        
+        # Treeview with better sizing
+        self.task_list = ttk.Treeview(tasklist_frame, 
+                                    yscrollcommand=tasklist_scroll.set, 
+                                    selectmode="extended", 
+                                    style="Treeview", 
+                                    height=8)
+        self.task_list.grid(row=1, column=0, sticky="nsew")
+        
+        # Connect scrollbar
+        tasklist_scroll.config(command=self.task_list.yview)
+        
+        # Format columns for better display on Linux
+        self.task_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", 
+                                   "Start Date", "End Date", "Description")
+        
+        # Ensure the Treeview expands properly
+        self.task_list.column("#0", width=0, stretch=False)
+        self.task_list.column('Task Name', width=250, stretch=True)
+        self.task_list.column('Task Time', width=80, stretch=False)
+        self.task_list.column('Task Weight', width=80, stretch=False)
+        self.task_list.column('Task ID', anchor="center", width=0, stretch=False)
+        self.task_list.column('Start Date', anchor="center", width=0, stretch=False)
+        self.task_list.column('End Date', anchor="center", width=0, stretch=False)
+        self.task_list.column('Description', anchor="center", width=0, stretch=False)
+        
+        # Format headings
+        self.task_list.heading("#0", text="", anchor="w")
+        self.task_list.heading("Task Name", text="Task Name", anchor="w")
+        self.task_list.heading("Task Time", text="Time", anchor="center")
+        self.task_list.heading("Task Weight", text="Weight", anchor="center")
+        self.task_list.heading("Task ID", text="ID", anchor="center")
+        self.task_list.heading("Start Date", text="Start Date", anchor="center")
+        self.task_list.heading("End Date", text="End Date", anchor="center")
+        self.task_list.heading("Description", text="Description", anchor="center")
+        
+        # Configure row colors
+        self.task_list.tag_configure('oddrow', background="#A9A9A9", foreground="black")
+        self.task_list.tag_configure('evenrow', background="#dcdcdc", foreground="black")
 
-        #Set scrollbar
-        self.task_list = ttk.Treeview(tasklist_frame, yscrollcommand=tasklist_scroll.set, selectmode = "extended", style  = "Treeview", height = 8)
-        self.task_list.grid(row = 1, column = 0)
-
-        #Task List is vertical scroll
-        tasklist_scroll.config(command = self.task_list.yview)
-
-        #Format columns
-        self.task_list['columns'] = ("Task Name", "Task Time", "Task Weight", "Task ID", "Start Date", "End Date", "Description")
-        self.task_list.configure(height=8) #set fixed height
-        self.task_list.column("#0", width = 0, stretch=NO)
-        self.task_list.column('Task Name', width = 250, stretch=YES)
-        self.task_list.column('Task Time', width = 100, stretch=NO)
-        self.task_list.column('Task Weight', width =100, stretch=NO)
-        self.task_list.column('Task ID',anchor = CENTER, width = 0, stretch = NO)
-        self.task_list.column('Start Date', anchor = CENTER, width = 0, stretch = NO)
-        self.task_list.column('End Date', anchor = CENTER, width = 0, stretch = NO)
-        self.task_list.column('Description', anchor = CENTER, width = 0, stretch = NO)
-
-        #Format headings
-        self.task_list.heading("#0", text = "", anchor = W)
-        self.task_list.heading("Task Name", text = "Task Name", anchor = W)
-        self.task_list.heading("Task Time", text = "Time", anchor = CENTER)
-        self.task_list.heading("Task Weight", text = "Weight", anchor = CENTER)
-        self.task_list.heading("Task ID", text = "ID", anchor = CENTER)
-        self.task_list.heading("Start Date", text = "Start Date", anchor = CENTER)
-        self.task_list.heading("End Date", text = "End Date", anchor = CENTER)
-        self.task_list.heading("Description", text = "Description", anchor = CENTER)
-
-        #Configure the different rows for color
-        self.task_list.tag_configure('oddrow', background=  "#A9A9A9", foreground= "black")
-        self.task_list.tag_configure('evenrow', background=  "#dcdcdc", foreground= "black")
-
-        #This is the select thing. Will become void after current task table is implemented
-        #So Full page will become smaller and when using select button it should put task information at the top.
-        data_frame = tk.LabelFrame(self.full_page, text = "Input", bg="#dcdcdc")
-        data_frame.pack(fill = "x", padx = 20)
-
-        tn_label = Label(data_frame, text = "Task Name")
-        tn_label.grid(row = 0, column = 0, padx = 10, pady = 0)
-        self.tn_entry = Entry(data_frame)
-        self.tn_entry.grid(row = 1, column = 0)
-
-        tt_label = Label(data_frame, text = "Task Time")
-        tt_label.grid(row = 0, column = 1, padx = 10, pady = 0)
-        self.tt_entry = Entry(data_frame)
-        self.tt_entry.grid(row = 1, column = 1)
-
-        tw_label = Label(data_frame, text = "Task Weight")
-        tw_label.grid(row = 0, column = 2, padx = 10, pady = 0)
-        self.tw_entry = Entry(data_frame)
-        self.tw_entry.grid(row = 1, column = 2)
-
-        ti_label = Label(data_frame, text = "Task ID")
-        ti_label.grid(row = 0, column = 3, padx = 10, pady = 0)
-        self.ti_entry = Entry(data_frame)
-        self.ti_entry.grid(row = 1, column = 3)
-
-        sd_label = Label(data_frame, text = "Start Date")
-        sd_label.grid(row = 0, column = 4, padx = 10, pady = 0)
-        self.sd_entry = Entry(data_frame)
-        self.sd_entry.grid(row = 1, column = 4)
-
-        td_label = Label(data_frame, text = "Start Date")
-        td_label.grid(row = 0, column = 5, padx = 10, pady = 0)
-        self.td_entry = Entry(data_frame)
-        self.td_entry.grid(row = 1, column = 5)
-
+        # Create a hidden data frame for form fields (only used programmatically)
+        data_frame = tk.LabelFrame(self.full_page, text="Input", bg="#dcdcdc")
+        
+        # Task Name
+        tn_label = ttk.Label(data_frame, text="Task Name")
+        tn_label.grid(row=0, column=0, padx=10, pady=0)
+        self.tn_entry = ttk.Entry(data_frame)
+        self.tn_entry.grid(row=1, column=0)
+        
+        # Task Time
+        tt_label = ttk.Label(data_frame, text="Task Time")
+        tt_label.grid(row=0, column=1, padx=10, pady=0)
+        self.tt_entry = ttk.Entry(data_frame)
+        self.tt_entry.grid(row=1, column=1)
+        
+        # Task Weight
+        tw_label = ttk.Label(data_frame, text="Task Weight")
+        tw_label.grid(row=0, column=2, padx=10, pady=0)
+        self.tw_entry = ttk.Entry(data_frame)
+        self.tw_entry.grid(row=1, column=2)
+        
+        # Task ID
+        ti_label = ttk.Label(data_frame, text="Task ID")
+        ti_label.grid(row=0, column=3, padx=10, pady=0)
+        self.ti_entry = ttk.Entry(data_frame)
+        self.ti_entry.grid(row=1, column=3)
+        
+        # Start Date
+        sd_label = ttk.Label(data_frame, text="Start Date")
+        sd_label.grid(row=0, column=4, padx=10, pady=0)
+        self.sd_entry = ttk.Entry(data_frame)
+        self.sd_entry.grid(row=1, column=4)
+        
+        # End Date (was labeled incorrectly as Start Date in original code)
+        td_label = ttk.Label(data_frame, text="End Date")  # Fixed label
+        td_label.grid(row=0, column=5, padx=10, pady=0)
+        self.td_entry = ttk.Entry(data_frame)
+        self.td_entry.grid(row=1, column=5)
+        
+        # Don't pack the data_frame - it's used programmatically
         data_frame.pack_forget()
-
-        button_frame = tk.LabelFrame(self.full_page, text = "Commands", bg="#dcdcdc")
-        button_frame.pack(fill = "x",pady = 10,side = BOTTOM)
-
-
-        #Buttons
-        self.update_button = tk.Button(button_frame, text = "Edit Task",bg = main_btn_color, command = self.open_EditTaskWindow)
-        self.update_button.grid(row = 0, column = 0, padx = 6, pady = 10)
-
-        self.commit_button = tk.Button(button_frame, text="Commit History", bg=main_btn_color, command=self.open_CommitHistoryWindow)
+        
+        # Button frame with improved layout
+        button_frame = tk.LabelFrame(self.full_page, text="Commands", bg="#dcdcdc")
+        button_frame.pack(fill="x", padx=5, pady=10, side="bottom")
+        
+        # Ensure equal button spacing
+        for i in range(5):
+            button_frame.columnconfigure(i, weight=1)
+        
+        # Command buttons with better sizing for Linux
+        self.update_button = tk.Button(button_frame, text="Edit Task",
+                                     bg=main_btn_color, 
+                                     command=self.open_EditTaskWindow,
+                                     width=12)  # Fixed width for all buttons
+        self.update_button.grid(row=0, column=0, padx=6, pady=10)
+        
+        self.add_button = tk.Button(button_frame, text="Add Task",
+                                  bg=main_btn_color, 
+                                  command=self.open_AddTaskWindow,
+                                  width=12)
+        self.add_button.grid(row=0, column=1, padx=6, pady=10)
+        
+        select_record_button = tk.Button(button_frame, text="Select Task",
+                                       bg=main_btn_color, 
+                                       command=self.select_current_task,
+                                       width=12)
+        select_record_button.grid(row=0, column=2, padx=6, pady=10)
+        
+        self.commit_button = tk.Button(button_frame, text="Commit History", 
+                                     bg=main_btn_color, 
+                                     command=self.open_CommitHistoryWindow,
+                                     width=12)
         self.commit_button.grid(row=0, column=3, padx=6, pady=10)
-
-        self.add_button = tk.Button(button_frame, text = "Add Task",bg = main_btn_color, command = self.open_AddTaskWindow)
-        self.add_button.grid(row = 0, column = 1, padx = 6, pady = 10)
-
-        remove_all_button = tk.Button(button_frame, text = "Remove All",bg = del_btn_color, command = self.remove_all)
-        remove_all_button.grid(row = 0, column = 4, padx = 6, pady = 10)
-
-
-        select_record_button = tk.Button(button_frame, text = "Select Task",bg = main_btn_color, command = self.select_current_task)
-        select_record_button.grid(row = 0, column = 2, padx = 6, pady = 10)
-
-        #Uses select button on single click. Takes value from TreeView, not the database
+        
+        remove_all_button = tk.Button(button_frame, text="Remove All",
+                                    bg=del_btn_color, 
+                                    command=self.remove_all,
+                                    width=12)
+        remove_all_button.grid(row=0, column=4, padx=6, pady=10)
+        
+        # Bind treeview selection
         self.task_list.bind("<ButtonRelease-1>", self.select_record)
-
+        
+        # Initialize current task display
         self.set_current_task()
-
-
-    #Move a task up in the task list
+        
+    def initialize_ui_enhancements(self):
+        """Initialize UI enhancements like keyboard shortcuts and tooltips"""
+        # Setup keyboard shortcuts
+        self.setup_keyboard_shortcuts()
+        
+        # Add tooltips to buttons
+        self.add_tooltips()
+        
+        # Initialize backup system
+        self.initialize_backup_system()
+        
+        # Apply user preferences
+        self.apply_preferences()
+        
     def move_up(self):
         selected = self.task_list.selection()
         if not selected:

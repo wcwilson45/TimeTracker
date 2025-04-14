@@ -31,18 +31,14 @@ BASE_DIR = str(APP_DIR)
 logger.info(f"App directory: {APP_DIR}")
 logger.info(f"Base directory: {BASE_DIR}")
 
-# Define database paths - use user's home directory to avoid permission issues
-# For Linux: ~/.timetracker
-# For Windows: C:\Users\username\.timetracker
-USER_DATA_DIR = Path.home() / '.timetracker'
-DB_DIR = USER_DATA_DIR / 'data'
-DB_PATH = str(DB_DIR / 'task_list.db')  # SQLite requires string paths
+# Define database paths using the project's ui/Databases folder
+DB_DIR = APP_DIR / "ui" / "Databases"
+DB_PATH = str(DB_DIR / "task_list.db")  # SQLite requires string paths
 
-# Ensure directories exist
+# Ensure database directory exists
 DB_DIR.mkdir(parents=True, exist_ok=True)
 
 # Log the paths for debugging
-logger.info(f"User data directory: {USER_DATA_DIR}")
 logger.info(f"Database directory: {DB_DIR}")
 logger.info(f"Database path: {DB_PATH}")
 
@@ -75,9 +71,9 @@ def get_available_fonts():
 
 # Define cross-platform fonts based on availability
 preferred_fonts = {
-    "title": ["sf pro display", "Arial", "dejavu sans", "liberation sans", "sans-serif"],
-    "body": ["sf pro display", "Arial", "dejavu sans", "liberation sans", "sans-serif"],
-    "description": ["sf pro text", "Arial", "dejavu sans", "liberation sans", "sans-serif"]
+    "title": ["sf pro display", "Arial", "dejavu sans", "liberation sans", "ubuntu", "noto sans", "sans-serif"],
+    "body": ["sf pro display", "Arial", "dejavu sans", "liberation sans", "ubuntu", "noto sans", "sans-serif"],
+    "description": ["sf pro text", "Arial", "dejavu sans", "liberation sans", "ubuntu", "noto sans", "sans-serif"]
 }
 
 # Find available fonts
@@ -87,12 +83,12 @@ available_fonts = get_available_fonts()
 FONTS = {}
 for font_type, font_list in preferred_fonts.items():
     for font in font_list:
-        if font in available_fonts:
+        if font.lower() in available_fonts:
             FONTS[font_type] = (font,)
             logger.info(f"Using '{font}' for {font_type}")
             break
     if font_type not in FONTS:
-        FONTS[font_type] = ("sans-serif",)  # Default fallback
+        FONTS[font_type] = ("TkDefaultFont",)  # Default fallback using Tk's system font
         logger.info(f"No preferred fonts available for {font_type}, using system default")
 
 # Check if database directory is writable
@@ -116,6 +112,7 @@ def get_best_theme():
         
     # Select best theme by platform
     if system == 'Linux':
+        # For Linux, prefer these themes in order - clam works best on most distros
         preferred_themes = ['clam', 'alt', 'default']
     elif system == 'Windows':
         preferred_themes = ['vista', 'winnative', 'xpnative', 'default']
@@ -139,18 +136,36 @@ THEME = get_best_theme()
 
 # Platform-specific adjustments
 import platform
-if platform.system() == 'Linux':
-    FONT_ADJUSTMENT = 1  # Make fonts slightly larger on Linux
+system = platform.system()
+
+if system == 'Linux':
+    # Linux-specific adjustments
+    FONT_ADJUSTMENT = -1  # Make fonts slightly smaller on Linux for better appearance
     PADDING_ADJUSTMENT = 2  # Extra padding for widgets on Linux
+    
+    # Improved window sizes for Linux - slightly larger with better proportions
     WINDOW_SIZE = {
-        "main": "550x650",
-        "completed": "620x420",
-        "small": "250x180",
-        "tags": "550x620",
-        "analytics": "1020x1020",
-        "archive": "650x620"
+        "main": "650x700",          # Increased width and height for main window
+        "completed": "700x500",     # Larger for completed tasks view
+        "small": "300x180",         # Wider small overlay
+        "tags": "600x650",          # Slightly larger tags window
+        "analytics": "1050x1050",   # Slightly larger analytics
+        "archive": "700x650"        # Larger archive view
     }
-else:
+    
+    # Detect desktop environment for potential additional customizations
+    desktop_env = os.environ.get('XDG_CURRENT_DESKTOP', '').lower()
+    logger.info(f"Linux desktop environment: {desktop_env}")
+    
+    # GNOME-specific adjustments
+    if 'gnome' in desktop_env:
+        PADDING_ADJUSTMENT = 3  # GNOME often needs more padding
+    
+    # KDE-specific adjustments
+    elif 'kde' in desktop_env:
+        PADDING_ADJUSTMENT = 2  # KDE works well with moderate padding
+    
+elif system == 'Windows':
     FONT_ADJUSTMENT = 0
     PADDING_ADJUSTMENT = 0
     WINDOW_SIZE = {
@@ -161,3 +176,53 @@ else:
         "analytics": "1000x1000",
         "archive": "650x600"
     }
+    
+elif system == 'Darwin':  # macOS
+    FONT_ADJUSTMENT = 0
+    PADDING_ADJUSTMENT = 1
+    WINDOW_SIZE = {
+        "main": "500x660",
+        "completed": "620x420",
+        "small": "240x170",
+        "tags": "550x620",
+        "analytics": "1020x1020",
+        "archive": "670x620"
+    }
+    
+else:
+    # Default fallback for other platforms
+    FONT_ADJUSTMENT = 0
+    PADDING_ADJUSTMENT = 0
+    WINDOW_SIZE = {
+        "main": "500x650",
+        "completed": "600x400",
+        "small": "250x160",
+        "tags": "530x610",
+        "analytics": "1000x1000",
+        "archive": "650x600"
+    }
+
+# Additional configuration specifically for high-DPI displays
+try:
+    # Create temporary window to check screen DPI
+    temp_root = tk.Tk()
+    screen_dpi = temp_root.winfo_fpixels('1i')
+    temp_root.destroy()
+    
+    # Adjust for high-DPI screens (approximately 150+ DPI)
+    if screen_dpi > 150:
+        logger.info(f"High-DPI display detected ({screen_dpi} DPI)")
+        
+        # Increase font size for high-DPI
+        FONT_ADJUSTMENT += 2
+        
+        # Increase window sizes for high-DPI
+        for key in WINDOW_SIZE:
+            # Parse dimensions
+            width, height = map(int, WINDOW_SIZE[key].split('x'))
+            # Increase by 20%
+            width = int(width * 1.2)
+            height = int(height * 1.2)
+            WINDOW_SIZE[key] = f"{width}x{height}"
+except Exception as e:
+    logger.error(f"Error detecting screen DPI: {e}")
