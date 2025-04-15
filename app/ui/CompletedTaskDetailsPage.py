@@ -9,9 +9,11 @@ from tkinter import messagebox
 import sqlite3
 import pathlib
 
-global path 
+global path
 path = pathlib.Path(__file__).parent
-path = str(path).replace("CompletedTaskDetailsPage.py", '') + '\\Databases' + '\\task_list.db'
+path = path / 'Databases' / 'task_list.db'
+path = str(path) # Automatically uses the correct separator
+
 
 
 bad_btn = "#e99e56"
@@ -592,7 +594,7 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
 
         # Configure styles
         self.style = ttk.Style()
-        self.style.theme_use('alt')
+        self.style.theme_use('clam')
         self.style.configure("Info.TLabel", font=("Arial", 10), background='#A9A9A9')
         self.style.configure("Tag.TLabel", font=("Arial", 8), background='#A9A9A9', padding=2, foreground='black')
         

@@ -24,7 +24,7 @@ class CurrentTask(tk.Toplevel):
 
         # Configure styles
         self.style = ttk.Style()
-        self.style.theme_use('alt')
+        self.style.theme_use('clam')
         self.style.configure("Info.TLabel", font=("SF Pro Text", 10), background='#5DADE2')
         self.style.configure("Tag.TLabel", font=("SF Pro Text", 8), background='#D3D3D3', padding=2, foreground='white')
 

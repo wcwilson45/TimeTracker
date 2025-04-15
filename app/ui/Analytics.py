@@ -15,7 +15,7 @@ frame_bg_color = "#dcdcdc"
 
 global path 
 path = pathlib.Path(__file__).parent
-path = str(path).replace("Analytics.py", '') + '\\Databases' + '\\task_list.db'
+path = str(path).replace("Analytics.py", '') + '/Databases/task_list.db'
 
 class AnalyticsPage(tk.Frame):
     def __init__(self, parent):
@@ -35,7 +35,7 @@ class AnalyticsPage(tk.Frame):
 
         # Style configurations
         style = ttk.Style(self)
-        style.theme_use("alt")  
+        style.theme_use("clam")  
         style.configure('Input.TEntry', fieldbackground=background_color, font=("SF Pro Text", 10))
         style.configure('TLabel', background=frame_bg_color, font=("SF Pro Text", 10))  
         style.configure('TButton', background=background_color, font=("SF Pro Text", 10))

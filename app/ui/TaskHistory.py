@@ -8,8 +8,8 @@ import tkinter.font as tkfont
 class TaskHistoryDB:
     def __init__(self):
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("TaskHistory.py", '') + '\\Databases' + '\\task_list.db'
-        
+        self.path = str(self.path).replace("TaskHistory.py", '') + '/Databases/task_list.db'
+
         # Create the history table with proper indexing
         conn = sqlite3.connect(self.path)
         c = conn.cursor()

@@ -11,8 +11,11 @@ import sqlite3
 import pathlib
 
 global path 
+# Get the parent directory of the current script
 path = pathlib.Path(__file__).parent
-path = str(path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list.db'
+
+# Replace the specific filename in the path and join the 'Databases' folder and 'task_list.db'
+path = str(path).replace("CompletionPage.py", '') + '/Databases/task_list.db'
 
 bad_btn = "#e99e56"
 good_btn = "#77DD77"
@@ -567,7 +570,7 @@ class CompletedTasksWindow(tk.Tk):
 
         # Configure styles
         self.style = ttk.Style()
-        self.style.theme_use('alt')
+        self.style.theme_use('clam')
         self.style.configure("Info.TLabel", font=("Arial", 10), background='#A9A9A9')
         self.style.configure("Tag.TLabel", font=("Arial", 8), background='#A9A9A9', padding=2, foreground='black')
         

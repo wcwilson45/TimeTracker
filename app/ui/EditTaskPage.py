@@ -24,11 +24,13 @@ class EditTaskWindow(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Define paths
+        # For task_list.db
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("EditTaskPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = str(self.path).replace("EditTaskPage.py", '') / 'Databases' / 'task_list.db'
 
+        # For tags.db
         self.tags_path = pathlib.Path(__file__).parent
-        self.tags_path = str(self.tags_path).replace('EditTaskPage.py','') + '\\Databases' + '\\tags.db'
+        self.tags_path = str(self.tags_path).replace('EditTaskPage.py', '') / 'Databases' / 'tags.db'
 
         # Initialize task data
         self.edit_task = None
@@ -315,7 +317,7 @@ class EditTaskWindow(tk.Tk):
 
         # Style configurations
         self.style = ttk.Style(self)
-        self.style.theme_use("alt")  # Using "alt" theme for better customization
+        self.style.theme_use("clam")  # Using "alt" theme for better customization
         self.style.configure('MainFrame.TFrame', background=background_color)  # Lighter Blue for frames
         self.style.configure('Input.TEntry', fieldbackground='#d3d3d3', font=("SF Pro Text", 10))
         self.style.configure('Input.TCombobox', fieldbackground='#d3d3d3', background=background_color, font=("SF Pro Text", 10))

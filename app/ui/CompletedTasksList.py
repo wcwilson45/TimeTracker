@@ -17,8 +17,11 @@ from .CompletedTaskDetailsPage import CompletedTaskDetailsWindow
 
 
 global path 
+# Get the parent directory of the current script
 path = pathlib.Path(__file__).parent
-path = str(path).replace("CompletedTasksList.py", '') + '\\Databases' + '\\task_list.db'
+
+# Replace the specific filename in the path and join the 'Databases' folder and 'task_list.db'
+path = str(path).replace("CompletedTasksList.py", '') + '/Databases/task_list.db'
 
 background_color = "#A9A9A9"
 grey_button_color = "#d3d3d3"
@@ -50,7 +53,7 @@ class CompletedTasksList(tk.Frame):
 
         # Configure Treeview style
         style = ttk.Style()
-        style.theme_use('default')
+        style.theme_use('clam')
         style.configure("Treeview",
                     background="#d3d3d3",
                     foreground="black",

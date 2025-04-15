@@ -13,7 +13,7 @@ from datetime import datetime
 
 global path 
 path = pathlib.Path(__file__).parent
-path = str(path).replace("ArchiveTasksList.py", '') + '\\Databases' + '\\task_list.db'
+path = str(path).replace("ArchiveTasksList.py", '') + '/' + 'Databases' + '/' + 'task_list.db'
 
 background_color = "#A9A9A9"
 grey_button_color = "#d3d3d3"
@@ -29,7 +29,7 @@ class ArchiveTasksList(tk.Frame):
         self.configure(background="#A9A9A9")
 
         style = ttk.Style()
-        style.theme_use('default')
+        style.theme_use('clam')
         style.configure("Treeview",
                         background="#d3d3d3",
                         foreground="black",
@@ -289,9 +289,10 @@ class ArchiveTasksList(tk.Frame):
 
         try:
             # Create Archives directory if it doesn't exist
+            # Define export directory
             export_dir = pathlib.Path(__file__).parent / "Archives"
-            export_dir.mkdir(exist_ok=True)
-            
+            export_dir.mkdir(parents=True, exist_ok=True)
+                        
             # Get all tasks from the treeview
             tasks = []
             headers = self.archive_list['columns']

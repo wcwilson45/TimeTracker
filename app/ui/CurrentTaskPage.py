@@ -40,7 +40,7 @@ class CurrentTaskWindow(tk.Tk):
 
             # Style configurations
             self.style = ttk.Style(self)
-            self.style.theme_use("alt")  # Using "alt" theme for better customization
+            self.style.theme_use("clam")  # Using "clam" theme for better customization
             self.style.configure('MainFrame.TFrame', background='#5DADE2')  # Lighter Blue for frames
             self.style.configure('Input.TEntry', fieldbackground='#d3d3d3', font=("SF Pro Text", 10))
             self.style.configure('TLabel', background='#5DADE2', font=("SF Pro Text", 10))  # Lighter Blue for labels

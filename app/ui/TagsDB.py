@@ -17,8 +17,14 @@ class TagsDB(tk.Frame):
         super().__init__(parent)
         #DATABASE SECTION ############################################
 
+        # Get the parent directory of the current file
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("TagsDB.py", '') + '\\Databases' + '\\tags.db'
+
+        # Define the path to the tags.db file in the 'Databases' folder
+        self.path = self.path / 'Databases' / 'tags.db'
+
+        # Convert to string if needed (but pathlib is generally better)
+        self.path = str(self.path)
 
         # Create or Connect to the database
         conn = sqlite3.connect(self.path)
@@ -109,7 +115,7 @@ class TagsDB(tk.Frame):
 
         # Style configurations
         style = ttk.Style(self)
-        style.theme_use("alt")  
+        style.theme_use("clam")  
         style.configure('Input.TEntry', fieldbackground='#d3d3d3', font=("SF Pro Text", 10))
         style.configure('TLabel', background='#d3d3d3', font=("SF Pro Text", 10))  
         style.configure('TButton', background= background_color, font=("SF Pro Text", 10))

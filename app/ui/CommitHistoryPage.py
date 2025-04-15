@@ -30,7 +30,8 @@ class CommitHistoryWindow(tk.Tk):
         # Header section of the window
         self.create_header()
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("EditTaskPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = str(self.path).replace("EditTaskPage.py", '') / 'Databases' / 'task_list.db'
+
         # Create or Connect to the database
         conn = sqlite3.connect(self.path)
 
@@ -66,7 +67,7 @@ class CommitHistoryWindow(tk.Tk):
 
         # Apply a modern theme
         style = ttk.Style(self)
-        style.theme_use("alt")
+        style.theme_use("clam")
         style.configure("Vertical.TScrollbar", troughcolor="#E0E0E0", background="#AED6F1", bordercolor="#5DADE2", arrowcolor="#5DADE2")
 
     def create_header(self):

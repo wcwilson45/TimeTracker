@@ -44,9 +44,12 @@ main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
 
 global path 
+# Get the parent directory of the current script
 path = pathlib.Path(__file__).parent
-path = str(path).replace("MainPage.py", '') + '\\ui' + '\\Databases' + '\\task_list.db'
-      
+
+# Replace the specific filename in the path and join 'ui', 'Databases', and 'task_list.db'
+path = str(path).replace("MainPage.py", '') + '/ui/Databases/task_list.db'
+     
 
 #Create a database or connect to an existing database
 conn = sqlite3.connect(path)
@@ -120,7 +123,7 @@ class App:
     def __init__(self, root):
       self.root = root
       self.root.title("Task Manager")
-      self.root.geometry("488x650")
+      self.root.geometry("888x850") #488x650
       root.resizable(width = 0, height = 0)
 
       self.addtask_window = None
@@ -335,7 +338,7 @@ class App:
         self.full_page.configure(background= background_color)
         style = ttk.Style()
         style.configure('TLabel', background= "#dcdcdc")
-        style.theme_use('alt')
+        style.theme_use('clam')
         style.configure("Treeview",
         background = "black",
         foreground = "black",

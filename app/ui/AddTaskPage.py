@@ -23,12 +23,13 @@ class AddTaskWindow(tk.Tk):
         self.main_app = main_app
         self.main_app.addtask_window = self
 
-        # Define path
+        # Define path for task_list.db
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("AddTaskPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = str(self.path).replace("AddTaskPage.py", '') + '/' + 'Databases' + '/' + 'task_list.db'
 
+        # Define path for tags.db
         self.tags_path = pathlib.Path(__file__).parent
-        self.tags_path = str(self.tags_path).replace('AddTaskPage.py','') + '\\Databases' + '\\tags.db'
+        self.tags_path = str(self.tags_path).replace("AddTaskPage.py", '') + '/' + 'Databases' + '/' + 'tags.db'
 
         # Create or Connect to the database
         conn = sqlite3.connect(self.tags_path)
@@ -75,7 +76,7 @@ class AddTaskWindow(tk.Tk):
 
         # Style configurations
         self.style = ttk.Style(self)
-        self.style.theme_use("alt")
+        self.style.theme_use("clam")
         self.style.configure('MainFrame.TFrame', background=background_color) 
         self.style.configure('Input.TEntry', background='d3d3d3', fieldbackground='#d3d3d3', font=("SF Pro Text", 10))
         self.style.configure('TLabel', background=background_color, font=("SF Pro Text", 8)) 
