@@ -323,9 +323,9 @@ class CommitHistoryWindow(tk.Toplevel):
         self.new_value_text.config(state="disabled")
 
 
-class CompletedTasksWindow(tk.Tk):
-    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, task_description=None, refresh_callback=None, start_date=None):
-        super().__init__()
+class CompletedTasksWindow(tk.Toplevel):
+    def __init__(self, task_name=None, task_weight=None, task_time=None, task_id=None, task_description=None, refresh_callback=None, start_date=None, parent=None):
+        super().__init__(parent)
         self.history_db = TaskHistoryDB()
         self.task_name = task_name
         self.task_weight = task_weight
@@ -334,9 +334,9 @@ class CompletedTasksWindow(tk.Tk):
         self.task_description = task_description
         self.start_date = start_date
         self.refresh_callback = refresh_callback
+        self.parent = parent
         self.commit_history_window = None
-        self.resizable(width = 0, height = 0)
-
+        
         # Font Tuples for Use on pages
         self.fonts = {
             "Title_Tuple": tkfont.Font(family="SF Pro Display", size=24, weight="bold"),
@@ -344,7 +344,13 @@ class CompletedTasksWindow(tk.Tk):
             "Description_Tuple": tkfont.Font(family="Sf Pro Text", size=12)
         }
 
+        # Setup UI
         self.setup_ui()
+
+        self.resizable(width=0, height=0)
+        
+        # Protocol handler for closing window
+        self.protocol("WM_DELETE_WINDOW", self.cancel_task)
 
     def complete_task(self):
         if self.task_id:
@@ -489,7 +495,7 @@ class CompletedTasksWindow(tk.Tk):
                 if self.winfo_exists():
                     x = self.winfo_x() + 50
                     y = self.winfo_y() + 50
-                    self.commit_history_window.geometry("800x600")
+                    self.commit_history_window.geometry(f"+{x}+{y}")
             else:
                 # If window already exists, bring it to front and update selected item if needed
                 self.commit_history_window.lift()
@@ -563,8 +569,8 @@ class CompletedTasksWindow(tk.Tk):
                 )
 
     def setup_ui(self):
-        self.geometry("1050x520")
-        self.title("Task Details")
+        self.geometry("900x540")
+        self.title("")
         self.configure(bg="#A9A9A9")
 
         # Configure styles
@@ -581,9 +587,6 @@ class CompletedTasksWindow(tk.Tk):
         self.style.map('Treeview',
                     background=[('selected', '#4169E1')],
                     foreground=[('selected', '#000000')])
-        
-        self.style.configure("Info.TLabel", font=("Arial", 10), background='#A9A9A9')
-        self.style.configure("Tag.TLabel", font=("Arial", 8), background='#A9A9A9', padding=2, foreground='black')
 
         # Configure main layout - 2 columns, 2 rows
         self.grid_columnconfigure(0, weight=1)  # Left side
@@ -644,7 +647,7 @@ class CompletedTasksWindow(tk.Tk):
         date_label = tk.Label(info_frame, text="Completion Date:", font=self.fonts['Body_Tuple'], bg="#e0e0e0")
         date_label.grid(row=3, column=0, sticky="w", padx=5, pady=5)
         
-        date_value = tk.Label(info_frame, text=current_time, 
+        date_value = tk.Label(info_frame, text="Not Yet Completed", 
                              font=self.fonts['Description_Tuple'], bg="#e0e0e0")
         date_value.grid(row=3, column=1, sticky="w", padx=5, pady=5)
         
@@ -696,7 +699,7 @@ class CompletedTasksWindow(tk.Tk):
 
         # Commit History Frame
         commit_frame = tk.LabelFrame(right_frame, text="Commit History", bg="#e0e0e0")
-        commit_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+        commit_frame.grid(row=1, column=0, padx=5, pady=0, sticky="nsew")
         
         # Make the commit frame expandable
         commit_frame.grid_columnconfigure(0, weight=1)
@@ -715,8 +718,7 @@ class CompletedTasksWindow(tk.Tk):
             history_frame,
             yscrollcommand=history_scroll.set,
             selectmode="browse",
-            height=15,
-            style="Treeview"
+            height=15
         )
         self.history_tree.pack(side=LEFT, fill="both", expand=True)
         
@@ -745,7 +747,7 @@ class CompletedTasksWindow(tk.Tk):
         
         # ===== BUTTON AREA =====
         btn_frame = tk.Frame(self, bg="#A9A9A9")
-        btn_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="sew")
+        btn_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=0, sticky="sew")
         
         # Configure for right-aligned buttons
         btn_frame.grid_columnconfigure(0, weight=1)  # Spacer that pushes buttons right
@@ -758,7 +760,7 @@ class CompletedTasksWindow(tk.Tk):
                                width=10)
         complete_btn.grid(row=0, column=1, padx=10, pady=5, sticky="e")
 
-        cancel_btn = tk.Button(btn_frame, text="Cancel", command=self.destroy,
+        cancel_btn = tk.Button(btn_frame, text="Cancel", command=self.cancel_task,
                              bg=bad_btn, fg="#000000", font=("SF Pro Text", 10),
                              activebackground="#F49797", activeforeground="#000000",
                              width=10)
