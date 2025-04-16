@@ -120,11 +120,6 @@ class CompletedTasksList(tk.Frame):
                             bg="#b2fba5", command=self.undo_task_completion)
         undo_button.pack(side="left")
 
-        # View details button
-        details_button = tk.Button(button_frame, text="View Details",
-                                bg="#b2fba5", command=self.open_selected_task_details)
-        details_button.pack(side="left")
-
         # Bind selection event
         self.completed_list.bind('<<TreeviewSelect>>', self.on_task_select)
 
