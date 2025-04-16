@@ -223,14 +223,15 @@ class App:
 
         # Font Tuples for Use on pages - adjust for Linux
         # On Linux, use system fonts or common cross-platform ones
+       # In your App.__init__ method, replace the current fonts section with:
         self.fonts = {
-            "Title_Tuple": tkfont.Font(family="DejaVu Sans" if "DejaVu Sans" in tkfont.families() else FONTS["title"][0], 
-                                      size=20+FONT_ADJUSTMENT, weight="bold"),
-            "Body_Tuple": tkfont.Font(family="DejaVu Sans" if "DejaVu Sans" in tkfont.families() else FONTS["body"][0], 
-                                     size=11+FONT_ADJUSTMENT, weight="bold"),
-            "Description_Tuple": tkfont.Font(family="DejaVu Sans" if "DejaVu Sans" in tkfont.families() else FONTS["description"][0], 
-                                           size=11+FONT_ADJUSTMENT)
+            "Title_Tuple": tkfont.Font(family="Liberation Sans", size=16, weight="bold"),
+            "Body_Tuple": tkfont.Font(family="Liberation Sans", size=11, weight="bold"),
+            "Description_Tuple": tkfont.Font(family="Liberation Sans", size=11)
         }
+
+        self.configure_styles()
+
 
         # Set Background color
         self.root.configure(bg=background_color)
@@ -248,8 +249,10 @@ class App:
         self.menu_btn.pack(side="left", padx=5)
 
         # Page Title Label
-        self.page_title = ttk.Label(self.menu_frame, text="Time Tracker", font=self.fonts['Body_Tuple'], background=background_color)
+        self.page_title = ttk.Label(self.menu_frame, text="Time Tracker", 
+                          style="Title.TLabel", background=background_color)
         self.page_title.pack(side="left", padx=10)
+        
 
         # Create pages
         self.full_page = tk.Frame(self.main_container)
@@ -285,6 +288,32 @@ class App:
 
         # Query the database for all information inside
         self.query_database()
+
+    def configure_styles(self):
+        """Configure ttk styles with explicit fonts for Linux compatibility"""
+        style = ttk.Style()
+        
+        # Create a font that definitely exists on the system
+        available_fonts = tkfont.families()
+        font_family = None
+        for font in ["Liberation Sans", "Ubuntu", "DejaVu Sans", "Arial", "Helvetica", "Sans"]:
+            if font in available_fonts:
+                font_family = font
+                break
+        
+        if not font_family:
+            font_family = tkfont.nametofont("TkDefaultFont").actual()["family"]
+        
+        # Configure ttk styles with explicit fonts
+        style.configure("TLabel", font=(font_family, 11), background=background_color)
+        style.configure("Title.TLabel", font=(font_family, 16, "bold"), background=background_color)
+        style.configure("Header.TLabel", font=(font_family, 12, "bold"), background=background_color)
+        
+        # Apply to Combobox, Button, etc.
+        style.configure("TCombobox", font=(font_family, 11))
+        style.configure("TButton", font=(font_family, 11))
+        
+        # No widget-specific configuration here
 
     def on_close(self):
         """Handle proper application shutdown"""
