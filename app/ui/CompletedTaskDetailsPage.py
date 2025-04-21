@@ -8,6 +8,7 @@ from datetime import datetime
 from tkinter import messagebox
 import sqlite3
 import pathlib
+from .utils import show_messagebox
 
 global path
 path = pathlib.Path(__file__).parent
@@ -24,7 +25,7 @@ frame_color = "#dcdcdc"
 class TaskHistoryDB:
     def __init__(self):
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = str(self.path).replace("CompletionPage.py", '') + '/Databases/task_list.db'
         
         # Create the history table
         conn = sqlite3.connect(self.path)
@@ -496,7 +497,7 @@ class CompletedTaskDetailsWindow(tk.Toplevel):
                     # Reload history with the new selection
                     self.commit_history_window.load_history()
         else:
-            messagebox.showwarning("No Task Selected", "Please select a task to view its history.")
+            show_messagebox(self, messagebox.showwarning,"No Task Selected", "Please select a task to view its history.")
 
     def load_history_data(self):
         """Load the task history data into the Treeview"""
