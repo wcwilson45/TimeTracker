@@ -1,5 +1,3 @@
-
-
 from tkinter import *
 from tkinter.ttk import *
 from tkinter import filedialog
@@ -25,7 +23,8 @@ from ui import (
     AnalyticsPage,
     ArchiveTasksList, 
     SettingsPage,
-    HelpPage
+    HelpPage,
+    show_messagebox
 )
 from ui.CommitHistoryPage import CommitHistoryWindow
 from ui.CompletedTaskDetailsPage import CompletedTaskDetailsWindow as CTDW
@@ -123,7 +122,7 @@ class App:
     def __init__(self, root):
       self.root = root
       self.root.title("Task Manager")
-      self.root.geometry("888x850") #488x650
+      self.root.geometry("650x675") #488x650
       root.resizable(width = 0, height = 0)
 
       self.addtask_window = None
@@ -207,7 +206,7 @@ class App:
       self.query_database()
 
     def on_close(self):
-        confirm = messagebox.askyesno("Confirm Exit", "Are you sure you want to exit the program?")
+        confirm = show_messagebox(self, messagebox.askyesno,"Confirm Exit", "Are you sure you want to exit the program?")
         if self.inactivity_timer:
             self.inactivity_timer.cancel()
 
@@ -226,10 +225,32 @@ class App:
 
     def show_menu(self):
         try:
+            # First, create a function to unpost the menu when clicked elsewhere
+            def unpost_menu(event):
+                # Check if the click was outside the menu
+                if self.popup_menu.winfo_ismapped():  # Check if menu is posted/visible
+                    # Get menu geometry
+                    x = self.popup_menu.winfo_rootx()
+                    y = self.popup_menu.winfo_rooty()
+                    width = self.popup_menu.winfo_width()
+                    height = self.popup_menu.winfo_height()
+                    
+                    # If clicked outside menu bounds, unpost it
+                    if not (x <= event.x_root <= x + width and 
+                            y <= event.y_root <= y + height):
+                        self.popup_menu.unpost()
+                        # Remove the binding after unposting
+                        self.root.unbind("<Button-1>", binding_id)
+            
+            # Show the menu
             self.popup_menu.tk_popup(
                 self.menu_btn.winfo_rootx(),
                 self.menu_btn.winfo_rooty() + self.menu_btn.winfo_height()
             )
+            
+            # Add binding to detect clicks outside the menu
+            binding_id = self.root.bind("<Button-1>", unpost_menu, add="+")
+            
         finally:
             self.popup_menu.grab_release()
 
@@ -239,34 +260,34 @@ class App:
         if page_name == "Time Tracker":
             self.current_page = self.full_page
             self.page_title.config(text="Time Tracker", background= background_color)
-            self.root.geometry("488x650")
+            self.root.geometry("650x675")
             self.query_database()
         elif page_name == "Completed Tasks":
             self.current_page = self.completedtasks_page
             self.page_title.config(text="Completed Tasks", background= background_color)
-            self.root.geometry("600x400")
+            self.root.geometry("650x400")
             self.query_database()
             self.completedtasks_page.load_completed_tasks()
         elif page_name == "Small Overlay":
             self.current_page = self.smalloverlay_page
             self.page_title.config(text="Small Overlay", background=background_color)
-            self.root.geometry("230x160")
+            self.root.geometry("250x180")
             self.query_database()
         elif page_name == "Tags Database":
             self.current_page = self.tags_database_page  
             self.page_title.config(text="Tags Database", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("640x580")
+            self.root.geometry("640x640")
             self.query_database()
         elif page_name == "Analytics":
             self.current_page = self.analytics_page  
             self.page_title.config(text="Analytics", background=background_color) #CHANGED REMEMBER <<<<<<<<<<
-            self.root.geometry("1000x1000")
+            self.root.geometry("1050x650")
             self.query_database()
             self.analytics_page.update_total_time()  
         elif page_name == "Archive":  
             self.current_page = self.archive_page
             self.page_title.config(text="Archived Tasks", background=background_color)
-            self.root.geometry("650x515")
+            self.root.geometry("650x550")
             self.archive_page.load_archive_tasks()
         elif page_name == "Help and Documentation":
             self.current_page = self.help_page
@@ -295,7 +316,7 @@ class App:
         self.time_box_overlay = Text(self.smalloverlay_page, height=1, width=10,
                                     font=self.fonts['Description_Tuple'],
                                     background=grey_button_color)
-        self.time_box_overlay.grid(row=1, column=0, padx=50, pady=5, sticky=E)
+        self.time_box_overlay.grid(row=1, column=0, padx=60, pady=5, sticky=W)
         # Timer control buttons
         self.small_overlay_start_button = tk.Button(self.smalloverlay_page, 
                                                 text="Start",
@@ -308,14 +329,14 @@ class App:
                                                 # relief="flat",
                                                 background="#FF7276",
                                                 command=self.stop_timer)
-        self.small_overlay_stop_button.grid(row=2, column=0, sticky=W, padx=45, pady=5)
+        self.small_overlay_stop_button.grid(row=2, column=0, sticky=W, padx=60, pady=5)
         self.small_overlay_stop_button.config(state=DISABLED)
 
         self.small_overlay_complete_button = tk.Button(self.smalloverlay_page,
                                           text="Complete",
                                           background="#4682B4",
                                           command=self.complete_current_task)
-        self.small_overlay_complete_button.grid(row=2, column=0, sticky=W, padx=90, pady=5)
+        self.small_overlay_complete_button.grid(row=2, column=0, sticky=W, padx=120, pady=5)
    
     def update_timer_boxes(self, timer_text):
       """Update the timer display in both timer boxes."""
@@ -385,9 +406,9 @@ class App:
         description_scroll.grid(row = 1, column = 1, sticky = "ns")
         self.description_box = Text(description_frame, yscrollcommand= description_scroll.set,
                                 height=5,
-                                    width=50,border = 1, font=self.fonts['Description_Tuple'],
+                                    width=60,border = 1, font=self.fonts['Description_Tuple'],
                                     background="#dcdcdc")
-        self.description_box.grid(row = 1, column = 0)
+        self.description_box.grid(row = 1, column = 0,sticky = E + W)
 
         #Insert Current Task Description
         description_scroll.config(command = self.description_box.yview)
@@ -461,7 +482,7 @@ class App:
 
         #Set scrollbar
         self.task_list = ttk.Treeview(tasklist_frame, yscrollcommand=tasklist_scroll.set, selectmode = "extended", style  = "Treeview", height = 8)
-        self.task_list.grid(row = 1, column = 0)
+        self.task_list.grid(row = 1, column = 0, sticky = E + W)
 
         #Task List is vertical scroll
         tasklist_scroll.config(command = self.task_list.yview)
@@ -550,8 +571,17 @@ class App:
         select_record_button.grid(row = 0, column = 2, padx = 6, pady = 10)
 
         #Uses select button on single click. Takes value from TreeView, not the database
-        self.task_list.bind("<ButtonRelease-1>", self.select_record)
+        self.task_list.bind("<FocusIn>", lambda e: setattr(self, 'task_list_has_focus', True))
+        self.task_list.bind("<FocusOut>", lambda e: setattr(self, 'task_list_has_focus', False))
+        
+        # Add focus bindings to track when the application window gets focus
+        self.root.bind("<FocusIn>", self.check_selection_validity)
 
+        # Bind a method to clear selection when clicking on blank space
+        self.task_list.bind("<Button-1>", self.on_treeview_click)
+        
+        # Initialize the flag
+        self.task_list_has_focus = False
         self.set_current_task()
 
 
@@ -718,12 +748,52 @@ class App:
                 
         #Send values from TaskList Table to CurrentTaskList Table
     
+    def check_selection_validity(self, event=None):
+        """Check if the selection should be cleared based on focus"""
+        if not self.task_list_has_focus:
+            # If the focus is not on the task list, clear the selection
+            for selected in self.task_list.selection():
+                self.task_list.selection_remove(selected)
+            
+            # Clear entry boxes
+            self.tn_entry.delete(0, END)
+            self.tt_entry.delete(0, END)
+            self.ti_entry.delete(0, END)
+            self.tw_entry.delete(0, END)
+            self.sd_entry.delete(0, END)
+            self.td_entry.delete(0, END)
+
+    def on_treeview_click(self, event):
+        """
+        Handle clicks on the treeview, including white space.
+        Unselect tasks when clicking on empty areas of the treeview.
+        """
+        # Get the region that was clicked
+        region = self.task_list.identify_region(event.x, event.y)
+        
+        # If the click is in the white space (not on a row)
+        if region == "nowhere":
+            # Clear all selections
+            for selected in self.task_list.selection():
+                self.task_list.selection_remove(selected)
+            
+            # Clear entry boxes
+            self.tn_entry.delete(0, END)
+            self.tt_entry.delete(0, END)
+            self.ti_entry.delete(0, END)
+            self.tw_entry.delete(0, END)
+            self.sd_entry.delete(0, END)
+            self.td_entry.delete(0, END)
+        else:
+            # Preserve default selection behavior for rows
+            self.select_record(event)
+    
 
     def select_current_task(self):
         """Move selected task to current task and return previous current task to task list"""
         # Check if there's actually a task selected
         if not self.ti_entry.get():
-            messagebox.showwarning("No Task Selected", "Please select a task from the list first.")
+            show_messagebox(self, messagebox.showwarning,"No Task Selected", "Please select a task from the list first.")
             return
 
         # Stop the timer if it's running
@@ -772,12 +842,12 @@ class App:
                 
                 conn.commit()
             else:
-                messagebox.showwarning("Task Not Found", "The selected task could not be found in the database.")
+                show_messagebox(self, messagebox.showwarning,"Task Not Found", "The selected task could not be found in the database.")
 
         except sqlite3.Error as e:
             print(f"Database error: {e}")
             conn.rollback()
-            messagebox.showerror("Database Error", f"An error occurred: {e}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"An error occurred: {e}")
 
         finally:
             conn.close()
@@ -842,7 +912,7 @@ class App:
 
     def timerlog(self):
         self.stop_timer()
-        messagebox.showinfo("Timed Out", "Your Timer has stopped due to inactivity.")
+        show_messagebox(self, messagebox.showinfo,"Timed Out", "Your Timer has stopped due to inactivity.")
         
 
         
@@ -975,14 +1045,14 @@ class App:
 
         except sqlite3.Error as e:
             print(f"Database error: {e}")
-            messagebox.showerror("Database Error", "Failed to load tasks from database.")
+            show_messagebox(self, messagebox.showerror,"Database Error", "Failed to load tasks from database.")
         finally:
             conn.commit()
             conn.close()
 
 
     def remove_all(self):
-        response = messagebox.askyesno("Remove Everything?",
+        response = show_messagebox(self, messagebox.askyesno,"Remove Everything?",
                                        "Warning!! This will remove everything from the TaskList, Current Task, and all of the Task History for all tasks.")
 
         if response == 1:
@@ -1096,7 +1166,7 @@ class App:
                 self.commithistory_window.deiconify()
                 self.commithistory_window.lift()
         else:
-            messagebox.showwarning("Selection Required", "Please select a task to complete.")
+            show_messagebox(self, messagebox.showwarning,"Selection Required", "Please select a task to complete.")
 
     def open_AddCompleteTaskWindow(self, task_id):
         self.task_window = CompletedTasksWindow(
@@ -1115,7 +1185,7 @@ class App:
                 self.edittask_window.deiconify()
                 self.edittask_window.lift()
         else:
-            messagebox.showwarning("Selection Required", "Please select a task to complete.")
+            show_messagebox(self, messagebox.showwarning,"Selection Required", "Please select a task to complete.")
     
     def open_CompletionPage(self):
         selected = self.task_list.selection()
@@ -1137,7 +1207,7 @@ class App:
             )
             self.task_window.grab_set()
         else:
-            messagebox.showwarning("Selection Required", "Please select a task to complete.")
+            show_messagebox(self, messagebox.showwarning,"Selection Required", "Please select a task to complete.")
 
     def format_time(self, total_seconds):
         """Convert total seconds to HH:MM:SS format"""
@@ -1179,7 +1249,7 @@ class App:
         """Start the timer for current task"""
         # Check if there is a current task
         if not self.task_id_label.cget("text") or self.task_id_label.cget("text") == "No Current Task":
-            messagebox.showwarning("No Task Selected", 
+            show_messagebox(self, messagebox.showwarning,"No Task Selected", 
                                 "Please select a task before starting the timer.")
             return
         
@@ -1233,7 +1303,7 @@ class App:
                 
             except sqlite3.Error as e:
                 print(f"Database error: {e}")
-                messagebox.showerror("Error", 
+                show_messagebox(self, messagebox.showerror,"Error", 
                                 "Failed to save time to database. Please try again.")
             finally:
                 conn.close()
@@ -1252,7 +1322,7 @@ class App:
         
         # Check if there is a current task
         if not self.task_id_label.cget("text") or self.task_id_label.cget("text") == "-":
-            messagebox.showwarning("No Task", "There is no current task to complete.")
+            show_messagebox(self, messagebox.showwarning,"No Task", "There is no current task to complete.")
             return
         
         # Get current task details from labels and text boxes
@@ -1292,9 +1362,9 @@ class App:
                 )
                 self.task_window.grab_set()
             else:
-                messagebox.showerror("Error", "Could not find current task details in the database.")
+                show_messagebox(self, messagebox.showerror,"Error", "Could not find current task details in the database.")
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error retrieving task details: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"Error retrieving task details: {str(e)}")
         finally:
             conn.close()
 
@@ -1302,7 +1372,7 @@ class App:
         """Open edit window for the current task"""
         # Check if there is a current task
         if not self.task_id_label.cget("text") or self.task_id_label.cget("text") == "-":
-            messagebox.showwarning("No Current Task", "Please select a task first.")
+            show_messagebox(self, messagebox.showwarning,"No Current Task", "Please select a task first.")
             return
             
         task_id = self.task_id_label.cget("text")
@@ -1323,7 +1393,7 @@ class App:
         
         # Check if there is a current task
         if not task_id or task_id == "-":
-            messagebox.showwarning("No Current Task", "There is no current task selected.")
+            show_messagebox(self, messagebox.showwarning,"No Current Task", "There is no current task selected.")
             return
         
         # Open the commit history window for the current task
@@ -1336,7 +1406,7 @@ class App:
                 self.commithistory_window.deiconify()
                 self.commithistory_window.lift()
         except Exception as e:
-            messagebox.showerror("Error", f"Error opening history window: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Error", f"Error opening history window: {str(e)}")
             print(f"Exception details: {e}")
             # Re-enable the button if there was an error
             self.commit_button.config(state=tk.NORMAL)
@@ -1553,7 +1623,7 @@ class App:
 
             # Provide feedback to the user
             if tasks_imported > 0 and tasks_skipped > 0:
-                messagebox.showinfo("Import Results", 
+                show_messagebox(self, messagebox.showinfo,"Import Results", 
                                 f"Successfully imported {tasks_imported} tasks.\n"
                                 f"Skipped {tasks_skipped} tasks with duplicate names or missing data.")
                 
@@ -1566,14 +1636,14 @@ class App:
                         if len(skipped_tasks) > 20:
                             skipped_list += f"\n... and {len(skipped_tasks) - 20} more"
                         
-                        messagebox.showinfo("Skipped Tasks", skipped_list)
+                        show_messagebox(self, messagebox.showinfo,"Skipped Tasks", skipped_list)
             elif tasks_imported > 0:
-                messagebox.showinfo("Import Complete", f"Successfully imported {tasks_imported} tasks.")
+                show_messagebox(self, messagebox.showinfo,"Import Complete", f"Successfully imported {tasks_imported} tasks.")
             elif tasks_skipped > 0:
-                messagebox.showwarning("Import Failed", 
+                show_messagebox(self, messagebox.showwarning,"Import Failed", 
                                     f"All {tasks_skipped} tasks could not be imported due to duplicates or missing data.")
             else:
-                messagebox.showinfo("Import Notice", "No tasks were found to import.")
+                show_messagebox(self, messagebox.showinfo,"Import Notice", "No tasks were found to import.")
 
             self.query_database()
 
