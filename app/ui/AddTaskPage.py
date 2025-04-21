@@ -1,5 +1,3 @@
-
-
 from tkinter import *
 from tkinter.ttk import *
 import tkinter as tk
@@ -9,13 +7,11 @@ import pathlib
 import sqlite3
 from datetime import date
 import re
+from .utils import show_messagebox
 
 background_color = "#A9A9A9"
-
 green_btn_color = "#b2fba5"
 org_btn_color = "#e99e56"
-
-
 
 class AddTaskWindow(tk.Tk):
     def __init__(self, main_app):
@@ -23,13 +19,15 @@ class AddTaskWindow(tk.Tk):
         self.main_app = main_app
         self.main_app.addtask_window = self
 
-        # Define path for task_list.db
+        # Define path for task_list.db using pathlib
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("AddTaskPage.py", '') + '/' + 'Databases' + '/' + 'task_list.db'
+        self.path = self.path / 'Databases' / 'task_list.db'
+        self.path = str(self.path)  # Convert to string for sqlite3.connect()
 
-        # Define path for tags.db
+        # Define path for tags.db using pathlib
         self.tags_path = pathlib.Path(__file__).parent
-        self.tags_path = str(self.tags_path).replace("AddTaskPage.py", '') + '/' + 'Databases' + '/' + 'tags.db'
+        self.tags_path = self.tags_path / 'Databases' / 'tags.db'
+        self.tags_path = str(self.tags_path)
 
         # Create or Connect to the database
         conn = sqlite3.connect(self.tags_path)
@@ -52,13 +50,16 @@ class AddTaskWindow(tk.Tk):
         # Close connection to the database
         conn.close()
 
-
-        self.grab_set()
+        # Set the grab for this window after initialization
+        try:
+            self.grab_set()
+        except Exception as e:
+            print(f"Error setting grab: {e}")
 
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Set the main window properties
-        self.geometry("400x390")
+        self.geometry("450x400")
         self.title("Add Task")
         self.configure(bg=background_color)
 
@@ -131,8 +132,6 @@ class AddTaskWindow(tk.Tk):
 
         confirm_btn = tk.Button(button_frame, text="Confirm", font=("SF Pro Text", 10),command=self.confirm_action, bg=green_btn_color)
         confirm_btn.grid(row=0, column=0, padx=(0,6))
-
-
 
         # Right column
         right_frame = ttk.Frame(content_frame, style='MainFrame.TFrame')
@@ -237,14 +236,12 @@ class AddTaskWindow(tk.Tk):
         self.tag_text.delete(1.0, "end")  # Clear the Text widget
         self.tag_text.insert("1.0", "\n".join(selected_values))  # Insert the selected tags
 
-        
-
     def confirm_action(self):
         task_name = self.task_name_entry.get()
 
         # Check task name length
         if len(task_name) > 45:
-            messagebox.showwarning("Warning", "Task name cannot exceed 45 characters.")
+            show_messagebox(self, messagebox.showwarning, "Warning", "Task name cannot exceed 45 characters.")
             self.task_name_entry.delete(0, tk.END)  # Clear task name field
             self.lift()
             self.focus_force()
@@ -271,16 +268,17 @@ class AddTaskWindow(tk.Tk):
         
         if missing_fields:
             missing_fields_str = ", ".join(missing_fields)
-            messagebox.showwarning("Warning", f"Please fill in the following required fields: {missing_fields_str}")
+            show_messagebox(self, messagebox.showwarning, "Warning", f"Please fill in the following required fields: {missing_fields_str}")
             self.lift()
             self.focus_force()
             
             # Stop further action if any field is missing
             return
+            
         # Pattern for Date
         pattern = r"^(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])-(19|20)\d{2}$"
         if not re.match(pattern,start_date):
-            messagebox.showwarning("Warning", f"The Start Date you have is invaild")
+            show_messagebox(self, messagebox.showwarning, "Warning", f"The Start Date you have is invaild")
             self.lift()
             self.focus_force()
             return
@@ -288,19 +286,17 @@ class AddTaskWindow(tk.Tk):
         res = tags.split('\n') # Splits the string to check tags
         values.append("")
         if not all(tag in values for tag in res): #Checks to see if tags are in the accepted tags
-        
-            messagebox.showwarning("Warning", f"The Tags you have selected are invaild")
+            show_messagebox(self, messagebox.showwarning, "Warning", f"The Tags you have selected are invaild")
             self.lift()
             self.focus_force()
             # Stop further action if any field is missing
             return
         else:
-            
-            confirm = messagebox.askyesno("Confirm Add", "Are you sure you want to add this task?") #Askes if sure to add task
+            # Ask if sure to add task
+            confirm = show_messagebox(self, messagebox.askyesno, "Confirm Add", "Are you sure you want to add this task?")
             
         #Adds task
         if confirm:
-
             # Connect to the database
             conn = sqlite3.connect(self.path)
             c = conn.cursor()
@@ -340,7 +336,6 @@ class AddTaskWindow(tk.Tk):
                 }
             )
 
-
             conn.commit()
             conn.close()
             
@@ -349,7 +344,6 @@ class AddTaskWindow(tk.Tk):
 
             self.destroy()
             self.on_close()
-           
         else:
             return
 
@@ -359,10 +353,15 @@ class AddTaskWindow(tk.Tk):
         self.date_entry.insert(0, CurrentDate.strftime("%m-%d-%Y"))
 
     def on_close(self):
+        # Make sure to release grab before destroying
+        try:
+            self.grab_release()
+        except Exception as e:
+            print(f"Error releasing grab on close: {e}")
+            
         self.main_app.addtask_window = None  # Reset reference to allow reopening
         self.main_app.add_button.config(state=tk.NORMAL)
         self.destroy()
-
 
 
 if __name__ == "__main__":
