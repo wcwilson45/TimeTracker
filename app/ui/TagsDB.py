@@ -7,6 +7,7 @@ import sqlite3
 import csv
 from tkinter import messagebox
 import pathlib
+from .utils import show_messagebox
 
 background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
@@ -183,7 +184,7 @@ class TagsDB(tk.Frame):
 
         # Change the ID entry to a Label to hold the ID (non-editable)
         id_display = ttk.Label(data_frame, font=("SF Pro Text", 10, "bold"), background=background_color)
-        id_display.grid(row=2, column=0, padx=20, pady=3, sticky="w")
+        id_display.grid(row=2, column=0, padx=20, pady=6, sticky="w")
 
         # Tag Name Label & Entry
         n_label = ttk.Label(data_frame, text="Tag Name", font=("SF Pro Text", 10, "bold"),background=background_color)
@@ -253,7 +254,7 @@ class TagsDB(tk.Frame):
         # Remove all Tags
         def remove_all_Tags():
             # Add a little message box for fun
-            response = messagebox.askyesno("Delete All Tags", "This Will Delete EVERYTHING from the database.\nAre You Sure?")
+            response = show_messagebox(self, messagebox.askyesno,"Delete All Tags", "This Will Delete EVERYTHING from the database.\nAre You Sure?")
 
             #Add logic for message box
             if response == 1:
@@ -325,7 +326,7 @@ class TagsDB(tk.Frame):
                 query_database()
 
             else:
-                messagebox.showwarning("Warning", f"The tag your adding already exists.")
+                show_messagebox(self, messagebox.showwarning,"Warning", f"The tag your adding already exists.")
             self.lift()
             self.focus_force()
             return
@@ -462,7 +463,7 @@ class TagsDB(tk.Frame):
 
                     else:
                         # Show a warning if the tag already exists
-                        messagebox.showwarning("Warning", f"The Tag '{tag_name}' you are trying to import already exists")
+                        show_messagebox(self, messagebox.showwarning,"Warning", f"The Tag '{tag_name}' you are trying to import already exists")
                         self.lift()
                         self.focus_force()
                         return
@@ -573,7 +574,7 @@ class TagsDB(tk.Frame):
         export_btn = tk.Button(search_frame, text=" Export ", command=export_Tags,
                                     bg=green_btn_color, fg="#000000", font=("SF Pro Text", 10),
                                     activebackground="#A8F0A8", activeforeground="#000000")
-        export_btn.grid(row=0, column=2, pady=3, padx=(145,3), sticky="e")
+        export_btn.grid(row=0, column=2, pady=3, padx=(160,3), sticky="e")
 
         # Run to pull data from database on start
         query_database()
