@@ -9,6 +9,7 @@ from datetime import datetime
 from tkinter import messagebox
 import sqlite3
 import pathlib
+from .utils import show_messagebox
 
 global path 
 # Get the parent directory of the current script
@@ -418,19 +419,19 @@ class CompletedTasksWindow(tk.Tk):
                 c.execute("DELETE FROM CurrentTask WHERE task_id = ?", (self.task_id,))
 
                 conn.commit()
-                messagebox.showinfo("Success", "Task completed successfully!")
+                show_messagebox(self, messagebox.showinfo, "Success", "Task completed successfully!")
 
                 if self.refresh_callback:
                     self.refresh_callback()
                 self.destroy()
 
             except sqlite3.Error as e:
-                messagebox.showerror("Database Error", f"Error completing task: {str(e)}")
+                show_messagebox(self, messagebox.showerror,"Database Error", f"Error completing task: {str(e)}")
                 conn.rollback()
             finally:
                 conn.close()
         else:
-            messagebox.showerror("Error", "No task selected to complete.")
+            show_messagebox(self, messagebox.showerror,"Error", "No task selected to complete.")
 
     def cancel_task(self):
         self.destroy()
@@ -504,7 +505,7 @@ class CompletedTasksWindow(tk.Tk):
                     # Reload history with the new selection
                     self.commit_history_window.load_history()
         else:
-            messagebox.showwarning("No Task Selected", "Please select a task to view its history.")
+            show_messagebox(self, messagebox.showwarning,"No Task Selected", "Please select a task to view its history.")
     
     def on_history_select(self, event):
         """Handle selection in the history tree"""
