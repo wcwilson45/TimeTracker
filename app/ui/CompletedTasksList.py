@@ -14,6 +14,7 @@ from datetime import datetime
 from .TaskHistory import TaskHistoryDB
 from .CommitHistoryPage import CommitHistoryWindow
 from .CompletedTaskDetailsPage import CompletedTaskDetailsWindow
+from .utils import show_messagebox
 
 
 global path 
@@ -99,30 +100,6 @@ class CompletedTasksList(tk.Frame):
         # Bind double-click to open task details
         self.completed_list.bind("<Double-1>", self.open_task_details)
 
-        # Right side - History view
-        self.history_frame = tk.Frame(self.main_container, bg="#A9A9A9", width=400)
-        self.history_frame.pack(side="right", fill="both", padx=5, pady=5)
-        
-        # History title
-        self.history_title = tk.Label(self.history_frame, 
-                                    text="Task History", 
-                                    font=("SF Pro Display", 14, "bold"),
-                                    bg="#A9A9A9")
-        self.history_title.pack(pady=(0, 5))
-
-        # Previous state frame
-        self.prev_frame = ttk.LabelFrame(self.history_frame, text="Previous State")
-        self.prev_frame.pack(fill="both", expand=True, pady=5)
-        
-        self.prev_text = tk.Text(self.prev_frame, height=10, wrap="word", bg="#d3d3d3")
-        self.prev_text.pack(fill="both", expand=True, padx=5, pady=5)
-
-        # Changed state frame
-        self.new_frame = ttk.LabelFrame(self.history_frame, text="Changed State")
-        self.new_frame.pack(fill="both", expand=True, pady=5)
-        
-        self.new_text = tk.Text(self.new_frame, height=10, wrap="word", bg="#d3d3d3")
-        self.new_text.pack(fill="both", expand=True, padx=5, pady=5)
 
         # Button frame
         button_frame = tk.Frame(self.tasks_frame, bg="#A9A9A9")
@@ -176,7 +153,7 @@ class CompletedTasksList(tk.Frame):
         # Get the selected item
         selected = self.completed_list.selection()
         if not selected:
-            messagebox.showwarning("Selection Required", "Please select a task to view details.")
+            show_messagebox(self, messagebox.showwarning,"Selection Required", "Please select a task to view details.")
             return
             
         # Get the task ID
@@ -199,7 +176,7 @@ class CompletedTasksList(tk.Frame):
                 self.task_details_window = CompletedTaskDetailsWindow(compFlag=0, task_id=task_id, parent=self)
                 self.task_details_window.grab_set()
             except:
-                messagebox.showinfo("Info", "Please close the existing details window first.")
+                show_messagebox(self, messagebox.showinfo,"Info", "Please close the existing details window first.")
                 self.task_details_window.lift()
                 self.task_details_window.focus_force()
 
@@ -208,7 +185,7 @@ class CompletedTasksList(tk.Frame):
         selected_items = self.completed_list.selection()
         
         if not selected_items:
-            messagebox.showwarning("Selection Required", "Please select a task to archive.")
+            show_messagebox(self, messagebox.showwarning,"Selection Required", "Please select a task to archive.")
             return
 
         # Get the task details for confirmation
@@ -216,7 +193,7 @@ class CompletedTasksList(tk.Frame):
         task_id = self.completed_list.item(selected_items[0])['values'][3]
 
         # Confirm archiving
-        if not messagebox.askyesno("Confirm Archive", f"Are you sure you want to archive the task '{task_name}'?"):
+        if not show_messagebox(self, messagebox.askyesno,"Confirm Archive", f"Are you sure you want to archive the task '{task_name}'?"):
             return
 
         # Move to archive database
@@ -267,13 +244,13 @@ class CompletedTasksList(tk.Frame):
                 for i, item in enumerate(self.completed_list.get_children()):
                     self.completed_list.item(item, tags=('evenrow' if i % 2 == 0 else 'oddrow'))
                 
-                messagebox.showinfo("Success", "Task archived successfully!")
+                show_messagebox(self, messagebox.showinfo,"Success", "Task archived successfully!")
             else:
-                messagebox.showerror("Error", "Task not found in database.")
+                show_messagebox(self, messagebox.showerror,"Error", "Task not found in database.")
                 conn.rollback()
                 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error archiving task: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"Error archiving task: {str(e)}")
             conn.rollback()
         finally:
             conn.close()
@@ -281,11 +258,11 @@ class CompletedTasksList(tk.Frame):
     def delete_all_tasks(self):
         # Archive all tasks from the completed tasks list"""
         if not self.completed_list.get_children():
-            messagebox.showinfo("No Tasks", "There are no completed tasks to archive.")
+            show_messagebox(self, messagebox.showinfo,"No Tasks", "There are no completed tasks to archive.")
             return
 
         # Confirm archiving
-        if not messagebox.askyesno("Confirm Archive All", 
+        if not show_messagebox(self, messagebox.askyesno,"Confirm Archive All", 
                                 "Are you sure you want to archive ALL completed tasks?"):
             return
 
@@ -333,10 +310,10 @@ class CompletedTasksList(tk.Frame):
             for item in self.completed_list.get_children():
                 self.completed_list.delete(item)
             
-            messagebox.showinfo("Success", "All completed tasks archived successfully!")
+            show_messagebox(self, messagebox.showinfo,"Success", "All completed tasks archived successfully!")
 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error archiving tasks: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"Error archiving tasks: {str(e)}")
             conn.rollback()
         finally:
             conn.close()
@@ -348,7 +325,7 @@ class CompletedTasksList(tk.Frame):
         selected_items = self.completed_list.selection()
         
         if not selected_items:
-            messagebox.showwarning("Selection Required", "Please select a task to undo.")
+            show_messagebox(self, messagebox.showwarning,"Selection Required", "Please select a task to undo.")
             return
 
         # Get the task details from the selected item
@@ -359,7 +336,7 @@ class CompletedTasksList(tk.Frame):
         task_id = values[3]
 
         # Confirm undo
-        if not messagebox.askyesno("Confirm Undo", f"Move '{task_name}' back to tasks list?"):
+        if not show_messagebox(self, messagebox.askyesno,"Confirm Undo", f"Move '{task_name}' back to tasks list?"):
             return
 
         conn = sqlite3.connect(path)
@@ -374,7 +351,7 @@ class CompletedTasksList(tk.Frame):
             completed_task_data = c.fetchone()
             
             if not completed_task_data:
-                messagebox.showerror("Error", "Task data not found in database.")
+                show_messagebox(self, messagebox.showerror,"Error", "Task data not found in database.")
                 conn.rollback()
                 conn.close()
                 return
@@ -446,10 +423,10 @@ class CompletedTasksList(tk.Frame):
             if self.controller and hasattr(self.controller, 'query_database'):
                 self.controller.query_database()
 
-            messagebox.showinfo("Success", "Task moved back to tasks list successfully!")
+            show_messagebox(self, messagebox.showinfo,"Success", "Task moved back to tasks list successfully!")
 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error undoing task completion: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"Error undoing task completion: {str(e)}")
             conn.rollback()
         finally:
             conn.close()
@@ -471,7 +448,7 @@ class CompletedTasksList(tk.Frame):
                 self.completed_list.insert('', 'end', values=task, tags=tag)
 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error loading completed tasks: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"Error loading completed tasks: {str(e)}")
         finally:
             conn.close()
 
@@ -479,7 +456,7 @@ class CompletedTasksList(tk.Frame):
         """Export completed tasks to CSV file and commit history to a separate file"""
         # Check if there are tasks to export
         if not self.completed_list.get_children():
-            messagebox.showinfo("No Tasks", "There are no completed tasks to export.")
+            show_messagebox(self, messagebox.showinfo,"No Tasks", "There are no completed tasks to export.")
             return
 
         try:
@@ -547,7 +524,7 @@ class CompletedTasksList(tk.Frame):
                             new_value
                         ])
             except sqlite3.Error as e:
-                messagebox.showerror("Database Error", f"Error retrieving task history: {str(e)}")
+                show_messagebox(self, messagebox.showerror,"Database Error", f"Error retrieving task history: {str(e)}")
             finally:
                 conn.close()
 
@@ -556,12 +533,12 @@ class CompletedTasksList(tk.Frame):
                 writer = csv.writer(csvfile)
                 writer.writerows(history_rows)
 
-            messagebox.showinfo("Success", 
+            show_messagebox(self, messagebox.showinfo,"Success", 
                             f"Tasks exported successfully to:\n{tasks_filename}\n\n"
                             f"Task history exported to:\n{history_filename}")
 
         except Exception as e:
-            messagebox.showerror("Export Error", f"Error exporting data: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Export Error", f"Error exporting data: {str(e)}")
     
     def sort_completed_tasks(self, col):
         """Sort completed tasks by column."""
@@ -588,7 +565,7 @@ class CompletedTasksList(tk.Frame):
             self.current_sort_reverse = not self.current_sort_reverse
 
         except Exception as e:
-            messagebox.showerror("Sorting Error", f"An error occurred while sorting: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Sorting Error", f"An error occurred while sorting: {str(e)}")
 
     def on_task_select(self, event):
         """Handle task selection and show history"""
@@ -628,8 +605,8 @@ class CompletedTasksList(tk.Frame):
         task_values = self.completed_list.item(selection[0])['values']
         task = task_values[3]
         if not task:
-            messagebox.showwarning("Selection Required", "Please select a task to complete.")
+            show_messagebox(self, messagebox.showwarning,"Selection Required", "Please select a task to complete.")
         elif self.main_app.commithistory_window is None or not self.main_app.commithistory_window.winfo_exists():
             self.commithistory_window = CommitHistoryWindow(main_app=self, task_id=task, compFlag=0)
         else:
-            messagebox.showwarning("A commit history window is already open", "Please close it before reopening.")
+            show_messagebox(self, messagebox.showwarning,"A commit history window is already open", "Please close it before reopening.")
