@@ -140,12 +140,12 @@ class App:
       self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
      # Initialize activity tracking
-      self.inactivity_timer = None
-      self.inactivity_limit = 2 * 60 * 60
-      self.bind_activity_events()
+      #self.inactivity_timer = None
+      #self.inactivity_limit = 2 * 60 * 60
+      #self.bind_activity_events()
 
      # Set initial inactivity timer
-      self.reset_inactivity_timer()
+        #self.reset_inactivity_timer()
 
       icon = tk.PhotoImage(file=resource_path("app/image.png"))
       self.root.iconphoto(True, icon)
@@ -215,8 +215,8 @@ class App:
 
     def on_close(self):
         confirm = messagebox.askyesno("Confirm Exit", "Are you sure you want to exit the program?")
-        if self.inactivity_timer:
-            self.inactivity_timer.cancel()
+        #if self.inactivity_timer:
+            #self.inactivity_timer.cancel()
 
         if confirm:
             if self.addtask_window:
@@ -834,22 +834,22 @@ class App:
         self.time_box_overlay.configure(state = NORMAL, foreground= "black")
         self.description_box.configure(state = NORMAL,foreground= "black") 
 
-    def reset_inactivity_timer(self):
-        """Reset the inactivity timer to log out after inactivity limit"""
-        if self.inactivity_timer:
-            self.inactivity_timer.cancel()  # Cancel the existing timer if any
-        self.inactivity_timer = threading.Timer(self.inactivity_limit, self.timerlog)  # Create a new timer
-        self.inactivity_timer.start()  # Start the timer
+    #def reset_inactivity_timer(self):
+        #"""Reset the inactivity timer to log out after inactivity limit"""
+        #if self.inactivity_timer:
+            #self.inactivity_timer.cancel()  # Cancel the existing timer if any
+        #self.inactivity_timer = threading.Timer(self.inactivity_limit, self.timerlog)  # Create a new timer
+        #self.inactivity_timer.start()  # Start the timer
 
-    def bind_activity_events(self):
-        """Bind all activity events that reset the timer"""
-        self.root.bind("<KeyPress>", lambda event: self.reset_inactivity_timer())  # Any key press
-        self.root.bind("<Motion>", lambda event: self.reset_inactivity_timer())  # Mouse movement
-        self.root.bind("<ButtonPress>", lambda event: self.reset_inactivity_timer())  # Mouse button click
+    #def bind_activity_events(self):
+        #"""Bind all activity events that reset the timer"""
+        #self.root.bind("<KeyPress>", lambda event: self.reset_inactivity_timer())  # Any key press
+        #self.root.bind("<Motion>", lambda event: self.reset_inactivity_timer())  # Mouse movement
+        #self.root.bind("<ButtonPress>", lambda event: self.reset_inactivity_timer())  # Mouse button click
 
-    def timerlog(self):
-        self.stop_timer()
-        messagebox.showinfo("Timed Out", "Your Timer has stopped due to inactivity.")
+    #def timerlog(self):
+        #self.stop_timer()
+        #messagebox.showinfo("Timed Out", "Your Timer has stopped due to inactivity.")
         
 
         
