@@ -1,4 +1,3 @@
-
 from tkinter import *
 from tkinter.ttk import *
 import tkinter as tk
@@ -8,6 +7,7 @@ import pathlib
 import sqlite3
 from datetime import date
 from .TaskHistory import TaskHistoryDB
+from .utils import show_messagebox
 
 main_btn_color = "#b2fba5"
 del_btn_color = "#e99e56"
@@ -23,18 +23,26 @@ class EditTaskWindow(tk.Tk):
         self.is_current_task = False  # Flag to track if editing current task
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # Define paths
+        # Define paths using pathlib properly
         # For task_list.db
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("EditTaskPage.py", '') / 'Databases' / 'task_list.db'
+        self.path = self.path / 'Databases' / 'task_list.db'
+        self.path = str(self.path)  # Convert to string for sqlite3.connect()
 
         # For tags.db
         self.tags_path = pathlib.Path(__file__).parent
-        self.tags_path = str(self.tags_path).replace('EditTaskPage.py', '') / 'Databases' / 'tags.db'
+        self.tags_path = self.tags_path / 'Databases' / 'tags.db'
+        self.tags_path = str(self.tags_path)
 
         # Initialize task data
         self.edit_task = None
         
+        # Set grab for this window
+        try:
+            self.grab_set()
+        except Exception as e:
+            print(f"Error setting grab: {e}")
+            
         # Load available tags
         self.load_tags()
         
@@ -48,7 +56,7 @@ class EditTaskWindow(tk.Tk):
         if self.edit_task:
             self.insert_task()
         else:
-            messagebox.showerror("Error", f"Task with ID {task_id} not found!")
+            show_messagebox(self, messagebox.showerror, "Error", f"Task with ID {task_id} not found!")
             self.destroy()
 
     # Separate method to load tags
@@ -72,9 +80,6 @@ class EditTaskWindow(tk.Tk):
             conn.commit()
             conn.close()
 
-
-
-
     def load_task(self):
         """Load task data from either TaskList or CurrentTask"""
         conn = sqlite3.connect(self.path)
@@ -97,7 +102,6 @@ class EditTaskWindow(tk.Tk):
             self.edit_task = None
         finally:
             conn.close()
-
 
     def insert_task(self):
         """Insert task data into UI fields"""
@@ -145,8 +149,7 @@ class EditTaskWindow(tk.Tk):
         except (IndexError, AttributeError) as e:
             # Handle potential issues with missing fields in the task data
             print(f"Error inserting task data: {e}")
-            messagebox.showwarning("Data Warning", "Some task data could not be loaded correctly.")
-
+            show_messagebox(self, messagebox.showwarning, "Data Warning", "Some task data could not be loaded correctly.")
 
     def update_values(self, event=None):
         selected_type = self.type_combo.get()
@@ -175,7 +178,7 @@ class EditTaskWindow(tk.Tk):
         self.on_close()
 
     def confirm_action(self):
-        confirm = messagebox.askyesno("Confirm Edit", "Are you sure you want to edit this task?")
+        confirm = show_messagebox(self, messagebox.askyesno, "Confirm Edit", "Are you sure you want to edit this task?")
         if confirm:
             # Connect to database
             conn = sqlite3.connect(self.path)
@@ -255,13 +258,13 @@ class EditTaskWindow(tk.Tk):
                 self.on_close()
             
             except sqlite3.Error as e:
-                messagebox.showerror("Database Error", f"Error editing task: {str(e)}")
+                show_messagebox(self, messagebox.showerror, "Database Error", f"Error editing task: {str(e)}")
                 conn.rollback()
             finally:
                 conn.close()
 
     def delete_action(self):
-        delete = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this task?")
+        delete = show_messagebox(self, messagebox.askyesno, "Confirm Delete", "Are you sure you want to delete this task?")
         if delete:
             # Connect to database
             conn = sqlite3.connect(self.path)
@@ -277,7 +280,7 @@ class EditTaskWindow(tk.Tk):
                 # Commit changes to database
                 conn.commit()
                 
-                messagebox.showinfo("Success", "Task deleted successfully!")
+                show_messagebox(self, messagebox.showinfo, "Success", "Task deleted successfully!")
                 
                 # Refresh the main app's task list
                 if hasattr(self.main_app, 'query_database'):
@@ -292,7 +295,7 @@ class EditTaskWindow(tk.Tk):
                 self.on_close()
                 
             except sqlite3.Error as e:
-                messagebox.showerror("Database Error", f"Error deleting task: {str(e)}")
+                show_messagebox(self, messagebox.showerror, "Database Error", f"Error deleting task: {str(e)}")
                 conn.rollback()
             finally:
                 conn.close()
@@ -301,7 +304,7 @@ class EditTaskWindow(tk.Tk):
     #Configure the ui
     def configure_ui(self):
          # Set the main window geometry and title
-        self.geometry("400x430")  # Increased height to accommodate additional fields
+        self.geometry("500x430")  # Increased height to accommodate additional fields
         self.title("Edit Task")
         self.configure(bg=background_color)  # Lighter Blue background
         # Create fonts
@@ -504,6 +507,11 @@ class EditTaskWindow(tk.Tk):
             self.tag_listbox.insert(tk.END, value)
 
     def on_close(self):
+        try:
+            self.grab_release()
+        except Exception as e:
+            print(f"Error releasing grab on close: {e}")
+            
         self.main_app.edittask_window = None  # Reset when closed
         self.main_app.update_button.config(state=tk.NORMAL)
         self.destroy()
