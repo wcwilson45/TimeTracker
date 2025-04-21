@@ -8,6 +8,7 @@ import sqlite3
 from matplotlib.figure import Figure 
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,  
 NavigationToolbar2Tk)
+from .utils import show_messagebox
 
 background_color = "#A9A9A9"
 green_btn_color = "#b2fba5"
@@ -714,7 +715,7 @@ class AnalyticsPage(tk.Frame):
 
         except sqlite3.Error as e:
             print(f"Database error: {e}")
-            messagebox.showerror("Database Error", "Failed to load data from CompletedTasks.")
+            show_messagebox(self, messagebox.showerror,"Database Error", "Failed to load data from CompletedTasks.")
         finally:
             conn.commit()
             conn.close()
