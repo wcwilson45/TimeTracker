@@ -10,6 +10,7 @@ from tkinter import messagebox
 import pathlib
 import os
 from datetime import datetime
+from .utils import show_messagebox
 
 global path 
 path = pathlib.Path(__file__).parent
@@ -112,7 +113,7 @@ class ArchiveTasksList(tk.Frame):
         selected_items = self.archive_list.selection()
         
         if not selected_items:
-            messagebox.showwarning("Selection Required", "Please select a task to delete.")
+            show_messagebox(self, messagebox.showwarning,"Selection Required", "Please select a task to delete.")
             return
 
         # Get the task details for confirmation
@@ -120,7 +121,7 @@ class ArchiveTasksList(tk.Frame):
         task_id = self.archive_list.item(selected_items[0])['values'][3]
 
         # Confirm deletion
-        if not messagebox.askyesno("Confirm Delete", f"Are you sure you want to permanently delete '{task_name}'?"):
+        if not show_messagebox(self, messagebox.askyesno,"Confirm Delete", f"Are you sure you want to permanently delete '{task_name}'?"):
             return
 
         # Delete from database
@@ -138,10 +139,10 @@ class ArchiveTasksList(tk.Frame):
             for i, item in enumerate(self.archive_list.get_children()):
                 self.archive_list.item(item, tags=('evenrow' if i % 2 == 0 else 'oddrow'))
             
-            messagebox.showinfo("Success", "Task deleted successfully!")
+            show_messagebox(self, messagebox.showinfo,"Success", "Task deleted successfully!")
 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error deleting task: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"Error deleting task: {str(e)}")
             conn.rollback()
         finally:
             conn.close()
@@ -149,11 +150,11 @@ class ArchiveTasksList(tk.Frame):
     def delete_all_tasks(self):
         """Delete all tasks from the archive list"""
         if not self.archive_list.get_children():
-            messagebox.showinfo("No Tasks", "There are no archived tasks to delete.")
+            show_messagebox(self, messagebox.showinfo,"No Tasks", "There are no archived tasks to delete.")
             return
 
         # Confirm deletion
-        if not messagebox.askyesno("Confirm Delete All", 
+        if not show_messagebox(self, messagebox.askyesno,"Confirm Delete All", 
                                   "Are you sure you want to permanently delete ALL archived tasks? This cannot be undone."):
             return
 
@@ -169,10 +170,10 @@ class ArchiveTasksList(tk.Frame):
             for item in self.archive_list.get_children():
                 self.archive_list.delete(item)
             
-            messagebox.showinfo("Success", "All archived tasks deleted successfully!")
+            show_messagebox(self, messagebox.showinfo,"Success", "All archived tasks deleted successfully!")
 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error deleting tasks: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"Error deleting tasks: {str(e)}")
             conn.rollback()
         finally:
             conn.close()
@@ -182,7 +183,7 @@ class ArchiveTasksList(tk.Frame):
         selected_items = self.archive_list.selection()
         
         if not selected_items:
-            messagebox.showwarning("Selection Required", "Please select a task to restore.")
+            show_messagebox(self, messagebox.showwarning,"Selection Required", "Please select a task to restore.")
             return
 
         # Get the task details
@@ -191,7 +192,7 @@ class ArchiveTasksList(tk.Frame):
         task_id = values[3]
 
         # Confirm restore
-        if not messagebox.askyesno("Confirm Restore", f"Move '{task_name}' back to task list?"):
+        if not show_messagebox(self, messagebox.askyesno,"Confirm Restore", f"Move '{task_name}' back to task list?"):
             return
 
         conn = sqlite3.connect(path)
@@ -206,7 +207,7 @@ class ArchiveTasksList(tk.Frame):
             task_data = c.fetchone()
             
             if not task_data:
-                messagebox.showerror("Error", "Task data not found in database.")
+                show_messagebox(self, messagebox.showerror,"Error", "Task data not found in database.")
                 conn.rollback()
                 conn.close()
                 return
@@ -251,10 +252,10 @@ class ArchiveTasksList(tk.Frame):
             if self.controller and hasattr(self.controller, 'query_database'):
                 self.controller.query_database()
 
-            messagebox.showinfo("Success", "Task restored to task list successfully!")
+            show_messagebox(self, messagebox.showinfo,"Success", "Task restored to task list successfully!")
 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error restoring task: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"Error restoring task: {str(e)}")
             conn.rollback()
         finally:
             conn.close()
@@ -276,7 +277,7 @@ class ArchiveTasksList(tk.Frame):
                 self.archive_list.insert('', 'end', values=task, tags=tag)
 
         except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error loading archived tasks: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Database Error", f"Error loading archived tasks: {str(e)}")
         finally:
             conn.close()
 
@@ -284,7 +285,7 @@ class ArchiveTasksList(tk.Frame):
         """Export archived tasks to CSV file"""
         # Check if there are tasks to export
         if not self.archive_list.get_children():
-            messagebox.showinfo("No Tasks", "There are no archived tasks to export.")
+            show_messagebox(self, messagebox.showinfo,"No Tasks", "There are no archived tasks to export.")
             return
 
         try:
@@ -339,10 +340,10 @@ class ArchiveTasksList(tk.Frame):
                 writer = csv.writer(csvfile)
                 writer.writerows(tasks)
 
-            messagebox.showinfo("Success", f"Tasks exported successfully to:\n{filename}")
+            show_messagebox(self, messagebox.showinfo,"Success", f"Tasks exported successfully to:\n{filename}")
 
         except Exception as e:
-            messagebox.showerror("Export Error", f"Error exporting tasks: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Export Error", f"Error exporting tasks: {str(e)}")
 
     def sort_archive_tasks(self, col):
         """Sort archived tasks by column."""
@@ -391,4 +392,4 @@ class ArchiveTasksList(tk.Frame):
             self.current_sort_reverse = not self.current_sort_reverse
 
         except Exception as e:
-            messagebox.showerror("Sorting Error", f"An error occurred while sorting: {str(e)}")
+            show_messagebox(self, messagebox.showerror,"Sorting Error", f"An error occurred while sorting: {str(e)}")
