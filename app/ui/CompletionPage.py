@@ -352,90 +352,107 @@ class CompletedTasksWindow(tk.Toplevel):
         # Protocol handler for closing window
         self.protocol("WM_DELETE_WINDOW", self.cancel_task)
 
-    def complete_task(self):
-        if self.task_id:
-            # Use get_writable_db_path instead of the read-only path
-            from .utils import get_writable_db_path
-            writable_path = get_writable_db_path('app/ui/Databases/task_list.db')
-            
-            conn = sqlite3.connect(writable_path)
-            c = conn.cursor()
+    def complete_task(self): 
+        if self.task_id: 
+            conn = sqlite3.connect(path) 
+            c = conn.cursor() 
+            try: 
+                # Begin transaction 
+                c.execute("BEGIN") 
+                # Get current task state before completion 
+                c.execute("SELECT * FROM TaskList WHERE task_id = ?", (self.task_id,)) 
+                old_task = c.fetchone() 
+                # Add any missing columns to the CompletedTasks table 
+                # Check for required columns and add them if missing 
+                required_columns = { 
+                    "task_name": "TEXT",  
+                    "task_time": "TEXT",  
+                    "task_weight": "TEXT",  
+                    "task_id": "INTEGER",  
+                    "completion_date": "TEXT",  
+                    "total_duration": "TEXT",  
+                    "start_date": "TEXT",  
+                    "task_tags": "TEXT",  
+                    "task_weight_type": "TEXT",  
+                    "task_description": "TEXT" 
+                } 
+                # Check existing columns 
 
-            try:
-                # Begin transaction
-                c.execute("BEGIN")
+                c.execute("PRAGMA table_info(CompletedTasks)") 
+                existing_columns = {col[1]: col[2] for col in c.fetchall()} 
+                # Add any missing columns 
+
+                for col_name, col_type in required_columns.items(): 
+
+                    if col_name not in existing_columns: 
+
+                        try: 
+
+                            c.execute(f"ALTER TABLE CompletedTasks ADD COLUMN {col_name} {col_type}") 
+
+                        except sqlite3.Error as e: 
+
+                            print(f"Error adding column {col_name}: {e}") 
+
+                # Record completion as a history event 
+
+                self.history_db.record_change( 
+
+                    self.task_id, 
+
+                    "status", 
+
+                    "in_progress", 
+
+                    "completed", 
+
+                    existing_conn=conn 
+
+                ) 
+                # Insert into CompletedTasks with all fields 
+
+                completion_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S") 
+                # This is the key fix - explicitly use the start_date passed in the constructor 
+
+                # or fall back to the value from old_task if necessary 
+
+                start_date_value = self.start_date 
+
+                if not start_date_value and old_task and len(old_task) > 4: 
+
+                    start_date_value = old_task[4] 
+                    
+                c.execute("""INSERT INTO CompletedTasks  
+                        (task_name, task_time, task_weight, task_id, completion_date,  
+                        total_duration, start_date, task_tags, task_weight_type, task_description) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+
+                        (self.task_name, self.task_time, self.task_weight, 
+                        self.task_id, completion_time, self.task_time, 
+                        start_date_value,  # Use the fixed start_date value 
+                        old_task[8] if old_task and len(old_task) > 8 else None,  # task_tags 
+                        old_task[7] if old_task and len(old_task) > 7 else None,  # task_weight_type 
+                        self.task_description))  # task_description 
                 
-                # Get current task state before completion
-                c.execute("SELECT * FROM TaskList WHERE task_id = ?", (self.task_id,))
-                old_task = c.fetchone()
+                # Delete from TaskList 
+                c.execute("DELETE FROM TaskList WHERE task_id = ?", (self.task_id,)) 
+                c.execute("DELETE FROM CurrentTask WHERE task_id = ?", (self.task_id,)) 
+                conn.commit() 
 
-                # Add any missing columns to the CompletedTasks table
-                # Check for required columns and add them if missing
-                required_columns = {
-                    "task_name": "TEXT", 
-                    "task_time": "TEXT", 
-                    "task_weight": "TEXT", 
-                    "task_id": "INTEGER", 
-                    "completion_date": "TEXT", 
-                    "total_duration": "TEXT", 
-                    "start_date": "TEXT", 
-                    "task_tags": "TEXT", 
-                    "task_weight_type": "TEXT", 
-                    "task_description": "TEXT"
-                }
-                
-                # Check existing columns
-                c.execute("PRAGMA table_info(CompletedTasks)")
-                existing_columns = {col[1]: col[2] for col in c.fetchall()}
-                
-                # Add any missing columns
-                for col_name, col_type in required_columns.items():
-                    if col_name not in existing_columns:
-                        try:
-                            c.execute(f"ALTER TABLE CompletedTasks ADD COLUMN {col_name} {col_type}")
-                        except sqlite3.Error as e:
-                            print(f"Error adding column {col_name}: {e}")
-                
-                # Record completion as a history event
-                self.history_db.record_change(
-                    self.task_id,
-                    "status",
-                    "in_progress",
-                    "completed",
-                    existing_conn=conn
-                )
+                messagebox.showinfo("Success", "Task completed successfully!") 
 
-                # Insert into CompletedTasks with all fields
-                completion_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                c.execute("""INSERT INTO CompletedTasks 
-                        (task_name, task_time, task_weight, task_id, completion_date, 
-                        total_duration, start_date, task_tags, task_weight_type, task_description)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                        (self.task_name, self.task_time, self.task_weight,
-                        self.task_id, completion_time, self.task_time,
-                        old_task[4] if old_task and len(old_task) > 4 else None,  # start_date
-                        old_task[8] if old_task and len(old_task) > 8 else None,  # task_tags
-                        old_task[7] if old_task and len(old_task) > 7 else None,  # task_weight_type
-                        self.task_description))  # task_description
+                if self.refresh_callback: 
+                    self.refresh_callback() 
 
-                # Delete from TaskList
-                c.execute("DELETE FROM TaskList WHERE task_id = ?", (self.task_id,))
-                c.execute("DELETE FROM CurrentTask WHERE task_id = ?", (self.task_id,))
+                self.destroy() 
 
-                conn.commit()
-                messagebox.showinfo("Success", "Task completed successfully!")
-
-                if self.refresh_callback:
-                    self.refresh_callback()
-                self.destroy()
-
-            except sqlite3.Error as e:
-                messagebox.showerror("Database Error", f"Error completing task: {str(e)}")
-                conn.rollback()
-            finally:
-                conn.close()
-        else:
-            messagebox.showerror("Error", "No task selected to complete.")
+            except sqlite3.Error as e: 
+                messagebox.showerror("Database Error", f"Error completing task: {str(e)}") 
+                conn.rollback() 
+            finally: 
+                conn.close() 
+        else: 
+            messagebox.showerror("Error", "No task selected to complete.") 
 
     def cancel_task(self):
         self.destroy()

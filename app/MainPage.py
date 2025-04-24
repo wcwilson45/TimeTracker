@@ -1124,27 +1124,29 @@ class App:
         else:
             messagebox.showwarning("Selection Required", "Please select a task to complete.")
     
-    def open_CompletionPage(self):
-        selected = self.task_list.selection()
-        if selected:
-            values = self.task_list.item(selected[0], "values")
-            task_name = values[0]
-            task_time = values[1]
-            task_weight = values[2]
-            task_id = values[3]
-            task_description = values[6]
+    def open_CompletionPage(self): 
+        selected = self.task_list.selection() 
+        if selected: 
+            values = self.task_list.item(selected[0], "values") 
+            task_name = values[0] 
+            task_time = values[1] 
+            task_weight = values[2] 
+            task_id = values[3] 
+            task_start_date = values[4]  # Make sure to get the start date from values 
+            task_description = values[6] 
 
-            self.task_window = CompletedTasksWindow(
-                task_name=task_name,
-                task_time=task_time,
-                task_weight=task_weight,
-                task_id=task_id,
-                task_description = task_description,
-                refresh_callback=self.query_database
-            )
-            self.task_window.grab_set()
-        else:
-            messagebox.showwarning("Selection Required", "Please select a task to complete.")
+            self.task_window = CompletedTasksWindow( 
+                task_name=task_name, 
+                task_time=task_time, 
+                task_weight=task_weight, 
+                task_id=task_id, 
+                task_description=task_description, 
+                start_date=task_start_date,  # Pass the start date properly 
+                refresh_callback=self.query_database 
+            ) 
+            self.task_window.grab_set() 
+        else: 
+            messagebox.showwarning("Selection Required", "Please select a task to complete.") 
 
     def format_time(self, total_seconds):
         """Convert total seconds to HH:MM:SS format"""
@@ -1251,59 +1253,58 @@ class App:
             # Update button states
             self.disable_buttons(start_disabled=False)
     
-    def complete_current_task(self):
-        """Complete the current active task"""
-        # Stop the timer if it's running
-        if self.timer_running:
-            self.stop_timer()
-        
-        # Check if there is a current task
-        if not self.task_id_label.cget("text") or self.task_id_label.cget("text") == "-":
-            messagebox.showwarning("No Task", "There is no current task to complete.")
-            return
-        
-        # Get current task details from labels and text boxes
-        task_id = self.task_id_label.cget("text")
-        task_name = self.task_name_label.cget("text")
-        
-        # Get task time from the time box
-        self.time_box_full.config(state=NORMAL)
-        task_time = self.time_box_full.get("1.0", tk.END).strip()
-        self.time_box_full.config(state=DISABLED)
-        
-        # Get description from the description box
-        self.description_box.config(state=NORMAL)
-        task_description = self.description_box.get("1.0", tk.END).strip()
-        self.description_box.config(state=DISABLED)
-        
-        # Fetch additional task details from the database
-        conn = sqlite3.connect(user_db_path)
-        c = conn.cursor()
-        
-        try:
-            c.execute("SELECT task_weight, task_start_date, task_tags, task_weight_type FROM CurrentTask WHERE task_id = ?", (task_id,))
-            result = c.fetchone()
-            
-            if result:
-                task_weight, start_date, task_tags, task_weight_type = result
-                
-                # Open CompletedTasksWindow with all the data
-                self.task_window = CompletedTasksWindow(
-                    task_name=task_name,
-                    task_time=task_time,
-                    task_weight=task_weight,
-                    task_id=task_id,
-                    task_description=task_description,
-                    start_date=start_date,
-                    refresh_callback=self.set_current_task
-                )
-                self.task_window.grab_set()
-            else:
-                messagebox.showerror("Error", "Could not find current task details in the database.")
-        except sqlite3.Error as e:
-            messagebox.showerror("Database Error", f"Error retrieving task details: {str(e)}")
-        finally:
-            conn.close()
+    def complete_current_task(self): 
+        """Complete the current active task""" 
+        # Stop the timer if it's running 
+        if self.timer_running: 
+            self.stop_timer() 
+         
+        # Check if there is a current task 
+        if not self.task_id_label.cget("text") or self.task_id_label.cget("text") == "-": 
+            messagebox.showwarning("No Task", "There is no current task to complete.") 
+            return 
+         
+        # Get current task details from labels and text boxes 
+        task_id = self.task_id_label.cget("text") 
+        task_name = self.task_name_label.cget("text") 
+
+        # Get task time from the time box 
+        self.time_box_full.config(state=NORMAL) 
+        task_time = self.time_box_full.get("1.0", tk.END).strip() 
+        self.time_box_full.config(state=DISABLED) 
+        # Get description from the description box 
+        self.description_box.config(state=NORMAL) 
+        task_description = self.description_box.get("1.0", tk.END).strip() 
+        self.description_box.config(state=DISABLED) 
+
+        # Fetch additional task details from the database 
+        conn = sqlite3.connect(user_db_path) 
+        c = conn.cursor() 
+         
+        try: 
+            c.execute("SELECT task_weight, task_start_date, task_tags, task_weight_type FROM CurrentTask WHERE task_id = ?", (task_id,)) 
+            result = c.fetchone() 
+
+            if result: 
+                task_weight, start_date, task_tags, task_weight_type = result 
+                 
+                # Open CompletedTasksWindow with all the data 
+                self.task_window = CompletedTasksWindow( 
+                    task_name=task_name, 
+                    task_time=task_time, 
+                    task_weight=task_weight, 
+                    task_id=task_id, 
+                    task_description=task_description, 
+                    start_date=start_date,  # Properly pass the start_date 
+                    refresh_callback=self.set_current_task 
+                ) 
+                self.task_window.grab_set() 
+            else: 
+                messagebox.showerror("Error", "Could not find current task details in the database.") 
+        except sqlite3.Error as e: 
+            messagebox.showerror("Database Error", f"Error retrieving task details: {str(e)}") 
+        finally: 
+            conn.close() 
 
     def edit_current_task(self):
         """Open edit window for the current task"""
