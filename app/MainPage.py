@@ -573,17 +573,18 @@ class App:
         select_record_button.grid(row = 0, column = 2, padx = 6, pady = 10)
 
         #Uses select button on single click. Takes value from TreeView, not the database
-        self.task_list.bind("<FocusIn>", lambda e: setattr(self, 'task_list_has_focus', True))
-        self.task_list.bind("<FocusOut>", lambda e: setattr(self, 'task_list_has_focus', False))
-        
-        # Add focus bindings to track when the application window gets focus
-        self.root.bind("<FocusIn>", self.check_selection_validity)
-
-        # Bind a method to clear selection when clicking on blank space
-        self.task_list.bind("<Button-1>", self.on_treeview_click)
-        
-        # Initialize the flag
-        self.task_list_has_focus = False
+        # self.task_list.bind("<FocusIn>", lambda e: setattr(self, 'task_list_has_focus', True))
+        # self.task_list.bind("<FocusOut>", lambda e: setattr(self, 'task_list_has_focus', False))
+        #
+        # # Add focus bindings to track when the application window gets focus
+        # self.root.bind("<FocusIn>", self.check_selection_validity)
+        #
+        # # Bind a method to clear selection when clicking on blank space
+        # self.task_list.bind("<Button-1>", self.on_treeview_click)
+        #
+        # # Initialize the flag
+        # self.task_list_has_focus = False
+        self.task_list.bind("<ButtonRelease-1>", self.select_record)
         self.set_current_task()
 
 
