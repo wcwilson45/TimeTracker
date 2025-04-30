@@ -1,0 +1,7 @@
+# Basic requirements for TimeTracker application - Linux version
+# Note: These are Python package dependencies. System dependencies like python3-tk
+# should be installed using your distribution's package manager.
+
+matplotlib>=3.4.0
+PyInstaller>=5.0.0
+pillow>=8.0.0  # For icon conversion
