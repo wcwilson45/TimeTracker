@@ -362,9 +362,13 @@ class AddTaskWindow(tk.Tk):
                 c.execute("SELECT MAX(task_id) FROM CurrentTask")
                 current_task_id = c.fetchone()[0]
                 current_task_id = current_task_id if current_task_id is not None else 0
+
+                c.execute("SELECT MAX(task_id) FROM ArchivedTasks")
+                archive_task_id = c.fetchone()[0]
+                archive_task_id = archive_task_id if archive_task_id is not None else 0
                 
                 # Find the next task_id
-                task_id = max(max_tasklist_id, max_completed_id, current_task_id) + 1
+                task_id = max(max_tasklist_id, max_completed_id, current_task_id, archive_task_id) + 1
                 
                 # Get the maximum list_place for proper insertion
                 c.execute("SELECT MAX(list_place) FROM TaskList")
