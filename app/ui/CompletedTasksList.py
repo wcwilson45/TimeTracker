@@ -12,7 +12,7 @@ import pathlib
 import os
 from datetime import datetime
 from .TaskHistory import TaskHistoryDB
-from .CommitHistoryPage import CommitHistoryWindow
+# from .CommitHistoryPage import CommitHistoryWindow
 from .CompletedTaskDetailsPage import CompletedTaskDetailsWindow
 from .utils import show_messagebox
 

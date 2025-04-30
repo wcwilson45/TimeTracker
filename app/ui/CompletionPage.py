@@ -26,7 +26,7 @@ frame_color = "#dcdcdc"
 class TaskHistoryDB:
     def __init__(self):
         self.path = pathlib.Path(__file__).parent
-        self.path = str(self.path).replace("CompletionPage.py", '') + '\\Databases' + '\\task_list.db'
+        self.path = str(self.path).replace("CompletionPage.py", '') + '/Databases' + '/task_list.db'
         
         # Create the history table
         conn = sqlite3.connect(self.path)

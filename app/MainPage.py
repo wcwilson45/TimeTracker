@@ -14,6 +14,8 @@ import threading
 import time
 import sys
 import shutil
+
+from ui.utils import show_messagebox
 from ui import (
     CompletedTasksWindow,
     EditTaskWindow,
@@ -24,9 +26,9 @@ from ui import (
     ArchiveTasksList, 
     SettingsPage,
     HelpPage,
-    show_messagebox
+    # utils.show_messagebox
 )
-from ui.CommitHistoryPage import CommitHistoryWindow
+# from ui.CommitHistoryPage import CommitHistoryWindow
 from ui.CompletedTaskDetailsPage import CompletedTaskDetailsWindow as CTDW
 #MAKE SURE TO EITHER COMMENT OUT VOID CODE OR JUST DELETE IT WHEN APPLICABLE
 #DATABASE IS CALLED task_list.db
